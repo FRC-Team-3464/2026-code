@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import java.security.Timestamp;
-
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -52,7 +50,9 @@ public class RobotContainer {
   }
 
   public void robotPeriodic() {
-    OdometryObservation obs = new OdometryObservation(Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
+    OdometryObservation obs =
+        new OdometryObservation(
+            Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
     RobotState.getInstance().addOdometryObservation(obs);
   }
 
