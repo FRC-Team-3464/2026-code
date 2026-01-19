@@ -38,9 +38,9 @@ public final class Constants {
     REPLAY
   }
 
-  public class DriveConstants {
+  public static final class DriveConstants {
 
-    public static class ModuleConfigs {
+    public static final class ModuleConfigs {
 
       public static record ModuleConfig(
           int driveMotorID, int angleMotorID, int canCoderID, Rotation2d angleOffset) {}
@@ -164,4 +164,6 @@ public final class Constants {
             3, 3.0,
             4, 4.0);
   }
+
+  public static final class VisionConstants {}
 }
