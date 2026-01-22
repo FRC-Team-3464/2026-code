@@ -12,7 +12,7 @@ import frc.robot.Constants.DriveConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class RobotState {
-  private static RobotState instance = new RobotState();
+  private static RobotState instance;
 
   public static RobotState getInstance() {
     if (instance == null) instance = new RobotState();

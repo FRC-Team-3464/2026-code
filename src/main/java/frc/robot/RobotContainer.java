@@ -15,25 +15,41 @@ import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.SwerveMod;
 import frc.robot.subsystems.drive.SwerveMod.ModuleName;
+import frc.robot.subsystems.vision.Vision;
 
 public class RobotContainer {
   private final XboxController driver = new XboxController(0);
 
   private final Drive drive;
+  private final Vision vision;
 
   public RobotContainer() {
-    if (Robot.isReal()) {
-      drive = new Drive(null, null);
-    } else {
-      drive =
-          new Drive(
-              new SwerveMod[] {
+
+    switch (Constants.kCurrentMode) {
+      case REAL:
+        // Initialize real IO implementations.
+        drive = new Drive(null, null);
+        vision = new Vision(null);
+        break;
+      case SIM:
+        // Initialize simulation IO implementations.
+        drive = new Drive(
+            new SwerveMod[] {
                 new SwerveMod(new ModuleIOSim(), ModuleName.FRONT_LEFT),
                 new SwerveMod(new ModuleIOSim(), ModuleName.FRONT_RIGHT),
                 new SwerveMod(new ModuleIOSim(), ModuleName.BACK_LEFT),
                 new SwerveMod(new ModuleIOSim(), ModuleName.BACK_RIGHT),
-              },
-              new GyroIO() {});
+            },
+            new GyroIO() {
+            });
+        vision = new Vision(null);
+        break;
+      case REPLAY:
+      default:
+        // Initialize default IO implementations.
+        drive = new Drive(null, null);
+        vision = new Vision(null, null);
+        break;
     }
 
     configureBindings();
@@ -50,9 +66,8 @@ public class RobotContainer {
   }
 
   public void robotPeriodic() {
-    OdometryObservation obs =
-        new OdometryObservation(
-            Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
+    OdometryObservation obs = new OdometryObservation(
+        Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
     RobotState.getInstance().addOdometryObservation(obs);
   }
 
