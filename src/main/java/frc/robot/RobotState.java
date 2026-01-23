@@ -58,11 +58,9 @@ public class RobotState {
   }
 
   /** Reset pose estimate and align gyro frame to the given pose. */
-  public void resetPose(Pose2d pose) {
-
-    poseEstimator.resetPose(pose);
-
-    Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
+  public void setPose(
+      Pose2d pose, SwerveModulePosition[] modulePositions, Rotation2d rawGyroRotation) {
+    poseEstimator.resetPosition(rawGyroRotation, modulePositions, pose);
   }
 
   /** Field-relative estimated robot pose. */

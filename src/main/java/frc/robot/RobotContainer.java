@@ -4,36 +4,64 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.ModuleConstants;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.SwerveMod;
-import frc.robot.subsystems.drive.SwerveMod.ModuleName;
+import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.Hub;
 
 public class RobotContainer {
-  private final XboxController driver = new XboxController(0);
+  private final CommandXboxController driver = new CommandXboxController(0);
 
   private final Drive drive;
 
   public RobotContainer() {
-    if (Robot.isReal()) {
-      drive = new Drive(null, null);
-    } else {
-      drive =
-          new Drive(
-              new SwerveMod[] {
-                new SwerveMod(new ModuleIOSim(), ModuleName.FRONT_LEFT),
-                new SwerveMod(new ModuleIOSim(), ModuleName.FRONT_RIGHT),
-                new SwerveMod(new ModuleIOSim(), ModuleName.BACK_LEFT),
-                new SwerveMod(new ModuleIOSim(), ModuleName.BACK_RIGHT),
-              },
-              new GyroIO() {});
+    switch (Constants.kCurrentMode) {
+      case REAL:
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(ModuleConstants.FrontLeft),
+            new ModuleIOTalonFX(ModuleConstants.FrontRight),
+            new ModuleIOTalonFX(ModuleConstants.BackLeft),
+            new ModuleIOTalonFX(ModuleConstants.BackRight));
+        break;
+      case SIM:
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(ModuleConstants.FrontLeft),
+            new ModuleIOSim(ModuleConstants.FrontRight),
+            new ModuleIOSim(ModuleConstants.BackLeft),
+            new ModuleIOSim(ModuleConstants.BackRight));
+        break;
+      case REPLAY:
+      default:
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
+        break;
     }
 
     configureBindings();
@@ -42,17 +70,37 @@ public class RobotContainer {
   private void configureBindings() {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
-            () -> -driver.getRightX(),
-            () -> false));
+            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+
+    driver
+        .rightBumper()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -driver.getLeftY(), // xSupplier
+                () -> -driver.getLeftX(), // ySupplier
+                () -> {
+                  Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+                  Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+
+                  Translation2d delta = target.minus(robotPose.getTranslation());
+
+                  return new Rotation2d(Math.atan2(delta.getY(), delta.getX()))
+                      .plus(Rotation2d.k180deg); // Because KitBot shooter is on the back
+                }));
+
+    driver
+        .y()
+        .onTrue(
+            DriveCommands.turnToPoint(
+                drive,
+                () -> RobotState.getInstance().getEstimatedPose(),
+                () -> Hub.innerCenterPoint.toTranslation2d()));
   }
 
   public void robotPeriodic() {
-    OdometryObservation obs =
-        new OdometryObservation(
-            Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
+    OdometryObservation obs = new OdometryObservation(
+        Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
     RobotState.getInstance().addOdometryObservation(obs);
   }
 

@@ -1,28 +1,24 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-/** The {@code GyroIO} interface defines methods and attributes for the gyro. */
 public interface GyroIO {
-  default void updateInputs(GyroIOInputs inputs) {}
-  ;
-
   @AutoLog
-  /** Gyro values */
   public static class GyroIOInputs {
-    public GyroIOData data = new GyroIOData(false, Rotation2d.kZero, 0);
+    public boolean connected = false;
+    public Rotation2d yawPosition = Rotation2d.kZero;
+    public double yawVelocityRadPerSec = 0.0;
+    public double[] odometryYawTimestamps = new double[] {};
+    public Rotation2d[] odometryYawPositions = new Rotation2d[] {};
   }
 
-  public record GyroIOData(
-      boolean connected, Rotation2d yawPosition, double yawVelocityRadPerSec) {}
-  ;
-
-  /** Resets the gyro. */
-  default void resetGyro() {}
-  ;
-
-  /** Zeroes the yaw. */
-  default void zeroYaw() {}
-  ;
+  public default void updateInputs(GyroIOInputs inputs) {}
 }
