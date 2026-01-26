@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.commands.DriveCommands;
@@ -20,17 +20,16 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
-import frc.robot.subsystems.vision.CameraIO;
-import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.Hub;
 
 public class RobotContainer {
-  private final CommandXboxController driver = new CommandXboxController(0);
+  private final CommandPS5Controller driver =
+      new CommandPS5Controller(Constants.kDriverControllerPort);
 
   private final Drive drive;
-  private final Vision vision;
+  // private final Vision vision;
 
   public RobotContainer() {
     switch (Constants.kCurrentMode) {
@@ -42,7 +41,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(ModuleConstants.FrontRight),
                 new ModuleIOTalonFX(ModuleConstants.BackLeft),
                 new ModuleIOTalonFX(ModuleConstants.BackRight));
-        vision = new Vision(null, null);
+        // vision = new Vision(null, null);
         break;
       case SIM:
         drive =
@@ -52,7 +51,7 @@ public class RobotContainer {
                 new ModuleIOSim(ModuleConstants.FrontRight),
                 new ModuleIOSim(ModuleConstants.BackLeft),
                 new ModuleIOSim(ModuleConstants.BackRight));
-        vision = new Vision(null, null);
+        // vision = new Vision(null, null);
         break;
       case REPLAY:
       default:
@@ -63,7 +62,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        vision = new Vision(null, new CameraIO[] {});
+        // vision = new Vision(null, new CameraIO[] {});
         break;
     }
 
@@ -76,7 +75,7 @@ public class RobotContainer {
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
     driver
-        .rightBumper()
+        .R1()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
@@ -89,12 +88,11 @@ public class RobotContainer {
 
                   Translation2d delta = target.minus(robotPose.getTranslation());
 
-                  return new Rotation2d(Math.atan2(delta.getY(), delta.getX()))
-                      .plus(Rotation2d.k180deg); // Because KitBot shooter is on the back
+                  return new Rotation2d(Math.atan2(delta.getY(), delta.getX()));
                 }));
 
     driver
-        .y()
+        .triangle()
         .onTrue(
             DriveCommands.turnToPoint(
                 drive,
