@@ -15,6 +15,5 @@ public interface IntakeIO {
   default void updateInputs(IntakeIOInputs inputs) {}
 
   @AutoLog
-  public class IntakeIOInputs {}
-
+  public static class IntakeIOInputs {}
 }
