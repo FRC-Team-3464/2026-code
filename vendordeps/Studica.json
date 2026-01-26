@@ -1,24 +1,24 @@
 {
-  "fileName": "StudicaLib.json",
-  "name": "StudicaLib",
+  "fileName": "Studica.json",
+  "name": "Studica",
   "version": "2026.0.0",
   "frcYear": "2026",
-  "uuid": "963ef341-8abd-4981-a969-c8ae3f592e82",
+  "uuid": "cb311d09-36e9-4143-a032-55bb2b94443b",
   "mavenUrls": [
     "https://dev.studica.com/maven/release/2026/"
   ],
-  "jsonUrl": "https://dev.studica.com/maven/release/2026/json/StudicaLib-2026.0.0.json",
+  "jsonUrl": "https://dev.studica.com/maven/release/2026/json/Studica-2026.0.0.json",
   "javaDependencies": [
     {
       "groupId": "com.studica.frc",
-      "artifactId": "StudicaLib-java",
+      "artifactId": "Studica-java",
       "version": "2026.0.0"
     }
   ],
   "jniDependencies": [
     {
       "groupId": "com.studica.frc",
-      "artifactId": "StudicaLib-driver",
+      "artifactId": "Studica-driver",
       "version": "2026.0.0",
       "skipInvalidPlatforms": true,
       "isJar": false,
@@ -35,9 +35,9 @@
   "cppDependencies": [
     {
       "groupId": "com.studica.frc",
-      "artifactId": "StudicaLib-cpp",
+      "artifactId": "Studica-cpp",
       "version": "2026.0.0",
-      "libName": "StudicaLib",
+      "libName": "Studica",
       "headerClassifier": "headers",
       "sharedLibrary": false,
       "skipInvalidPlatforms": true,
@@ -52,9 +52,9 @@
     },
     {
       "groupId": "com.studica.frc",
-      "artifactId": "StudicaLib-driver",
+      "artifactId": "Studica-driver",
       "version": "2026.0.0",
-      "libName": "StudicaLibDriver",
+      "libName": "StudicaDriver",
       "headerClassifier": "headers",
       "sharedLibrary": false,
       "skipInvalidPlatforms": true,

@@ -1,65 +1,49 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
-/**
- * The {@code ModuleIO} class contains default methods for the
- *
- * @author Maxwell Morgan
- */
 public interface ModuleIO {
-  default void updateInputs(ModuleIOInputs inputs) {}
-
   @AutoLog
-  /** Module values */
-  public class ModuleIOInputs {
-    public ModuleIOData data =
-        new ModuleIOData(false, 0, 0, 0, false, Rotation2d.kZero, 0, 0, 0, 0);
+  public static class ModuleIOInputs {
+    public boolean driveConnected = false;
+    public double drivePositionRad = 0.0;
+    public double driveVelocityRadPerSec = 0.0;
+    public double driveAppliedVolts = 0.0;
+    public double driveCurrentAmps = 0.0;
+
+    public boolean turnConnected = false;
+    public boolean turnEncoderConnected = false;
+    public Rotation2d turnAbsolutePosition = Rotation2d.kZero;
+    public Rotation2d turnPosition = Rotation2d.kZero;
+    public double turnVelocityRadPerSec = 0.0;
+    public double turnAppliedVolts = 0.0;
+    public double turnCurrentAmps = 0.0;
+
+    public double[] odometryTimestamps = new double[] {};
+    public double[] odometryDrivePositionsRad = new double[] {};
+    public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
   }
 
-  public record ModuleIOData(
-      boolean driveConnected,
-      double drivePositionRad,
-      double driveVelocityRadPerSec,
-      double driveAppliedVolts,
-      boolean turnConnected,
-      Rotation2d turnPosition,
-      double turnVelocityRadPerSec,
-      double turnAppliedVolts,
-      double driveCurrentAmps,
-      double turnCurrentAmps) {}
+  /** Updates the set of loggable inputs. */
+  public default void updateInputs(ModuleIOInputs inputs) {}
 
-  /**
-   * Sets the drive motor output.
-   *
-   * @param percentOutput the percent of the drive motor's maximum output to request (between -1 and
-   *     1)
-   */
-  default void runDriveDutyCycle(double percentOutput) {}
+  /** Run the drive motor at the specified open loop value. */
+  public default void setDriveOpenLoop(double output) {}
 
-  /**
-   * Sets the turn motor output.
-   *
-   * @param percentOutput the percent of the turn motor's maximum output to request (between -1 and
-   *     1)
-   */
-  default void runTurnDutyCycle(double percentOutput) {}
+  /** Run the turn motor at the specified open loop value. */
+  public default void setTurnOpenLoop(double output) {}
 
-  /**
-   * Sets the drive motor velocity.
-   *
-   * @param velocityRadPerSec the velocity used to set the drive motor controller target
-   */
-  default void runDriveVelocity(double velocityRadPerSec) {}
+  /** Run the drive motor at the specified velocity. */
+  public default void setDriveVelocity(double velocityRadPerSec) {}
 
-  /**
-   * Sets the turn motor to the specified angle.
-   *
-   * @param angle the {@link Rotation2d} used to set the angle motor controller target
-   */
-  default void runTurnAngle(Rotation2d angle) {}
-
-  /** Resets the turning encoder to match absolute CANcoder. */
-  default void resetToAbsolute() {}
+  /** Run the turn motor to the specified rotation. */
+  public default void setTurnPosition(Rotation2d rotation) {}
 }

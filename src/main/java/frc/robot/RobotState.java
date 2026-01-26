@@ -5,6 +5,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -22,6 +23,8 @@ public class RobotState {
   /** Pose Estimator */
   private SwerveDrivePoseEstimator poseEstimator;
 
+  private ChassisSpeeds robotVelocity;
+
   private RobotState() {
     poseEstimator =
         new SwerveDrivePoseEstimator(
@@ -36,7 +39,12 @@ public class RobotState {
             Pose2d.kZero);
   }
 
-  /** Update robot state from drive sensors. */
+  /**
+   * Update robot pose estimate from drive sensors.
+   *
+   * @param observation An {@link OdometryObservation} object representing the measured odometry
+   *     state.
+   */
   public void addOdometryObservation(OdometryObservation observation) {
 
     // if (observation.gyroAngle().isEmpty()) {
@@ -50,6 +58,11 @@ public class RobotState {
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
   }
 
+  /**
+   * Update robot pose estimate from cameras.
+   *
+   * @param measurement A {@link VisionMeasurement} object representing the vision pose estimate.
+   */
   public void addVisionMeasurement(VisionMeasurement measurement) {
     poseEstimator.addVisionMeasurement(
         measurement.visionPose().toPose2d(), measurement.timestamp(), measurement.stdDevs());
@@ -57,17 +70,34 @@ public class RobotState {
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
   }
 
-  /** Reset pose estimate and align gyro frame to the given pose. */
-  public void resetPose(Pose2d pose) {
-
-    poseEstimator.resetPose(pose);
-
-    Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
+  /**
+   * Reset pose estimate and align gyro frame to the given pose.
+   *
+   * @param pose The pose to reset the pose estimator to.
+   * @param modulePositions An array of the current swerve module positions.
+   * @param rawGyroRotation The estimated rotation from the drivetrain.
+   */
+  public void setPose(
+      Pose2d pose, SwerveModulePosition[] modulePositions, Rotation2d rawGyroRotation) {
+    poseEstimator.resetPosition(rawGyroRotation, modulePositions, pose);
   }
 
-  /** Field-relative estimated robot pose. */
+  /**
+   * Field-relative estimated robot pose.
+   *
+   * @return A Pose2d object representing the robot's estimated pose.
+   */
   public Pose2d getEstimatedPose() {
     return poseEstimator.getEstimatedPosition();
+  }
+
+  /**
+   * Current robot velocity.
+   *
+   * @return A ChassisSpeeds object representing the velocity of the robot.
+   */
+  public ChassisSpeeds getRobotVelocity() {
+    return robotVelocity;
   }
 
   public record OdometryObservation(
