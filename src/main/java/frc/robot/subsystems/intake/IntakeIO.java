@@ -17,7 +17,4 @@ public interface IntakeIO {
   @AutoLog
   public class IntakeIOInputs {}
 
-  default void runPivotMotor(double speed) {}
-
-  default void runRollerMotor(double speed) {}
 }
