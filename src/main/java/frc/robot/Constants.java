@@ -10,6 +10,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
@@ -39,6 +40,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -49,6 +51,8 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.util.GeomUtil;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -82,6 +86,8 @@ public final class Constants {
   }
 
   public static final class DriveConstants {
+    public static final SwerveDriveKinematics kSwerveKinematics =
+        new SwerveDriveKinematics(Drive.getModuleTranslations());
 
     public static final double kOdometryFrequency =
         ModuleConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0;
@@ -129,7 +135,7 @@ public final class Constants {
                 1),
             kModuleTranslations);
 
-    public static class ModuleConstants {
+    public static final class ModuleConstants {
       // Both sets of gains need to be tuned to your individual robot.
 
       // The steer motor uses any SwerveModule.SteerRequestType control request with
@@ -448,7 +454,7 @@ public final class Constants {
     }
   }
 
-  public class VisionConstants {
+  public static final class VisionConstants {
     // AprilTag layout
     public static AprilTagFieldLayout aprilTagLayout =
         AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
@@ -485,5 +491,56 @@ public final class Constants {
     public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
     public static double angularStdDevMegatag2Factor =
         Double.POSITIVE_INFINITY; // No rotation data available
+  }
+
+  public static final class ShooterConstants {
+
+    public static final class TurretConstants {
+      public static final double kGearRatio = 10 / 1;
+      public static final double kMinTurretAngleRad = -3.0 * Math.PI / 2.0; // -270 degrees
+      public static final double kMaxTurretAngleRad = 3.0 * Math.PI / 2.0; // +270 degrees
+
+      public static final double kLeftMotorId = 12;
+      public static final double kRightMotorId = 13;
+
+      // +X = Forward, +Y = Left
+      public static final Transform3d kRobotToLeftTurret =
+          new Transform3d(Inches.of(3.749), Inches.of(8.186), Inches.of(13.401), Rotation3d.kZero);
+
+      public static final Transform3d kRobotToRightTurret =
+          new Transform3d(Inches.of(3.749), Inches.of(-8.314), Inches.of(13.401), Rotation3d.kZero);
+    }
+
+    public static final class HoodConstants {
+      public static final double kTurretToHoodInches = 1.878;
+      public static final double kGearRatio = 100 / 1;
+
+      public static final Transform3d kRobotToLeftHood =
+          new Transform3d(
+              Inches.of(7.268715), Meters.of(0.20792316), Inches.of(16.018516), Rotation3d.kZero);
+
+      public static final Transform3d kRobotToRightHood =
+          new Transform3d(
+              Inches.of(-7.270121),
+              Inches.of(-(12.062888 - (7.5 / 2.0))),
+              Inches.of(16.018516),
+              Rotation3d.kZero);
+
+      public static final Transform3d kLeftTurretToLeftHood =
+          GeomUtil.toPose3d(HoodConstants.kRobotToLeftHood)
+              .minus(
+                  GeomUtil.toPose3d(TurretConstants.kRobotToLeftTurret)
+                      .plus(
+                          new Transform3d(
+                              Inches.of(7.268715), Inches.of(0), Inches.of(0), new Rotation3d())));
+
+      public static final Transform3d kRightTurretToRightHood =
+          GeomUtil.toPose3d(HoodConstants.kRobotToRightHood)
+              .minus(
+                  GeomUtil.toPose3d(TurretConstants.kRobotToRightTurret)
+                      .plus(
+                          new Transform3d(
+                              Inches.of(-7.270121), Inches.of(0), Inches.of(0), new Rotation3d())));
+    }
   }
 }

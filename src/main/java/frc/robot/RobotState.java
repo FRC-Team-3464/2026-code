@@ -9,7 +9,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import frc.robot.subsystems.drive.Drive;
+import frc.robot.Constants.DriveConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class RobotState {
@@ -28,7 +28,7 @@ public class RobotState {
   private RobotState() {
     poseEstimator =
         new SwerveDrivePoseEstimator(
-            Drive.kinematics,
+            DriveConstants.kSwerveKinematics,
             Rotation2d.kZero,
             new SwerveModulePosition[] {
               new SwerveModulePosition(),
@@ -80,6 +80,15 @@ public class RobotState {
   public void setPose(
       Pose2d pose, SwerveModulePosition[] modulePositions, Rotation2d rawGyroRotation) {
     poseEstimator.resetPosition(rawGyroRotation, modulePositions, pose);
+  }
+
+  /**
+   * Set the robot's velocity
+   *
+   * @param speeds A ChassisSpeeds object representing the robot's current velocity
+   */
+  public void setRobotVelocity(ChassisSpeeds speeds) {
+    robotVelocity = speeds;
   }
 
   /**

@@ -20,6 +20,9 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.shooter.Shooter.ShooterSide;
+import frc.robot.subsystems.shooter.turret.Turret;
+import frc.robot.subsystems.shooter.turret.TurretIOSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.Hub;
@@ -28,8 +31,10 @@ public class RobotContainer {
   private final CommandPS5Controller driver =
       new CommandPS5Controller(Constants.kDriverControllerPort);
 
-  private final Drive drive;
-  // private final Vision vision;
+  private Drive drive;
+  private Turret leftShooter;
+  private Turret rightShooter;
+  // private Vision vision;
 
   public RobotContainer() {
     switch (Constants.kCurrentMode) {
@@ -51,6 +56,8 @@ public class RobotContainer {
                 new ModuleIOSim(ModuleConstants.FrontRight),
                 new ModuleIOSim(ModuleConstants.BackLeft),
                 new ModuleIOSim(ModuleConstants.BackRight));
+        leftShooter = new Turret(ShooterSide.LEFT, new TurretIOSim());
+        rightShooter = new Turret(ShooterSide.RIGHT, new TurretIOSim());
         // vision = new Vision(null, null);
         break;
       case REPLAY:
@@ -73,6 +80,14 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+    leftShooter.setDefaultCommand(
+        leftShooter.trackTarget(
+            () -> RobotState.getInstance().getEstimatedPose(),
+            () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
+    rightShooter.setDefaultCommand(
+        rightShooter.trackTarget(
+            () -> RobotState.getInstance().getEstimatedPose(),
+            () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
 
     driver
         .R1()

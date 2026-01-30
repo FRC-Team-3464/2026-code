@@ -77,6 +77,8 @@ public class Robot extends LoggedRobot {
     CachedSupplier.invalidateAll();
     robotContainer.robotPeriodic();
     CommandScheduler.getInstance().run();
+
+    RobotVisualizer.getInstance().log("Mechanism3d/Robot");
   }
 
   /** This function is called once when the robot is disabled. */
@@ -93,7 +95,7 @@ public class Robot extends LoggedRobot {
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
-      autonomousCommand.schedule();
+      CommandScheduler.getInstance().schedule(autonomousCommand);
     }
   }
 

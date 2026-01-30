@@ -45,8 +45,8 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-  public static final SwerveDriveKinematics kinematics =
-      new SwerveDriveKinematics(getModuleTranslations());
+  private final SwerveDriveKinematics kinematics = DriveConstants.kSwerveKinematics;
+
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
