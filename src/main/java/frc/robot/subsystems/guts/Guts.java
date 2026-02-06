@@ -10,6 +10,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/**
+ * This class updates and stores the values of the inputs periodically, and
+ * contains commands to run the gut motors forward and backward.
+ * @author Ryan Hefferon
+ */
 public class Guts extends SubsystemBase {
 
   public final GutsIO io;
@@ -20,20 +25,20 @@ public class Guts extends SubsystemBase {
     this.io = io;
   }
 
-  public Command runGutsForward(){
+  /** Runs the gut motors forward at 0.5 speed, then stops them when finished. */
+  public Command runGutsForward() {
     return Commands.runEnd(
-      () -> io.setLeftGutMotorSpeed(0.5),
-      () -> io.setLeftGutMotorSpeed(0),
-      this
-    );
+        () -> io.setLeftGutMotorSpeed(0.5),
+        () -> io.setLeftGutMotorSpeed(0),
+        this);
   }
 
-  public Command runGutsBackward(){
+  /** Runs the gut motors backward at 0.5 speed, then stops them when finished. */
+  public Command runGutsBackward() {
     return Commands.runEnd(
-      () -> io.setLeftGutMotorSpeed(-0.5),
-      () -> io.setLeftGutMotorSpeed(0),
-      this
-    );
+        () -> io.setLeftGutMotorSpeed(-0.5),
+        () -> io.setLeftGutMotorSpeed(0),
+        this);
   }
 
   @Override
