@@ -6,6 +6,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.DigitalInput;
+
 public class IntakeIOHardware implements IntakeIO {
     SparkMax armMotor = new SparkMax(5, MotorType.kBrushless);
     SparkMax wheelMotor = new SparkMax(6, MotorType.kBrushless);

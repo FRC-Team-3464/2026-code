@@ -24,7 +24,14 @@ public interface IntakeIO {
     double wheelMotorPositionRotations = 0.0;
 
   }
-
+  /**
+   * method to set the speed of the arm
+   * @param speed determines the speed of the arm on a scale of -1 to 1
+   */
   default void setArmSpeed(double speed){}
+    /**
+   * method to set the speed of the wheel
+   * @param speed determines the speed of the wheel on a scale of -1 to 1
+   */
   default void setWheelSpeed(double speed){}
 }
