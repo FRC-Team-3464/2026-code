@@ -8,45 +8,34 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 /**
- * This class contains all of the physical objects: two motors and two
- * corresponding encoders. It also implements the default methods specified in
+ * This class contains all of the physical objects: one motor and its
+ * corresponding encoder. It also implements the default methods specified in
  * the IO interface to set the speed of the physical motor and update the input
  * values using the encoders.
+ * 
  * @author Ryan Hefferon
  */
 public class GutsIOSparkMax implements GutsIO {
 
-    private final SparkMax leftGutMotor = new SparkMax(0, MotorType.kBrushless);
-    private final SparkMax rightGutMotor = new SparkMax(1, MotorType.kBrushless);
-    private final RelativeEncoder leftGutEncoder = leftGutMotor.getEncoder();
-    private final RelativeEncoder rightGutEncoder = rightGutMotor.getEncoder();
-    private final SparkMaxConfig leftGutMotorConfig;
-    private final SparkMaxConfig rightGutMotorConfig;
+    private final SparkMax GutMotor = new SparkMax(0, MotorType.kBrushless);
+    private final RelativeEncoder GutEncoder = GutMotor.getEncoder();
+    private final SparkMaxConfig GutMotorConfig;
 
     public GutsIOSparkMax() {
-        leftGutMotorConfig = new SparkMaxConfig();
-        rightGutMotorConfig = new SparkMaxConfig();
+        GutMotorConfig = new SparkMaxConfig();
 
-        leftGutMotor.configure(leftGutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        rightGutMotor.configure(rightGutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        GutMotor.configure(GutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
     @Override
-    public void setLeftGutMotorSpeed(double speed) {
-        leftGutMotor.set(speed);
-    }
-
-    @Override
-    public void setRightGutMotorSpeed(double speed) {
-        rightGutMotor.set(speed);
+    public void setGutMotorSpeed(double speed) {
+        GutMotor.set(speed);
     }
 
     @Override
     public void updateInputs(GutsIOInputs inputs) {
-        inputs.leftGutMotorPositionRot = leftGutEncoder.getPosition();
-        inputs.leftGutMotorVelocityRPM = leftGutEncoder.getVelocity();
-        inputs.rightGutMotorPositionRot = rightGutEncoder.getPosition();
-        inputs.rightGutMotorVelocityRPM = rightGutEncoder.getVelocity();
+        inputs.GutMotorPositionRot = GutEncoder.getPosition();
+        inputs.GutMotorVelocityRPM = GutEncoder.getVelocity();
     }
 
 }

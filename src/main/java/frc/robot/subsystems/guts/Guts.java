@@ -12,55 +12,61 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * This class updates and stores the values of the inputs periodically, and
- * contains commands to run the gut motors forward and backward.
+ * contains commands to run the gut motor forward and backward.
+ * 
  * @author Ryan Hefferon
  */
 public class Guts extends SubsystemBase {
 
+  private final GutSide side;
   public final GutsIO io;
   public GutsIOInputsAutoLogged inputs = new GutsIOInputsAutoLogged();
 
   /** Creates a new Guts. */
-  public Guts(GutsIO io) {
+  public Guts(GutSide side, GutsIO io) {
     this.io = io;
+    this.side = side;
   }
 
-  /** Runs the left gut motor forward at 0.5 speed, then stops it when finished. */
-  public Command runLeftGutForward() {
+  /**
+   * Runs the gut motor forward at 0.5 speed, then stops it when finished.
+   */
+  public Command runGutForward() {
     return Commands.runEnd(
-        () -> io.setLeftGutMotorSpeed(0.5),
-        () -> io.setLeftGutMotorSpeed(0),
+        () -> io.setGutMotorSpeed(0.5),
+        () -> io.setGutMotorSpeed(0),
         this);
   }
 
-  /** Runs the right gut motor forward at 0.5 speed, then stops it when finished. */
-  public Command runRightGutForward() {
+  /**
+   * Runs the gut motor backward at 0.5 speed, then stops it when finished.
+   */
+  public Command runGutBackward() {
     return Commands.runEnd(
-        () -> io.setRightGutMotorSpeed(0.5),
-        () -> io.setRightGutMotorSpeed(0),
-        this);
-  }
-
-  /** Runs the left gut motor backward at 0.5 speed, then stops it when finished. */
-  public Command runLeftGutBackward() {
-    return Commands.runEnd(
-        () -> io.setLeftGutMotorSpeed(-0.5),
-        () -> io.setLeftGutMotorSpeed(0),
-        this);
-  }
-
-  /** Runs the right gut motor backward at 0.5 speed, then stops it when finished. */
-  public Command runRightGutBackward() {
-    return Commands.runEnd(
-        () -> io.setRightGutMotorSpeed(-0.5),
-        () -> io.setRightGutMotorSpeed(0),
+        () -> io.setGutMotorSpeed(-0.5),
+        () -> io.setGutMotorSpeed(0),
         this);
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Guts", inputs);
+    Logger.processInputs("Guts/" + side.getName(), inputs);
     // This method will be called once per scheduler run
+  }
+
+  public enum GutSide {
+    LEFT("Left"),
+    RIGHT("Right");
+
+    private final String name;
+
+    private GutSide(String name) {
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
   }
 }
