@@ -25,19 +25,35 @@ public class Guts extends SubsystemBase {
     this.io = io;
   }
 
-  /** Runs the gut motors forward at 0.5 speed, then stops them when finished. */
-  public Command runGutsForward() {
+  /** Runs the left gut motor forward at 0.5 speed, then stops it when finished. */
+  public Command runLeftGutForward() {
     return Commands.runEnd(
         () -> io.setLeftGutMotorSpeed(0.5),
         () -> io.setLeftGutMotorSpeed(0),
         this);
   }
 
-  /** Runs the gut motors backward at 0.5 speed, then stops them when finished. */
-  public Command runGutsBackward() {
+  /** Runs the right gut motor forward at 0.5 speed, then stops it when finished. */
+  public Command runRightGutForward() {
+    return Commands.runEnd(
+        () -> io.setRightGutMotorSpeed(0.5),
+        () -> io.setRightGutMotorSpeed(0),
+        this);
+  }
+
+  /** Runs the left gut motor backward at 0.5 speed, then stops it when finished. */
+  public Command runLeftGutBackward() {
     return Commands.runEnd(
         () -> io.setLeftGutMotorSpeed(-0.5),
         () -> io.setLeftGutMotorSpeed(0),
+        this);
+  }
+
+  /** Runs the right gut motor backward at 0.5 speed, then stops it when finished. */
+  public Command runRightGutBackward() {
+    return Commands.runEnd(
+        () -> io.setRightGutMotorSpeed(-0.5),
+        () -> io.setRightGutMotorSpeed(0),
         this);
   }
 

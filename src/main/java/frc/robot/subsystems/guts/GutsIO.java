@@ -4,7 +4,7 @@ import org.littletonrobotics.junction.AutoLog;
 
 /**
  * This IO interface contains the class which initializes all the inputs as well as
- * default methods to update the values of the inputs and set the speed of the motors.
+ * default methods to update the values of the inputs and set the speed of each of the motors.
  * @author Ryan Hefferon
  */
 public interface GutsIO {
@@ -22,8 +22,11 @@ public interface GutsIO {
     public double leftGutMotorPositionRot = 0.0;
   }
 
-  /** Sets the gut motor to a specific speed ranging from -1.0 to 1.0 */
+  /** Sets the left gut motor to a specific speed ranging from -1.0 to 1.0 */
   default void setLeftGutMotorSpeed(double speed) {
+  }
+
+  default void setRightGutMotorSpeed(double speed) {
   }
 
 }

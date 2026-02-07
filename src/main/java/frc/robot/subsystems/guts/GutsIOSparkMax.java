@@ -3,6 +3,8 @@ package frc.robot.subsystems.guts;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.ResetMode;
+import com.revrobotics.PersistMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 /**
@@ -25,16 +27,18 @@ public class GutsIOSparkMax implements GutsIO {
         leftGutMotorConfig = new SparkMaxConfig();
         rightGutMotorConfig = new SparkMaxConfig();
 
-        rightGutMotorConfig.follow(leftGutMotor, true);
-
-        // fix later to correctly configure motors
-        // leftGutMotor.configure(leftGutMotorConfig, null, null);
-        // rightGutMotor.configure(rightGutMotorConfig, null, null);
+        leftGutMotor.configure(leftGutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        rightGutMotor.configure(rightGutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
     @Override
     public void setLeftGutMotorSpeed(double speed) {
         leftGutMotor.set(speed);
+    }
+
+    @Override
+    public void setRightGutMotorSpeed(double speed) {
+        rightGutMotor.set(speed);
     }
 
     @Override
