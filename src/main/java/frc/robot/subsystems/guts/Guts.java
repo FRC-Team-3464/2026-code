@@ -21,6 +21,7 @@ public class Guts extends SubsystemBase {
   private final GutSide side;
   public final GutsIO io;
   public GutsIOInputsAutoLogged inputs = new GutsIOInputsAutoLogged();
+  public double speed = (side == GutSide.LEFT) ? 0.5 : -0.5;
 
   /** Creates a new Guts. */
   public Guts(GutSide side, GutsIO io) {
@@ -33,17 +34,17 @@ public class Guts extends SubsystemBase {
    */
   public Command runGutForward() {
     return Commands.runEnd(
-        () -> io.setGutMotorSpeed(0.5),
-        () -> io.setGutMotorSpeed(0),
-        this);
+      () -> io.setGutMotorSpeed(speed),
+      () -> io.setGutMotorSpeed(0),
+      this);
   }
 
   /**
    * Runs the gut motor backward at 0.5 speed, then stops it when finished.
    */
   public Command runGutBackward() {
-    return Commands.runEnd(
-        () -> io.setGutMotorSpeed(-0.5),
+      return Commands.runEnd(
+        () -> io.setGutMotorSpeed(-speed),
         () -> io.setGutMotorSpeed(0),
         this);
   }

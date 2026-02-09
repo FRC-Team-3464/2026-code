@@ -32,10 +32,10 @@ import frc.robot.subsystems.guts.Guts.GutSide;
 public class RobotContainer {
   private final CommandXboxController driver = new CommandXboxController(0);
 
-  private final Drive drive;
-  private final Vision vision;
-  private final Guts leftGut;
-  private final Guts rightGut;
+  private Drive drive;
+  private Vision vision;
+  private Guts leftGut;
+  private Guts rightGut;
 
   public RobotContainer() {
     switch (Constants.kCurrentMode) {
@@ -114,6 +114,16 @@ public class RobotContainer {
                 drive,
                 () -> RobotState.getInstance().getEstimatedPose(),
                 () -> Hub.innerCenterPoint.toTranslation2d()));
+
+    Constants.OperatorConstants.leftGutButton1.whileTrue(leftGut.runGutForward());
+    Constants.OperatorConstants.leftGutButton2.whileTrue(leftGut.runGutBackward());
+    Constants.OperatorConstants.rightGutButton1.whileTrue(rightGut.runGutForward());
+    Constants.OperatorConstants.rightGutButton2.whileTrue(rightGut.runGutBackward());
+
+    Constants.OperatorConstants.bothGutsButton1.whileTrue(leftGut.runGutForward().alongWith(rightGut.runGutForward()));
+
+    Constants.OperatorConstants.bothGutsButton2.whileTrue(leftGut.runGutBackward().alongWith(rightGut.runGutBackward()));
+
   }
 
   public void robotPeriodic() {

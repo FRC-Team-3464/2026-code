@@ -53,7 +53,10 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
 import java.util.Map;
 
 /**
@@ -915,4 +918,15 @@ public final class Constants {
     public static double angularStdDevMegatag2Factor =
         Double.POSITIVE_INFINITY; // No rotation data available
   }
+  public class OperatorConstants {
+    public static Joystick auxStick = new Joystick(0);
+    public static JoystickButton leftGutButton1 = new JoystickButton(auxStick, 0);
+    public static JoystickButton leftGutButton2 = new JoystickButton(auxStick, 1);
+    public static JoystickButton rightGutButton1 = new JoystickButton(auxStick, 2);
+    public static JoystickButton rightGutButton2 = new JoystickButton(auxStick, 3);
+    public static JoystickButton bothGutsButton1 = new JoystickButton(auxStick, 4);
+    public static JoystickButton bothGutsButton2 = new JoystickButton(auxStick, 5);
+
+  }
+
 }
