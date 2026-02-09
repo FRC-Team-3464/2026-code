@@ -7,12 +7,17 @@ public interface HoodIO {
 
   @AutoLog
   public static class HoodIOInputs {
-    boolean connected = false;
-    double angleRads = 0.0;
-    double velocityRadsPerSec = 0.0;
-    double appliedVolts = 0.0;
-    double currentAmps = 0.0;
+    public boolean connected = false;
+    public double positionRad = 0.0;
+    public double velocityRadPerSec = 0.0;
+    public double appliedVolts = 0.0;
+    public double currentDrawAmps = 0.0;
   }
 
+  /**
+   * Sets the target angle for the hood.
+   *
+   * @param angle The angle for the hood to aim at (in radians).
+   */
   default void setAngle(double angle) {}
 }

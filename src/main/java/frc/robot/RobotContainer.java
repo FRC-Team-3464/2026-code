@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.commands.DriveCommands;
@@ -20,20 +20,22 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
-import frc.robot.subsystems.shooter.turret.Turret;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.turret.TurretIOSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.Hub;
 
 public class RobotContainer {
-  private final CommandPS5Controller driver =
-      new CommandPS5Controller(Constants.kDriverControllerPort);
+  private final CommandXboxController driver =
+      new CommandXboxController(Constants.kDriverControllerPort);
 
   private Drive drive;
-  private Turret leftShooter;
-  private Turret rightShooter;
+  private Shooter leftShooter;
+  private Shooter rightShooter;
   // private Vision vision;
 
   public RobotContainer() {
@@ -56,8 +58,10 @@ public class RobotContainer {
                 new ModuleIOSim(ModuleConstants.FrontRight),
                 new ModuleIOSim(ModuleConstants.BackLeft),
                 new ModuleIOSim(ModuleConstants.BackRight));
-        leftShooter = new Turret(ShooterSide.LEFT, new TurretIOSim());
-        rightShooter = new Turret(ShooterSide.RIGHT, new TurretIOSim());
+        leftShooter =
+            new Shooter(ShooterSide.LEFT, new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
+        rightShooter =
+            new Shooter(ShooterSide.RIGHT, new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
         // vision = new Vision(null, null);
         break;
       case REPLAY:
@@ -90,7 +94,7 @@ public class RobotContainer {
             () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
 
     driver
-        .R1()
+        .rightBumper()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
@@ -107,7 +111,7 @@ public class RobotContainer {
                 }));
 
     driver
-        .triangle()
+        .y()
         .onTrue(
             DriveCommands.turnToPoint(
                 drive,
@@ -125,4 +129,6 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return Commands.print("No autonomous command configured");
   }
+
+  public void configureSubsystems() {}
 }

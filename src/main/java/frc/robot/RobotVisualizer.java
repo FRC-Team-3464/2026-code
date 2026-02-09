@@ -49,13 +49,13 @@ public class RobotVisualizer {
         leftTurretPose.transformBy(
             new Transform3d(
                 HoodConstants.kLeftTurretToLeftHood.getTranslation(),
-                new Rotation3d(0.0, Math.abs(Math.sin(Timer.getFPGATimestamp())) * -0.5, 0.0)));
+                new Rotation3d(0.0, hoodAngles[0], 0.0)));
 
     Pose3d rightHoodPose =
         rightTurretPose.transformBy(
             new Transform3d(
                 HoodConstants.kRightTurretToRightHood.getTranslation(),
-                new Rotation3d(0.0, Math.abs(Math.sin(Timer.getFPGATimestamp())) * -0.5, 0.0)));
+                new Rotation3d(0.0, hoodAngles[1], 0.0)));
 
     Logger.recordOutput(
         key + "/Components", leftTurretPose, rightTurretPose, leftHoodPose, rightHoodPose);
@@ -120,7 +120,7 @@ public class RobotVisualizer {
    *
    * @param angle A Rotation2d object to be inserted in the angles array.
    */
-  public void setLeftTurretAngle(double angle) {
+  public void setLeftHoodAngle(double angle) {
     hoodAngles[0] = angle;
   }
 
@@ -129,7 +129,7 @@ public class RobotVisualizer {
    *
    * @param angle A double to be inserted in the angles array.
    */
-  public void setLeftHoodAngle(double angle) {
+  public void setRightHoodAngle(double angle) {
     hoodAngles[1] = angle;
   }
 }

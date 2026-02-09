@@ -35,11 +35,10 @@ public class Turret extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs(("Turret/" + side.getName()), inputs);
 
-    if (side.equals(ShooterSide.LEFT)) {
-      RobotVisualizer.getInstance().setLeftTurretAngle(Rotation2d.fromRadians(inputs.positionRads));
-    } else if (side.equals(ShooterSide.RIGHT)) {
-      RobotVisualizer.getInstance()
-          .setRightTurretAngle(Rotation2d.fromRadians(inputs.positionRads));
+    if (side == ShooterSide.LEFT) {
+      RobotVisualizer.getInstance().setLeftTurretAngle(Rotation2d.fromRadians(inputs.positionRad));
+    } else if (side == ShooterSide.RIGHT) {
+      RobotVisualizer.getInstance().setRightTurretAngle(Rotation2d.fromRadians(inputs.positionRad));
     }
 
     Logger.recordOutput(("Turret/" + side.getName() + "/TargetAngle"), targetAngle);
@@ -78,7 +77,19 @@ public class Turret extends SubsystemBase {
         this);
   }
 
+  public void setPosition(Rotation2d position) {
+    io.setPosition(position);
+  }
+
   public double getPosition() {
-    return inputs.positionRads;
+    return inputs.positionRad;
+  }
+
+  public double getVelocity() {
+    return inputs.velocityRadPerSec;
+  }
+
+  public ShooterSide getSide() {
+    return this.side;
   }
 }
