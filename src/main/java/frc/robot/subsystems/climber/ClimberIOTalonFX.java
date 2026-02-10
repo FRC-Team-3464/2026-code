@@ -19,9 +19,9 @@ import frc.robot.Constants.ClimberConstants;
  * @author Owen Biamonte
  */
 public class ClimberIOTalonFX implements ClimberIO {
-    private final TalonFX climberMotor = new TalonFX(ClimberConstants.climberMotorID);
-    private final DigitalInput topLimitSwitch = new DigitalInput(ClimberConstants.topLimitSwitchID);
-    private final DigitalInput bottomLimitSwitch = new DigitalInput(ClimberConstants.bottomLimitSwitchID);
+    private final TalonFX climberMotor = new TalonFX(ClimberConstants.kClimberMotorID);
+    private final DigitalInput topLimitSwitch = new DigitalInput(ClimberConstants.kTopLimitSwitchID);
+    private final DigitalInput bottomLimitSwitch = new DigitalInput(ClimberConstants.kBottomLimitSwitchID);
 
     private final TalonFXConfiguration climberMotorConfig;
 

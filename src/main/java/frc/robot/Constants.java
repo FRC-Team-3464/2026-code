@@ -447,13 +447,13 @@ public final class Constants {
     }
 
     public static final class ClimberConstants {
-        public static final int climberMotorID = 0;
-        public static final int topLimitSwitchID = 0;
-        public static final int bottomLimitSwitchID = 1;
+        public static final int kClimberMotorID = 0;
+        public static final int kTopLimitSwitchID = 0;
+        public static final int kBottomLimitSwitchID = 1;
 
-        public static final double climberSpeed = 0.5;
+        public static final double kClimberSpeed = 0.5;
 
         //Change gear ratio later
-        public static final double climberMotorGearRatio = 0.0;
+        public static final double kClimberMotorGearRatio = 0.0;
     }
 }

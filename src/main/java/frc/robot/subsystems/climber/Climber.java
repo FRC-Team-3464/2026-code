@@ -43,7 +43,7 @@ public class Climber extends SubsystemBase {
    * stops the motor.
    */
   public Command runClimberUp() {
-    return Commands.run(() -> io.setClimberSpeed(ClimberConstants.climberSpeed), this)
+    return Commands.run(() -> io.setClimberSpeed(ClimberConstants.kClimberSpeed), this)
         .until(topLimitHit).finallyDo(() -> io.setClimberSpeed(0));
   }
 
@@ -52,7 +52,7 @@ public class Climber extends SubsystemBase {
    * stops the motor.
    */
   public Command runClimberDown() {
-    return Commands.run(() -> io.setClimberSpeed(-(ClimberConstants.climberSpeed)), this)
+    return Commands.run(() -> io.setClimberSpeed(-(ClimberConstants.kClimberSpeed)), this)
         .until(bottomLimitHit).finallyDo(() -> io.setClimberSpeed(0));
   }
 
