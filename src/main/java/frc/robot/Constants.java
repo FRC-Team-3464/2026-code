@@ -445,4 +445,15 @@ public final class Constants {
         public static JoystickButton climberButton1 = new JoystickButton(auxStick, 6);
         public static JoystickButton climberButton2 = new JoystickButton(auxStick, 7);
     }
+
+    public static final class ClimberConstants {
+        public static final int climberMotorID = 0;
+        public static final int topLimitSwitchID = 0;
+        public static final int bottomLimitSwitchID = 1;
+
+        public static final double climberSpeed = 0.5;
+
+        //Change gear ratio later
+        public static final double climberMotorGearRatio = 0.0;
+    }
 }

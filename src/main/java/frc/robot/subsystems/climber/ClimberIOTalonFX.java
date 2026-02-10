@@ -5,6 +5,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
+import frc.robot.Constants.ClimberConstants;
 
 /**
  * This class contains all the physical objects required for the climber
@@ -18,9 +19,9 @@ import edu.wpi.first.wpilibj.DigitalInput;
  * @author Owen Biamonte
  */
 public class ClimberIOTalonFX implements ClimberIO {
-    private final TalonFX climberMotor = new TalonFX(0);
-    private final DigitalInput topLimitSwitch = new DigitalInput(0);
-    private final DigitalInput bottomLimitSwitch = new DigitalInput(1);
+    private final TalonFX climberMotor = new TalonFX(ClimberConstants.climberMotorID);
+    private final DigitalInput topLimitSwitch = new DigitalInput(ClimberConstants.topLimitSwitchID);
+    private final DigitalInput bottomLimitSwitch = new DigitalInput(ClimberConstants.bottomLimitSwitchID);
 
     private final TalonFXConfiguration climberMotorConfig;
 

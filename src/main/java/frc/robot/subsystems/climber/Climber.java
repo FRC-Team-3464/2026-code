@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.ClimberConstants;
 import frc.robot.subsystems.climber.ClimberIO.ClimberIOInputs;
 
 /**
@@ -42,7 +43,7 @@ public class Climber extends SubsystemBase {
    * stops the motor.
    */
   public Command runClimberUp() {
-    return Commands.run(() -> io.setClimberSpeed(0.5), this)
+    return Commands.run(() -> io.setClimberSpeed(ClimberConstants.climberSpeed), this)
         .until(topLimitHit).finallyDo(() -> io.setClimberSpeed(0));
   }
 
@@ -51,7 +52,7 @@ public class Climber extends SubsystemBase {
    * stops the motor.
    */
   public Command runClimberDown() {
-    return Commands.run(() -> io.setClimberSpeed(-0.5), this)
+    return Commands.run(() -> io.setClimberSpeed(-(ClimberConstants.climberSpeed)), this)
         .until(bottomLimitHit).finallyDo(() -> io.setClimberSpeed(0));
   }
 
