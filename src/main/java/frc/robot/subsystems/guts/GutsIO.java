@@ -16,8 +16,10 @@ public interface GutsIO {
   /** Contains all the inputs regarding motors to be stored as data. */
   @AutoLog
   public static class GutsIOInputs {
-    public double GutMotorVelocityRPM = 0.0;
-    public double GutMotorPositionRot = 0.0;
+    public double velocityRadPerSec = 0.0;
+    public double positionRad = 0.0;
+    public double appliedVolts = 0.0;
+    public double currentDrawAmps = 0.0;
   }
 
   /** Sets the gut motor to a specific speed ranging from -1.0 to 1.0 */

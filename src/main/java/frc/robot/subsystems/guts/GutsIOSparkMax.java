@@ -7,6 +7,7 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.GutsConstants;
 
 /**
@@ -36,8 +37,10 @@ public class GutsIOSparkMax implements GutsIO {
 
     @Override
     public void updateInputs(GutsIOInputs inputs) {
-        inputs.GutMotorPositionRot = GutEncoder.getPosition();
-        inputs.GutMotorVelocityRPM = GutEncoder.getVelocity();
+        inputs.velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(GutEncoder.getVelocity());
+        inputs.positionRad = Units.rotationsToRadians(GutEncoder.getPosition());
+        inputs.appliedVolts = GutMotor.getAppliedOutput();
+        inputs.currentDrawAmps = GutMotor.getOutputCurrent();
     }
 
 }
