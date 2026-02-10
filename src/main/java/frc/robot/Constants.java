@@ -48,7 +48,9 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.GeomUtil;
 
@@ -436,5 +438,11 @@ public final class Constants {
             public static final MotorOutputConfigs kOutputConfigs = new MotorOutputConfigs()
                     .withNeutralMode(NeutralModeValue.Coast).withInverted(InvertedValue.Clockwise_Positive);
         }
+    }
+
+    public class OperatorConstants {
+        public static Joystick auxStick = new Joystick(0);
+        public static JoystickButton climberButton1 = new JoystickButton(auxStick, 6);
+        public static JoystickButton climberButton2 = new JoystickButton(auxStick, 7);
     }
 }

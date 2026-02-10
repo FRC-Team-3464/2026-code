@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.DriveConstants.ModuleConstants;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.commands.DriveCommands;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -36,6 +37,7 @@ public class RobotContainer {
   private Drive drive;
   private Shooter leftShooter;
   private Shooter rightShooter;
+  private Climber climber;
   // private Vision vision;
 
   public RobotContainer() {
@@ -117,6 +119,9 @@ public class RobotContainer {
                 drive,
                 () -> RobotState.getInstance().getEstimatedPose(),
                 () -> Hub.innerCenterPoint.toTranslation2d()));
+                
+    Constants.OperatorConstants.climberButton1.whileTrue(climber.runClimberUp());
+    Constants.OperatorConstants.climberButton2.whileTrue(climber.runClimberDown());
   }
 
   public void robotPeriodic() {
