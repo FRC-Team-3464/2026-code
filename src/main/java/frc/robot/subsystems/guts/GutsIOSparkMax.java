@@ -19,7 +19,7 @@ import frc.robot.Constants.GutsConstants;
  */
 public class GutsIOSparkMax implements GutsIO {
 
-    private final SparkMax GutMotor = new SparkMax(GutsConstants.gutMotorID, MotorType.kBrushless);
+    private final SparkMax GutMotor = new SparkMax(GutsConstants.kGutMotorID, MotorType.kBrushless);
     private final RelativeEncoder GutEncoder = GutMotor.getEncoder();
     private final SparkMaxConfig GutMotorConfig;
 

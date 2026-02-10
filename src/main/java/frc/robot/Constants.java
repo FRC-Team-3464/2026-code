@@ -931,12 +931,12 @@ public final class Constants {
 
   public static final class GutsConstants {
 
-    public static final int gutMotorID = 0;
+    public static final int kGutMotorID = 0;
 
-    public static final double gutMotorSpeed = 0.5;
+    public static final double kGutMotorSpeed = 0.5;
 
     //Change Gear Ratio later
-    public static final double gutMotorGearRatio = 0.0;
+    public static final double kGutMotorGearRatio = 0.0;
   }
 
 }

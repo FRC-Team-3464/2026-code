@@ -22,7 +22,7 @@ public class Guts extends SubsystemBase {
   private final GutSide side;
   public final GutsIO io;
   public GutsIOInputsAutoLogged inputs = new GutsIOInputsAutoLogged();
-  public double speed = (side == GutSide.LEFT) ? (GutsConstants.gutMotorSpeed) : -(GutsConstants.gutMotorSpeed);
+  public double speed = (side == GutSide.LEFT) ? (GutsConstants.kGutMotorSpeed) : -(GutsConstants.kGutMotorSpeed);
 
   /** Creates a new Guts. */
   public Guts(GutSide side, GutsIO io) {
