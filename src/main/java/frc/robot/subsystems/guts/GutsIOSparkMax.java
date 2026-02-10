@@ -7,6 +7,8 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.PersistMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import frc.robot.Constants.GutsConstants;
+
 /**
  * This class contains all of the physical objects: one motor and its
  * corresponding encoder. It also implements the default methods specified in
@@ -17,7 +19,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
  */
 public class GutsIOSparkMax implements GutsIO {
 
-    private final SparkMax GutMotor = new SparkMax(0, MotorType.kBrushless);
+    private final SparkMax GutMotor = new SparkMax(GutsConstants.gutMotorID, MotorType.kBrushless);
     private final RelativeEncoder GutEncoder = GutMotor.getEncoder();
     private final SparkMaxConfig GutMotorConfig;
 

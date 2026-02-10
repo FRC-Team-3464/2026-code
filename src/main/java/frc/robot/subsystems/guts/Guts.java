@@ -9,6 +9,7 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.GutsConstants;
 
 /**
  * This class updates and stores the values of the inputs periodically, and
@@ -21,7 +22,7 @@ public class Guts extends SubsystemBase {
   private final GutSide side;
   public final GutsIO io;
   public GutsIOInputsAutoLogged inputs = new GutsIOInputsAutoLogged();
-  public double speed = (side == GutSide.LEFT) ? 0.5 : -0.5;
+  public double speed = (side == GutSide.LEFT) ? (GutsConstants.gutMotorSpeed) : -(GutsConstants.gutMotorSpeed);
 
   /** Creates a new Guts. */
   public Guts(GutSide side, GutsIO io) {
