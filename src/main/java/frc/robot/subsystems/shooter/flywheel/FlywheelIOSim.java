@@ -44,6 +44,6 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void stop() {
-      pid.setSetpoint(0);
+    pid.setSetpoint(0);
   }
 }

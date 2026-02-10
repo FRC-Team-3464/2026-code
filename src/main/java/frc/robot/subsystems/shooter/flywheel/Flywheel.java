@@ -10,7 +10,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShooterConstants.FlywheelConstants;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
-
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {
@@ -36,8 +35,12 @@ public class Flywheel extends SubsystemBase {
   }
 
   public void setVelocity(double velocityRPM) {
-    atGoal = atGoalDebouncer.calculate(Math.abs(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM)
-        - inputs.velocityRadPerSec) < FlywheelConstants.kSpeedTolerance);
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(
+                    Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM)
+                        - inputs.velocityRadPerSec)
+                < FlywheelConstants.kSpeedTolerance);
     // Rotations per minute -> rotations per second
     io.setVelocity(velocityRPM / 60.0);
   }
@@ -48,7 +51,7 @@ public class Flywheel extends SubsystemBase {
 
   /**
    * Gets the current velocity of the flywheel
-   * 
+   *
    * @return A double representing the speed of the flywheel (in RPM).
    */
   public double getVelocity() {
