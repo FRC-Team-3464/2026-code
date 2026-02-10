@@ -7,10 +7,11 @@ import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.DigitalInput;
+import frc.robot.Constants.IntakeConstants;
 
 public class IntakeIOHardware implements IntakeIO {
-    SparkMax armMotor = new SparkMax(5, MotorType.kBrushless);
-    SparkMax wheelMotor = new SparkMax(6, MotorType.kBrushless);
+    SparkMax armMotor = new SparkMax(IntakeConstants.kPivotMotorID, MotorType.kBrushless);
+    SparkMax wheelMotor = new SparkMax(IntakeConstants.kRollerMotorID, MotorType.kBrushless);
     RelativeEncoder armEncoder = armMotor.getEncoder();
     RelativeEncoder wheelEncoder = wheelMotor.getEncoder();
     SparkMaxConfig armConfig;

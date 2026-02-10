@@ -919,5 +919,12 @@ public final class Constants {
   public static class IntakeConstants {
     public static final int kPivotMotorID = 8;
     public static final int kRollerMotorID = 9;
+
+    public static final double kPivotMotorSpeed = 0.5;
+    public static final double kRollerMotorSpeed = 0.5;
+
+    //Change Gear Ratios later
+    public static final double kPivotMotorGearRatio = 0.0;
+    public static final double kRollerMotorGearRatio = 0.0;
   }
 }
