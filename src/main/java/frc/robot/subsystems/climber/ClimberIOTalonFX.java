@@ -3,6 +3,7 @@ package frc.robot.subsystems.climber;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 
 /**
@@ -45,8 +46,8 @@ public class ClimberIOTalonFX implements ClimberIO {
 
     @Override
     public void updateInputs(ClimberIOInputs inputs) {
-        inputs.climberVelocityRPS = climberMotor.getVelocity();
-        inputs.climberPositionRot = climberMotor.getPosition();
+        inputs.climberVelocityRPS = Units.rotationsToRadians(climberMotor.getVelocity().getValueAsDouble());
+        inputs.climberPositionRot = Units.rotationsToRadians(climberMotor.getPosition().getValueAsDouble());
         inputs.atTopLimit = topLimitHit();
         inputs.atBottomLimit = bottomLimitHit();
     }

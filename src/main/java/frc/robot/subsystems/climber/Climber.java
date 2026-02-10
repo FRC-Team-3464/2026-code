@@ -61,4 +61,5 @@ public class Climber extends SubsystemBase {
     Logger.processInputs("Climber", inputs);
     // This method will be called once per scheduler run
   }
+
 }

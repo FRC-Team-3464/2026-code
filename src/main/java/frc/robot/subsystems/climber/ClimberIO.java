@@ -32,8 +32,8 @@ public interface ClimberIO {
      */
     @AutoLog
     public static class ClimberIOInputs {
-        public StatusSignal<AngularVelocity> climberVelocityRPS;
-        public StatusSignal<Angle> climberPositionRot;
+        public double climberVelocityRPS;
+        public double climberPositionRot;
         public boolean atTopLimit = false;
         public boolean atBottomLimit = false;
     }
