@@ -32,10 +32,12 @@ public interface ClimberIO {
      */
     @AutoLog
     public static class ClimberIOInputs {
-        public double climberVelocityRPS;
-        public double climberPositionRot;
+        public double velocityRadPerSec = 0.0;
+        public double positionRad = 0.0;
         public boolean atTopLimit = false;
         public boolean atBottomLimit = false;
+        public double appliedVolts = 0.0;
+        public double currentDrawAmps = 0.0;
     }
 
     /**

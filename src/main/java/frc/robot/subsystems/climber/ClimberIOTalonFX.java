@@ -47,10 +47,13 @@ public class ClimberIOTalonFX implements ClimberIO {
 
     @Override
     public void updateInputs(ClimberIOInputs inputs) {
-        inputs.climberVelocityRPS = Units.rotationsToRadians(climberMotor.getVelocity().getValueAsDouble());
-        inputs.climberPositionRot = Units.rotationsToRadians(climberMotor.getPosition().getValueAsDouble());
+        inputs.velocityRadPerSec = Units.rotationsToRadians(climberMotor.getVelocity().getValueAsDouble());
+        inputs.positionRad = Units.rotationsToRadians(climberMotor.getPosition().getValueAsDouble());
         inputs.atTopLimit = topLimitHit();
         inputs.atBottomLimit = bottomLimitHit();
+        inputs.appliedVolts = climberMotor.getMotorVoltage().getValueAsDouble();
+        //Check accuracy of the getTorqueCurrent method
+        inputs.currentDrawAmps = climberMotor.getTorqueCurrent().getValueAsDouble();
     }
 
 }
