@@ -18,10 +18,14 @@ public interface IntakeIO {
 
   @AutoLog
   public static class IntakeIOInputs {
-    double armMotorVelocityRPM = 0.0;
-    double wheelMotorVelocityRPM = 0.0;
-    double armMotorPositionsRotations = 0.0;
-    double wheelMotorPositionRotations = 0.0;
+    public double armVelocityRadPerSec = 0.0;
+    public double wheelVelocityRadPerSec = 0.0;
+    public double armPositionRad = 0.0;
+    public double wheelPositionRad = 0.0;
+    public double armAppliedVolts = 0.0;
+    public double wheelAppliedVolts = 0.0;
+    public double armCurrentDrawAmps = 0.0;
+    public double wheelCurrentDrawAmps = 0.0;
 
   }
   /**

@@ -6,6 +6,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants.IntakeConstants;
 
@@ -36,10 +37,14 @@ public class IntakeIOHardware implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs){
-    inputs.armMotorVelocityRPM = armEncoder.getVelocity();
-    inputs.wheelMotorVelocityRPM = wheelEncoder.getVelocity();
-    inputs.armMotorPositionsRotations = armEncoder.getPosition();
-    inputs.wheelMotorPositionRotations = wheelEncoder.getPosition();
+    inputs.armVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(armEncoder.getVelocity());
+    inputs.wheelVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(wheelEncoder.getVelocity());
+    inputs.armPositionRad = Units.rotationsToRadians(armEncoder.getPosition());
+    inputs.wheelPositionRad = Units.rotationsToRadians(wheelEncoder.getPosition());
+    inputs.armAppliedVolts = armMotor.getAppliedOutput();
+    inputs.wheelAppliedVolts = wheelMotor.getAppliedOutput();
+    inputs.armCurrentDrawAmps = armMotor.getOutputCurrent();
+    inputs.wheelCurrentDrawAmps = wheelMotor.getOutputCurrent();
     }
 
 }
