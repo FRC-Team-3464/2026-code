@@ -20,27 +20,27 @@ import frc.robot.Constants.GutsConstants;
  */
 public class GutsIOSparkMax implements GutsIO {
 
-    private final SparkMax GutMotor = new SparkMax(GutsConstants.kGutMotorID, MotorType.kBrushless);
-    private final RelativeEncoder GutEncoder = GutMotor.getEncoder();
-    private final SparkMaxConfig GutMotorConfig;
+    private final SparkMax gutMotor = new SparkMax(GutsConstants.kGutMotorID, MotorType.kBrushless);
+    private final RelativeEncoder gutEncoder = gutMotor.getEncoder();
+    private final SparkMaxConfig gutMotorConfig;
 
     public GutsIOSparkMax() {
-        GutMotorConfig = new SparkMaxConfig();
+        gutMotorConfig = new SparkMaxConfig();
 
-        GutMotor.configure(GutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        gutMotor.configure(gutMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     }
 
     @Override
     public void setGutMotorSpeed(double speed) {
-        GutMotor.set(speed);
+        gutMotor.set(speed);
     }
 
     @Override
     public void updateInputs(GutsIOInputs inputs) {
-        inputs.velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(GutEncoder.getVelocity());
-        inputs.positionRad = Units.rotationsToRadians(GutEncoder.getPosition());
-        inputs.appliedVolts = GutMotor.getAppliedOutput();
-        inputs.currentDrawAmps = GutMotor.getOutputCurrent();
+        inputs.velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(gutEncoder.getVelocity());
+        inputs.positionRad = Units.rotationsToRadians(gutEncoder.getPosition());
+        inputs.appliedVolts = gutMotor.getAppliedOutput();
+        inputs.currentDrawAmps = gutMotor.getOutputCurrent();
     }
 
 }
