@@ -1,7 +1,15 @@
 package frc.robot.subsystems.intake;
 
+import java.lang.module.Configuration;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.ResetMode;
+import com.revrobotics.PersistMode;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -11,23 +19,20 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants.IntakeConstants;
 
 public class IntakeIOHardware implements IntakeIO {
-    SparkMax armMotor = new SparkMax(IntakeConstants.kPivotMotorID, MotorType.kBrushless);
-    SparkMax wheelMotor = new SparkMax(IntakeConstants.kRollerMotorID, MotorType.kBrushless);
-    RelativeEncoder armEncoder = armMotor.getEncoder();
-    RelativeEncoder wheelEncoder = wheelMotor.getEncoder();
-    SparkMaxConfig armConfig;
-    SparkMaxConfig wheelConfig;
-
+    private SparkMax pivotMotor = new SparkMax(IntakeConstants.kPivotMotorID, MotorType.kBrushless);
+    private RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
+    private TalonFX wheelMotor = new TalonFX(IntakeConstants.kRollerMotorID);
+    private SparkMaxConfig pivotConfig;
+    private TalonFXConfiguration wheelMotorConfig;
     public IntakeIOHardware() {
-        armConfig = new SparkMaxConfig();
-        wheelConfig = new SparkMaxConfig();
-        // armMotor.configure(armConfig, null, null);
-        // wheelMotor.configure(armConfig, null, null);
+        pivotConfig = new SparkMaxConfig();
+        wheelMotor.getConfigurator().apply(wheelMotorConfig);
+        pivotMotor.configure(pivotConfig, ResetMode.kNoResetSafeParameters, null);
     }
 
     @Override
-    public void setArmSpeed(double speed) {
-        armMotor.set(speed);
+    public void setPivotSpeed(double speed) {
+        pivotMotor.set(speed);
     }
 
     @Override
@@ -37,14 +42,14 @@ public class IntakeIOHardware implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs){
-    inputs.armVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(armEncoder.getVelocity());
-    inputs.wheelVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(wheelEncoder.getVelocity());
-    inputs.armPositionRad = Units.rotationsToRadians(armEncoder.getPosition());
-    inputs.wheelPositionRad = Units.rotationsToRadians(wheelEncoder.getPosition());
-    inputs.armAppliedVolts = armMotor.getAppliedOutput();
-    inputs.wheelAppliedVolts = wheelMotor.getAppliedOutput();
-    inputs.armCurrentDrawAmps = armMotor.getOutputCurrent();
-    inputs.wheelCurrentDrawAmps = wheelMotor.getOutputCurrent();
+    inputs.pivotVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(pivotEncoder.getVelocity());
+    inputs.wheelVelocityRadPerSec = Units.rotationsToRadians(wheelMotor.getVelocity().getValueAsDouble());
+    inputs.pivotPositionRad = Units.rotationsToRadians(pivotEncoder.getPosition());
+    inputs.wheelPositionRad = Units.rotationsToRadians(wheelMotor.getPosition().getValueAsDouble());
+    inputs.pivotAppliedVolts = pivotMotor.getAppliedOutput();
+    inputs.wheelAppliedVolts = wheelMotor.getTorqueCurrent().getValueAsDouble();
+    inputs.pivotCurrentDrawAmps = pivotMotor.getOutputCurrent();
+    inputs.wheelCurrentDrawAmps = wheelMotor.getMotorVoltage().getValueAsDouble();
     }
 
 }

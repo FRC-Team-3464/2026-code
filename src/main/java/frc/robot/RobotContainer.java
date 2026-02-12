@@ -20,6 +20,8 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.vision.CameraIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
@@ -29,8 +31,9 @@ import frc.robot.util.FieldConstants.Hub;
 public class RobotContainer {
   private final CommandXboxController driver = new CommandXboxController(0);
 
-  private final Drive drive;
-  private final Vision vision;
+  private Drive drive;
+  private Vision vision;
+  private Intake intake;
 
   public RobotContainer() {
     switch (Constants.kCurrentMode) {
@@ -65,7 +68,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         vision = new Vision(null, new CameraIO[] {});
         break;
-    }
+        }
 
     configureBindings();
   }
@@ -100,6 +103,11 @@ public class RobotContainer {
                 drive,
                 () -> RobotState.getInstance().getEstimatedPose(),
                 () -> Hub.innerCenterPoint.toTranslation2d()));
+
+    Constants.OperatorConstants.kIntakeButton1.whileTrue(intake.runPivot());
+    Constants.OperatorConstants.kIntakeButton2.whileTrue(intake.runFeeder());
+    Constants.OperatorConstants.kIntakeButton3.whileTrue(intake.runPivotBack());
+    Constants.OperatorConstants.kIntakeButton4.whileTrue(intake.runFeederBack());
   }
 
   public void robotPeriodic() {

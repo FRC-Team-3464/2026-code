@@ -53,7 +53,10 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
 import java.util.Map;
 
 /**
@@ -926,5 +929,12 @@ public final class Constants {
     //Change Gear Ratios later
     public static final double kPivotMotorGearRatio = 0.0;
     public static final double kRollerMotorGearRatio = 0.0;
+  }
+  public static class OperatorConstants{
+    public final static Joystick auxStick = new Joystick(7);
+    public static JoystickButton kIntakeButton1 = new JoystickButton(auxStick, 4);
+    public static JoystickButton kIntakeButton2 = new JoystickButton(auxStick, 5);
+    public static JoystickButton kIntakeButton3 = new JoystickButton(auxStick, 6);
+    public static JoystickButton kIntakeButton4 = new JoystickButton(auxStick, 7);
   }
 }

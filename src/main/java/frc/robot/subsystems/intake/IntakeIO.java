@@ -18,21 +18,21 @@ public interface IntakeIO {
 
   @AutoLog
   public static class IntakeIOInputs {
-    public double armVelocityRadPerSec = 0.0;
+    public double pivotVelocityRadPerSec = 0.0;
     public double wheelVelocityRadPerSec = 0.0;
-    public double armPositionRad = 0.0;
+    public double pivotPositionRad = 0.0;
     public double wheelPositionRad = 0.0;
-    public double armAppliedVolts = 0.0;
+    public double pivotAppliedVolts = 0.0;
     public double wheelAppliedVolts = 0.0;
-    public double armCurrentDrawAmps = 0.0;
+    public double pivotCurrentDrawAmps = 0.0;
     public double wheelCurrentDrawAmps = 0.0;
 
   }
   /**
-   * method to set the speed of the arm
-   * @param speed determines the speed of the arm on a scale of -1 to 1
+   * method to set the speed of the pivot
+   * @param speed determines the speed of the pivot on a scale of -1 to 1
    */
-  default void setArmSpeed(double speed){}
+  default void setPivotSpeed(double speed){}
     /**
    * method to set the speed of the wheel
    * @param speed determines the speed of the wheel on a scale of -1 to 1

@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
@@ -22,24 +23,43 @@ public class Intake extends SubsystemBase {
     this.io = io;
   }
 /**
- * Command to run the arm
- * @param speed runs the arm at a set speed
- * @return runs the arm at a speed on every iteration until end when it stops the running
+ * Command to run the pivot
+ * @return runs the pivot at a speed on every iteration until end when it stops the running
  */
-  public Command runArm(double speed) {
+  public Command runPivot() {
     return Commands.runEnd(
-        () -> io.setArmSpeed(speed),
-        () -> io.setArmSpeed(0.0),
+        () -> io.setPivotSpeed(IntakeConstants.kPivotMotorSpeed),
+        () -> io.setPivotSpeed(0.0),
+        this);
+  }
+/**
+ * Command to run the pivot back
+ * @return runs the pivot at a speed on every iteration until end when it stops the running
+ */
+  public Command runPivotBack() {
+    return Commands.runEnd(
+        () -> io.setPivotSpeed(-(IntakeConstants.kPivotMotorSpeed)),
+        () -> io.setPivotSpeed(0.0),
         this);
   }
 /**
  * Command to run the feeder
- * @param speed runs the feeder at a set speed
  * @return runs the feeder at a speed on every iteration until end when it stops the running
  */
-  public Command runFeeder(double speed) {
+  public Command runFeeder() {
     return Commands.runEnd(
-        () -> io.setWheelSpeed(speed),
+        () -> io.setWheelSpeed(IntakeConstants.kRollerMotorSpeed),
+        () -> io.setWheelSpeed(0.0),
+        this);
+  }
+
+/**
+ * Command to run the feeder backward
+ * @return runs the feeder at a speed on every iteration until end when it stops the running
+ */
+    public Command runFeederBack() {
+    return Commands.runEnd(
+        () -> io.setWheelSpeed(-(IntakeConstants.kRollerMotorSpeed)),
         () -> io.setWheelSpeed(0.0),
         this);
   }
