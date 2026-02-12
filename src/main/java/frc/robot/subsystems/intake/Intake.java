@@ -19,10 +19,12 @@ public class Intake extends SubsystemBase {
   public Intake(IntakeIO io) {
     this.io = io;
   }
+
   /**
    * Command to run the pivot
    *
-   * @return runs the pivot at a speed on every iteration until end when it stops the running
+   * @return runs the pivot at a speed on every iteration until end when it stops
+   *         the running
    */
   public Command runPivot() {
     return Commands.runEnd(
@@ -30,10 +32,12 @@ public class Intake extends SubsystemBase {
         () -> io.setPivotSpeed(0.0),
         this);
   }
+
   /**
    * Command to run the pivot back
    *
-   * @return runs the pivot at a speed on every iteration until end when it stops the running
+   * @return runs the pivot at a speed on every iteration until end when it stops
+   *         the running
    */
   public Command runPivotBack() {
     return Commands.runEnd(
@@ -41,10 +45,12 @@ public class Intake extends SubsystemBase {
         () -> io.setPivotSpeed(0.0),
         this);
   }
+
   /**
    * Command to run the feeder
    *
-   * @return runs the feeder at a speed on every iteration until end when it stops the running
+   * @return runs the feeder at a speed on every iteration until end when it stops
+   *         the running
    */
   public Command runFeeder() {
     return Commands.runEnd(
@@ -56,7 +62,8 @@ public class Intake extends SubsystemBase {
   /**
    * Command to run the feeder backward
    *
-   * @return runs the feeder at a speed on every iteration until end when it stops the running
+   * @return runs the feeder at a speed on every iteration until end when it stops
+   *         the running
    */
   public Command runFeederBack() {
     return Commands.runEnd(
@@ -67,21 +74,21 @@ public class Intake extends SubsystemBase {
   // potential sequences for commands in future
 
   // public Command extendArmSequence() {
-  //   return Commands.run(() -> runArm(.5), this)
-  //       .andThen(Commands.waitUntil())
-  //       .finallyDo(Commands.runOnce(() -> runArm(0)));
+  // return Commands.run(() -> runArm(.5), this)
+  // .andThen(Commands.waitUntil())
+  // .finallyDo(Commands.runOnce(() -> runArm(0)));
   // }
 
   // public Command retractArmSequence() {
-  //   return Commands.run(() -> runArm(-0.5), this)
-  //       .andThen(Commands.waitUntil())
-  //       .finallyDo(Commands.runOnce(() -> runArm(0)));
+  // return Commands.run(() -> runArm(-0.5), this)
+  // .andThen(Commands.waitUntil())
+  // .finallyDo(Commands.runOnce(() -> runArm(0)));
   // }
 
   // public Command runFeederSequence() {
-  //   return Commands.run(() -> runFeeder(.5), this)
-  //       .andThen(Commands.waitUntil())
-  //       .finallyDo(Commands.runOnce(() -> runArm(0)));
+  // return Commands.run(() -> runFeeder(.5), this)
+  // .andThen(Commands.waitUntil())
+  // .finallyDo(Commands.runOnce(() -> runArm(0)));
   // }
 
   @Override
