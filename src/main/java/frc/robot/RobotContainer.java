@@ -21,7 +21,6 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.vision.CameraIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
@@ -68,7 +67,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         vision = new Vision(null, new CameraIO[] {});
         break;
-        }
+    }
 
     configureBindings();
   }
