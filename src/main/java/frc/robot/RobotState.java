@@ -9,7 +9,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.subsystems.drive.DriveConstants;
+
 import org.littletonrobotics.junction.Logger;
 
 public class RobotState {

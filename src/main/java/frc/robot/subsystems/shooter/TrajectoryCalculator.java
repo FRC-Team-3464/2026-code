@@ -8,8 +8,9 @@ public class TrajectoryCalculator {
   private static final InterpolatingTreeMap<Double, ShooterParams> shooterTable =
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShooterParams::interpolate);
 
+  // TODO update values
   static {
-    shooterTable.put(1.5, new ShooterParams(2800.0, 35.0));
+    shooterTable.put(1.5, new ShooterParams(2800.0, 35.0)); // Meters, RPM, Degrees
     shooterTable.put(2.0, new ShooterParams(3100.0, 38.0));
     shooterTable.put(2.5, new ShooterParams(3400.0, 42.0));
     shooterTable.put(3.0, new ShooterParams(3650.0, 46.0));

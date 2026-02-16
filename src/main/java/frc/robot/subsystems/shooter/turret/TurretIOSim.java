@@ -7,7 +7,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
-import frc.robot.Constants.ShooterConstants.TurretConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 
 public class TurretIOSim implements TurretIO {
   private final DCMotor gearbox = DCMotor.getNEO(1);

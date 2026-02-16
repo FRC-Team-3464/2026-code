@@ -18,7 +18,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.Constants.ShooterConstants.TurretConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 
 import java.util.function.DoubleSupplier;
 
@@ -49,10 +49,10 @@ public class TurretIOSparkMax implements TurretIO {
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
     config.softLimit
-        .reverseSoftLimit(TurretConstants.kMinTurretAngleRad)
-        .forwardSoftLimit(TurretConstants.kMaxTurretAngleRad)
         .reverseSoftLimitEnabled(true)
-        .forwardSoftLimitEnabled(true);
+        .forwardSoftLimitEnabled(true)
+        .reverseSoftLimit(TurretConstants.kMinTurretAngleRad)
+        .forwardSoftLimit(TurretConstants.kMaxTurretAngleRad);
 
     config.closedLoop.feedForward
         .kS(0);

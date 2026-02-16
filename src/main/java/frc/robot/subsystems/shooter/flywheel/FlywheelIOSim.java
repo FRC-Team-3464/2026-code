@@ -6,7 +6,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
-import frc.robot.Constants.ShooterConstants.FlywheelConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
 public class FlywheelIOSim implements FlywheelIO {
   private final DCMotor gearbox = DCMotor.getKrakenX44(1);

@@ -6,7 +6,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.Constants;
-import frc.robot.Constants.ShooterConstants.HoodConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 
 public class HoodIOSim implements HoodIO {
   private final DCMotor gearbox = DCMotor.getNeo550(1);

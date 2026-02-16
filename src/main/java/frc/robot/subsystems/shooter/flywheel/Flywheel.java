@@ -8,8 +8,9 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ShooterConstants.FlywheelConstants;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
+import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {

@@ -12,7 +12,7 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.ShooterConstants.FlywheelConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
   private final TalonFX motor;

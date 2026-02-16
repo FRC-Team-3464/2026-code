@@ -5,8 +5,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import frc.robot.Constants.ShooterConstants.HoodConstants;
-import frc.robot.Constants.ShooterConstants.TurretConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
+import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 import frc.robot.util.GeomUtil;
 import org.littletonrobotics.junction.Logger;
 
