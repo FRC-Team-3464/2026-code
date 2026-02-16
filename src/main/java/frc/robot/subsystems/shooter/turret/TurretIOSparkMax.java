@@ -7,19 +7,18 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
-
 import java.util.function.DoubleSupplier;
 
 public class TurretIOSparkMax implements TurretIO {
@@ -36,32 +35,36 @@ public class TurretIOSparkMax implements TurretIO {
 
     SparkMaxConfig config = new SparkMaxConfig();
 
-    config.idleMode(SparkMaxConfig.IdleMode.kBrake);
+    config.idleMode(IdleMode.kCoast);
     // .smartCurrentLimit(30);
 
-    config.encoder
-        .positionConversionFactor(2 * Math.PI / TurretConstants.kGearRatio) // No absolute encoder...
+    config
+        .encoder
+        .positionConversionFactor(
+            2 * Math.PI / TurretConstants.kGearRatio) // No absolute encoder...
         .velocityConversionFactor(2 * Math.PI / TurretConstants.kGearRatio / 60.0);
 
-    config.closedLoop
+    config
+        .closedLoop
         .pid(2.0, 0.0, 0.1)
         .positionWrappingEnabled(false)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
-    config.softLimit
+    config
+        .softLimit
         .reverseSoftLimitEnabled(true)
         .forwardSoftLimitEnabled(true)
         .reverseSoftLimit(TurretConstants.kMinTurretAngleRad)
         .forwardSoftLimit(TurretConstants.kMaxTurretAngleRad);
 
-    config.closedLoop.feedForward
-        .kS(0);
+    config.closedLoop.feedForward.kS(0);
 
     tryUntilOk(
         motor,
         5,
-        () -> motor.configure(
-            config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        () ->
+            motor.configure(
+                config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     tryUntilOk(motor, 5, () -> encoder.setPosition(0));
   }
 
@@ -72,16 +75,30 @@ public class TurretIOSparkMax implements TurretIO {
     ifOk(motor, encoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);
     ifOk(
         motor,
-        new DoubleSupplier[] { motor::getAppliedOutput, motor::getBusVoltage },
+        new DoubleSupplier[] {motor::getAppliedOutput, motor::getBusVoltage},
         (values) -> inputs.appliedVolts = values[0] * values[1]);
-    ifOk(motor, motor::getOutputCurrent, (value) -> inputs.currentAmps = value);
+    ifOk(motor, motor::getOutputCurrent, (value) -> inputs.currentDrawAmps = value);
     inputs.connected = connectedDebouncer.calculate(!sparkStickyFault);
   }
 
   @Override
   public void setPosition(Rotation2d position) {
-    double clampedPosition = MathUtil.clamp(position.getRadians(), TurretConstants.kMinTurretAngleRad, TurretConstants.kMaxTurretAngleRad);
+    double clampedPosition =
+        MathUtil.clamp(
+            position.getRadians(),
+            TurretConstants.kMinTurretAngleRad,
+            TurretConstants.kMaxTurretAngleRad);
 
-  motorController.setSetpoint(clampedPosition, ControlType.kPosition);
+    motorController.setSetpoint(clampedPosition, ControlType.kPosition);
+  }
+
+  @Override
+  public void setOpenLoop(double output) {
+    motor.set(MathUtil.clamp(output, -1.0, 1.0));
+  }
+
+  @Override
+  public void stop() {
+    motor.stopMotor();
   }
 }

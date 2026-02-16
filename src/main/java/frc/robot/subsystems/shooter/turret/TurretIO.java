@@ -12,8 +12,13 @@ public interface TurretIO {
     public double positionRad = 0.0;
     public double velocityRadPerSec = 0.0;
     public double appliedVolts = 0.0;
-    public double currentAmps = 0.0;
+    public double currentDrawAmps = 0.0;
   }
 
   public default void setPosition(Rotation2d position) {}
+
+  /** Run turn motor at the specified open loop value. */
+  public default void setOpenLoop(double output) {}
+
+  default void stop() {}
 }

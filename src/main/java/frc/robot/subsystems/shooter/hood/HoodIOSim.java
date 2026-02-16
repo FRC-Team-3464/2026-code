@@ -10,33 +10,36 @@ import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 
 public class HoodIOSim implements HoodIO {
   private final DCMotor gearbox = DCMotor.getNeo550(1);
-
-  private final SingleJointedArmSim sim =
-      new SingleJointedArmSim(
-          gearbox,
-          HoodConstants.kGearRatio,
-          0.025,
-          Units.inchesToMeters(7),
-          HoodConstants.kMinAngleRad,
-          HoodConstants.kMaxAngleRad,
-          true,
-          0);
+  private final SingleJointedArmSim sim;
 
   private final PIDController pid = new PIDController(1.0, 0.0, 0.0, Constants.kLoopPeriodSeconds);
 
   private double appliedVolts = 0.0;
 
-  public HoodIOSim() {}
+  public HoodIOSim() {
+    sim =
+        new SingleJointedArmSim(
+            gearbox,
+            HoodConstants.kGearRatio,
+            0.025,
+            Units.inchesToMeters(7),
+            HoodConstants.kMinAngleRad,
+            HoodConstants.kMaxAngleRad,
+            true,
+            0);
+  }
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
-    sim.setInputVoltage(appliedVolts);
+    double volts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
+
+    sim.setInputVoltage(volts);
     sim.update(0.02);
 
     inputs.connected = true;
     inputs.positionRad = sim.getAngleRads();
     inputs.velocityRadPerSec = sim.getVelocityRadPerSec();
-    inputs.appliedVolts = appliedVolts;
+    inputs.appliedVolts = volts;
     inputs.currentDrawAmps = sim.getCurrentDrawAmps();
   }
 
@@ -44,6 +47,16 @@ public class HoodIOSim implements HoodIO {
   public void setAngle(double angle) {
     angle = MathUtil.clamp(angle, HoodConstants.kMinAngleRad, HoodConstants.kMaxAngleRad);
 
-    appliedVolts = MathUtil.clamp(pid.calculate(sim.getAngleRads(), angle), -12.0, 12.0);
+    appliedVolts = pid.calculate(sim.getAngleRads(), angle);
+  }
+
+  @Override
+  public void setOpenLoop(double output) {
+    appliedVolts = 12.0 * output;
+  }
+
+  @Override
+  public void stop() {
+    appliedVolts = 0.0;
   }
 }

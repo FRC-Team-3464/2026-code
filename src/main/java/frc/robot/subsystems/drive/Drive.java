@@ -26,10 +26,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.RobotState.OdometryObservation;
+import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -140,6 +140,7 @@ public class Drive extends SubsystemBase {
       RobotState.getInstance()
           .addOdometryObservation(
               new OdometryObservation(sampleTimestamps[i], modulePositions, rawGyroRotation));
+      RobotState.getInstance().setRobotVelocity(getChassisSpeeds());
     }
 
     // Update gyro alert

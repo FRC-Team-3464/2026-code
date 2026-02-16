@@ -13,7 +13,9 @@ public class TurretIOSim implements TurretIO {
   private final DCMotor gearbox = DCMotor.getNEO(1);
   private final DCMotorSim sim;
 
-  private PIDController pid = new PIDController(10, 0, 0.3, Constants.kLoopPeriodSeconds);
+  private PIDController pid = new PIDController(2, 0, 0.3, Constants.kLoopPeriodSeconds);
+
+  private double appliedVolts = 0.0;
 
   public TurretIOSim() {
     pid.reset();
@@ -26,8 +28,7 @@ public class TurretIOSim implements TurretIO {
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
-    double currentOutput = pid.calculate(sim.getAngularPositionRad());
-    double volts = MathUtil.clamp(currentOutput, -12.0, 12.0);
+    double volts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
 
     sim.setInputVoltage(volts);
     sim.update(0.02);
@@ -36,11 +37,22 @@ public class TurretIOSim implements TurretIO {
     inputs.positionRad = sim.getAngularPositionRad();
     inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
     inputs.appliedVolts = volts;
-    inputs.currentAmps = sim.getCurrentDrawAmps();
+    inputs.currentDrawAmps = sim.getCurrentDrawAmps();
   }
 
   @Override
   public void setPosition(Rotation2d position) {
     pid.setSetpoint(position.getRadians());
+    appliedVolts = pid.calculate(sim.getAngularPositionRad());
+  }
+
+  @Override
+  public void setOpenLoop(double output) {
+    appliedVolts = 12.0 * output;
+  }
+
+  @Override
+  public void stop() {
+    appliedVolts = 0.0;
   }
 }

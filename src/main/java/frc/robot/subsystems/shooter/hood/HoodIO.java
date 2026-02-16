@@ -20,4 +20,9 @@ public interface HoodIO {
    * @param angle The angle for the hood to aim at (in radians).
    */
   default void setAngle(double angle) {}
+
+  /** Run turn motor at the specified open loop value. */
+  public default void setOpenLoop(double output) {}
+
+  default void stop() {}
 }

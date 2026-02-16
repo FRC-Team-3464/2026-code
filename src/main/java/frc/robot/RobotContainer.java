@@ -86,15 +86,22 @@ public class RobotContainer {
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
     leftShooter.setDefaultCommand(
         leftShooter.trackTarget(
-            () -> RobotState.getInstance().getEstimatedPose(),
             () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
     rightShooter.setDefaultCommand(
         rightShooter.trackTarget(
-            () -> RobotState.getInstance().getEstimatedPose(),
             () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
 
     driver
         .rightBumper()
+        .whileTrue(
+            Shooter.shootBothAtTarget(
+                leftShooter,
+                rightShooter,
+                () ->
+                    AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
+
+    driver
+        .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,

@@ -4,11 +4,12 @@
 
 package frc.robot.subsystems.shooter;
 
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.shooter.TrajectoryCalculator.ShooterCommand;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.hood.Hood;
@@ -39,13 +40,66 @@ public class Shooter extends SubsystemBase {
     flywheel.periodic();
   }
 
-  public Command trackTarget(
-      Supplier<Pose2d> robotPoseSupplier, Supplier<Translation2d> targetSupplier) {
-    return Commands.idle(this).alongWith(turret.trackTarget(robotPoseSupplier, targetSupplier));
+  /**
+   * Calculate and apply trajectory parameters for both shooters.
+   *
+   * @param leftShooter The left shooter subsystem.
+   * @param rightShooter The right shooter subsystem.
+   * @param targetSupplier A supplier for the target.
+   * @return A RunCommand applying trajectory parameters to both shooters.
+   */
+  public static Command shootBothAtTarget(
+      Shooter leftShooter, Shooter rightShooter, Supplier<Translation2d> targetSupplier) {
+    return Commands.run(
+        () -> {
+          var cmds = TrajectoryCalculator.calculateBoth(targetSupplier.get());
+          leftShooter.applyCommand(cmds.left());
+          rightShooter.applyCommand(cmds.right());
+        },
+        leftShooter,
+        rightShooter);
+  }
+
+  /**
+   * Apply a pre-calculated shooter command to this shooter. This does not require the shooter
+   * subsystem - use when combining with other shooters.
+   *
+   * @param cmd The shot parameters to apply.
+   */
+  public void applyCommand(ShooterCommand cmd) {
+    flywheel.setVelocity(cmd.wheelRPM());
+    hood.setAngle(cmd.hoodAngle());
+    turret.setPosition(cmd.turretAngle());
+  }
+
+  public Command shootAtTarget(Supplier<Translation2d> targetSupplier) {
+    return Commands.run(
+        () -> {
+          ShooterCommand cmd = TrajectoryCalculator.calculate(side, targetSupplier.get());
+          flywheel.setVelocity(cmd.wheelRPM());
+          hood.setAngle(cmd.hoodAngle());
+          turret.setPosition(cmd.turretAngle());
+        },
+        this,
+        turret,
+        hood,
+        flywheel);
+  }
+
+  public Command trackTarget(Supplier<Translation2d> targetSupplier) {
+    return Commands.idle(this).alongWith(turret.trackTarget(targetSupplier));
   }
 
   public void setFlywheelVelocity(double velocityRPM) {
     flywheel.setVelocity(velocityRPM);
+  }
+
+  public void setHoodAngle(double angle) {
+    hood.setAngle(angle);
+  }
+
+  public void setTurretPosition(Rotation2d position) {
+    turret.setPosition(position);
   }
 
   public ShooterSide getSide() {

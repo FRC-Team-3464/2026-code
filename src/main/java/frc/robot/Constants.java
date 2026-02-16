@@ -39,5 +39,4 @@ public final class Constants {
   public static void disableHAL() {
     kDisableHAL = true;
   }
-
 }

@@ -17,7 +17,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
-
 import java.util.Queue;
 
 /** IO implementation for Pigeon 2. */

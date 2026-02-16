@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.subsystems.drive.DriveConstants;
-
 import org.littletonrobotics.junction.Logger;
 
 public class RobotState {
@@ -108,6 +107,15 @@ public class RobotState {
    */
   public ChassisSpeeds getRobotVelocity() {
     return robotVelocity;
+  }
+
+  /** Get the rotation of the estimated pose. */
+  public Rotation2d getRotation() {
+    return poseEstimator.getEstimatedPosition().getRotation();
+  }
+
+  public ChassisSpeeds getFieldVelocity() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
   public record OdometryObservation(

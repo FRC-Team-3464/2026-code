@@ -4,9 +4,12 @@
 
 package frc.robot.subsystems.shooter.hood;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
+import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Hood extends SubsystemBase {
@@ -14,6 +17,9 @@ public class Hood extends SubsystemBase {
 
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
+
+  private boolean atGoal = false;
+  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
 
   /** Creates a new Hood. */
   public Hood(ShooterSide side, HoodIO io) {
@@ -31,6 +37,18 @@ public class Hood extends SubsystemBase {
     } else if (side == ShooterSide.RIGHT) {
       RobotVisualizer.getInstance().setRightHoodAngle(inputs.positionRad);
     }
+  }
+
+  /**
+   * Sets the hood to the target angle.
+   *
+   * @param angle The target angle (in radians).
+   */
+  public void setAngle(double angle) {
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(angle - inputs.positionRad) < HoodConstants.kAngleTolerance);
+    io.setAngle(angle);
   }
 
   public double getPosition() {

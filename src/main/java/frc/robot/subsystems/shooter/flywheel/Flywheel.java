@@ -10,7 +10,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
-
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {

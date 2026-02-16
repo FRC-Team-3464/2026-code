@@ -4,16 +4,18 @@
 
 package frc.robot.subsystems.shooter.turret;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
-
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,6 +26,9 @@ public class Turret extends SubsystemBase {
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
   private Rotation2d targetAngle = Rotation2d.kZero;
+
+  private boolean atGoal = false;
+  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
 
   /** Creates a new Turret. */
   public Turret(ShooterSide side, TurretIO io) {
@@ -45,13 +50,12 @@ public class Turret extends SubsystemBase {
     Logger.recordOutput(("Turret/" + side.getName() + "/TargetAngle"), targetAngle);
   }
 
-  public Command trackTarget(
-      Supplier<Pose2d> robotPoseSupplier, Supplier<Translation2d> targetSupplier) {
+  public Command trackTarget(Supplier<Translation2d> targetSupplier) {
 
     return Commands.run(
         () -> {
           Translation2d target = targetSupplier.get();
-          Pose2d robotPose = robotPoseSupplier.get();
+          Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
 
           Translation2d turretOffset =
               (this.side == ShooterSide.LEFT
@@ -79,6 +83,10 @@ public class Turret extends SubsystemBase {
   }
 
   public void setPosition(Rotation2d position) {
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(position.getRadians() - inputs.positionRad) < TurretConstants.kAngleTolerance);
+
     io.setPosition(position);
   }
 
