@@ -164,4 +164,11 @@ public final class Constants {
             3, 3.0,
             4, 4.0);
   }
+
+  public static class LEDConstants {
+    public static int kLEDStripPort = 0;
+
+    //Change LED strip length as needed
+    public static int kLEDBufferLength = 50;
+  }
 }
