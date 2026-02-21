@@ -19,10 +19,10 @@ public class LEDs extends SubsystemBase {
   public static LEDs instance;
 
   public static AddressableLED ledStrip = new AddressableLED(LEDConstants.kLEDStripPort);
-  public static AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(LEDConstants.kLEDBufferLength);
-  
+  public static AddressableLEDBuffer ledBuffer =
+      new AddressableLEDBuffer(LEDConstants.kLEDBufferLength);
 
-  public enum LEDMode { //temporary states to be changed later
+  public enum LEDMode { // temporary states to be changed later
     FLASH_WHITE("FLASH", "WHITE"),
     SOLID_RED("SOLIDRED"),
     RAINBOW_CHROMA("RAINBOWCHROMA"),
@@ -62,7 +62,6 @@ public class LEDs extends SubsystemBase {
     LEDPattern flashBase = LEDPattern.solid(color);
     LEDPattern flashAsymmetric = flashBase.blink(Seconds.of(2), Seconds.of(1));
   }
-
 
   LEDPattern rainbowBase = LEDPattern.rainbow(0, 0);
 
