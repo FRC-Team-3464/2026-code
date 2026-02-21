@@ -19,25 +19,43 @@ public class LEDs extends SubsystemBase {
   public static LEDs instance;
 
   public static AddressableLED ledStrip = new AddressableLED(LEDConstants.kLEDStripPort);
-  public static AddressableLEDBuffer ledBuffer =
-      new AddressableLEDBuffer(LEDConstants.kLEDBufferLength);
+  public static AddressableLEDBuffer ledBuffer = new AddressableLEDBuffer(LEDConstants.kLEDBufferLength);
+  
+  //region enum_setup
+  public enum LEDMode { //temporary states to be changed later
+    //#region param_desc
+    /*
+    param 1: light type
+    param 2: color
+    param 3: color2
+    param 4: period 1
+    param 5: period 2
+    */
+    //#endregion param_desc
+    FLASH_WHITE("FLASH", Color.kWhite),
+    SOLID_RED("SOLID", Color.kBlue),
+    RAINBOW_CHROMA("RAINBOWCHROMA", null),
+    OFF("OFF", null);
 
-  public enum LEDMode { // temporary states to be changed later
-    FLASH_WHITE("FLASH", "WHITE"),
-    SOLID_RED("SOLIDRED"),
-    RAINBOW_CHROMA("RAINBOWCHROMA"),
-    OFF("OFF");
+    private final String LEDtype;
+    private final Color LEDcolor;
 
-    private final String LEDColor;
-
-    private LEDMode(String color) {
-      this.LEDtype = LEDtype;
+    private LEDMode(String _type, Color _color) {
+      this.LEDtype = _type;
+      this.LEDcolor = _color;
     }
 
     public String getType() {
       return LEDtype;
     }
+
+    public Color getColor() {
+      return LEDcolor;
+    }
   }
+  //#endregion enum_setup
+
+  public LEDMode _curretstart;
 
   public static LEDs getInstance(LEDMode mode) {
     if (instance == null) {
@@ -58,10 +76,15 @@ public class LEDs extends SubsystemBase {
     ledStrip.setData(ledBuffer);
   }
 
-  public void flashColor(Color color) {
+  /*public void flashColor(Color color) {
     LEDPattern flashBase = LEDPattern.solid(color);
     LEDPattern flashAsymmetric = flashBase.blink(Seconds.of(2), Seconds.of(1));
+  }*/
+
+  public void Start(){
+    System.out.print(_curretstart.getType());
   }
+
 
   LEDPattern rainbowBase = LEDPattern.rainbow(0, 0);
 
