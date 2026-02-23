@@ -17,7 +17,7 @@ public interface TurretIO {
 
   public default void setPosition(Rotation2d position) {}
 
-  /** Run turn motor at the specified open loop value. */
+  /** Run motor at the specified open loop value. */
   public default void setOpenLoop(double output) {}
 
   default void stop() {}

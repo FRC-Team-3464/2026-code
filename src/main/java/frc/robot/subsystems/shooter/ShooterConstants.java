@@ -17,8 +17,8 @@ public final class ShooterConstants {
 
   public static final class TurretConstants {
     public static final double kGearRatio = 10 / 1;
-    public static final double kMinTurretAngleRad = Units.degreesToRadians(-180);
-    public static final double kMaxTurretAngleRad = Units.degreesToRadians(180);
+    public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
+    public static final double kMaxTurretAngleRad = Units.degreesToRadians(90);
     public static final double kAngleTolerance = Units.degreesToRadians(2);
 
     public static final double kLeftMotorId = 12;
@@ -69,7 +69,7 @@ public final class ShooterConstants {
                             Inches.of(-7.270121), Inches.of(0), Inches.of(0), new Rotation3d())));
 
     public static final double kMinAngleRad = Units.degreesToRadians(0);
-    public static final double kMaxAngleRad = Units.degreesToRadians(40);
+    public static final double kMaxAngleRad = Units.degreesToRadians(30);
   }
 
   public static final class FlywheelConstants {

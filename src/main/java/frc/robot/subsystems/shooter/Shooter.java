@@ -16,6 +16,8 @@ import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.turret.Turret;
 import frc.robot.subsystems.shooter.turret.TurretIO;
+import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldConstants.Hub;
 import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {
@@ -38,6 +40,13 @@ public class Shooter extends SubsystemBase {
     turret.periodic();
     hood.periodic();
     flywheel.periodic();
+  }
+
+  public static Command shootBothAtHub(Shooter leftShooter, Shooter rightShooter) {
+    return shootBothAtTarget(
+        leftShooter,
+        rightShooter,
+        () -> AllianceFlipUtil.apply(Hub.innerCenterPoint.toTranslation2d()));
   }
 
   /**
@@ -100,6 +109,18 @@ public class Shooter extends SubsystemBase {
 
   public void setTurretPosition(Rotation2d position) {
     turret.setPosition(position);
+  }
+
+  public void setFlywheelOpenLoop(double output) {
+    flywheel.setOpenLoop(output);
+  }
+
+  public void setHoodOpenLoop(double output) {
+    hood.setOpenLoop(output);
+  }
+
+  public void setTurretOpenLoop(double output) {
+    turret.setOpenLoop(output);
   }
 
   public ShooterSide getSide() {

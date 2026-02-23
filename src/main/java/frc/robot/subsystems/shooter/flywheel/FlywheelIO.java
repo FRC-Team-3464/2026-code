@@ -20,5 +20,8 @@ public interface FlywheelIO {
    */
   default void setVelocity(double velocity) {}
 
+  /** Run motor at the specified open loop value. */
+  public default void setOpenLoop(double output) {}
+
   default void stop() {}
 }

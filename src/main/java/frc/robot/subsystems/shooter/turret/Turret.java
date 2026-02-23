@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.shooter.turret;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -77,17 +78,35 @@ public class Turret extends SubsystemBase {
 
           this.targetAngle = targetAngle;
 
-          io.setPosition(targetAngle);
+          setPosition(targetAngle);
         },
         this);
   }
 
+  /**
+   * Set the target angle for the turret.
+   *
+   * <p>This will clamp the angle to be within the maximum and minimum rotation of the turret.
+   *
+   * @param position A {@link Rotation2d} object representing the target position of the turret.
+   */
   public void setPosition(Rotation2d position) {
     atGoal =
         atGoalDebouncer.calculate(
             Math.abs(position.getRadians() - inputs.positionRad) < TurretConstants.kAngleTolerance);
 
+    position =
+        Rotation2d.fromRadians(
+            MathUtil.clamp(
+                position.getRadians(),
+                TurretConstants.kMinTurretAngleRad,
+                TurretConstants.kMaxTurretAngleRad));
+
     io.setPosition(position);
+  }
+
+  public void setOpenLoop(double output) {
+    io.setOpenLoop(output);
   }
 
   public double getPosition() {
@@ -96,6 +115,10 @@ public class Turret extends SubsystemBase {
 
   public double getVelocity() {
     return inputs.velocityRadPerSec;
+  }
+
+  public boolean atGoal() {
+    return atGoal;
   }
 
   public ShooterSide getSide() {

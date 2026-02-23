@@ -60,6 +60,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   }
 
   @Override
+  public void setOpenLoop(double output) {
+    motor.set(output);
+  }
+
+  @Override
   public void stop() {
     motor.stopMotor();
   }

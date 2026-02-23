@@ -4,12 +4,17 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.commands.DriveCommands;
@@ -26,6 +31,7 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.turret.TurretIOSim;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.Direction;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.Hub;
 
@@ -77,6 +83,16 @@ public class RobotContainer {
         break;
     }
 
+    // if (Constants.kCurrentMode == Constants.Mode.REAL) {
+    //   try {
+    //     Constants.kRobotConfig = RobotConfig.fromGUISettings();
+    //   } catch (Exception e) {
+    //     // Handle exception as needed
+    //     e.printStackTrace();
+    //   }
+    // }
+
+    // configurePathPlanner();
     configureBindings();
   }
 
@@ -91,14 +107,33 @@ public class RobotContainer {
         rightShooter.trackTarget(
             () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
 
-    driver
-        .rightBumper()
-        .whileTrue(
-            Shooter.shootBothAtTarget(
-                leftShooter,
-                rightShooter,
-                () ->
-                    AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
+    /**
+     * Driver Bindings:
+     *
+     * <p>LB: Toggle deploy/retract intake LT: Spin intake RB: Shoot LT + A: backspin intake RT:
+     * Climb RT + A: Unclimb X: reset Gyro D-Pad: CrabWalk LB + RB + Y: Aux Handoff
+     *
+     * <p>Back up Aux Controls:
+     *
+     * <p>Pancake up + down: Pitch of turrets Pancake left + right: rotation of turrets trigger
+     * button: Fires fuel from turrets
+     *
+     * <p>button 7: deploy intake button 8: run intake button 9: retract intake
+     *
+     * <p>button 6: climber up button 4: climber down
+     *
+     * <p>thumb button: Driver Handoff
+     */
+    driver.povUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
+    driver.povUpRight().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHEAST));
+    driver.povRight().whileTrue(DriveCommands.crabWalk(drive, Direction.EAST));
+    driver.povDownRight().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHEAST));
+    driver.povDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
+    driver.povDownLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHWEST));
+    driver.povLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.WEST));
+    driver.povUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
+
+    driver.rightBumper().whileTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
 
     driver
         .a()
@@ -126,7 +161,7 @@ public class RobotContainer {
                 () -> Hub.innerCenterPoint.toTranslation2d()));
   }
 
-  public void robotPeriodic() {
+  public void robotContainerPeriodic() {
     OdometryObservation obs =
         new OdometryObservation(
             Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
@@ -137,5 +172,27 @@ public class RobotContainer {
     return Commands.print("No autonomous command configured");
   }
 
-  public void configureSubsystems() {}
+  public void configurePathPlanner() {
+    AutoBuilder.configure(
+        () -> RobotState.getInstance().getEstimatedPose(),
+        (pose) -> RobotState.getInstance().setPose(pose),
+        () -> RobotState.getInstance().getRobotVelocity(),
+        (speeds, feedforwards) -> drive.runVelocity(speeds),
+        new PPHolonomicDriveController(new PIDConstants(5, 0, 0), new PIDConstants(0, 0, 0)),
+        Constants.kRobotConfig,
+        AllianceFlipUtil::shouldFlip,
+        drive);
+
+    /** PATHPLANNER COMMANDS */
+    NamedCommands.registerCommand(
+        "resetGyro",
+        new InstantCommand(() -> RobotState.getInstance().resetRotation(Rotation2d.kZero)));
+
+    NamedCommands.registerCommand(
+        "scoreBothShooters",
+        Shooter.shootBothAtTarget(
+            leftShooter,
+            rightShooter,
+            () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
+  }
 }

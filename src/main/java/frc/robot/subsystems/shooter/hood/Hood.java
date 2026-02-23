@@ -51,12 +51,20 @@ public class Hood extends SubsystemBase {
     io.setAngle(angle);
   }
 
+  public void setOpenLoop(double output) {
+    io.setOpenLoop(output);
+  }
+
   public double getPosition() {
     return inputs.positionRad;
   }
 
   public double getVelocity() {
     return inputs.velocityRadPerSec;
+  }
+
+  public boolean atGoal() {
+    return atGoal;
   }
 
   public ShooterSide getSide() {

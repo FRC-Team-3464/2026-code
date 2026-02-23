@@ -21,7 +21,7 @@ public interface HoodIO {
    */
   default void setAngle(double angle) {}
 
-  /** Run turn motor at the specified open loop value. */
+  /** Run motor at the specified open loop value. */
   public default void setOpenLoop(double output) {}
 
   default void stop() {}

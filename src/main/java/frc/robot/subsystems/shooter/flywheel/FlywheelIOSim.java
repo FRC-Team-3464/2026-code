@@ -43,7 +43,12 @@ public class FlywheelIOSim implements FlywheelIO {
   }
 
   @Override
+  public void setOpenLoop(double output) {
+    appliedVolts = 12.0 * output;
+  }
+
+  @Override
   public void stop() {
-    pid.setSetpoint(0);
+    appliedVolts = 0.0;
   }
 }

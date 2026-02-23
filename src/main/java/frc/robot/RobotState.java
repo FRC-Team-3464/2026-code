@@ -83,6 +83,19 @@ public class RobotState {
   }
 
   /**
+   * Reset pose estimate and align gyro frame to the given pose.
+   *
+   * @param pose The pose to reset the pose estimator to.
+   */
+  public void setPose(Pose2d pose) {
+    poseEstimator.resetPosition(getRotation(), null, pose);
+  }
+
+  public void resetRotation(Rotation2d rotation) {
+    poseEstimator.resetRotation(rotation);
+  }
+
+  /**
    * Set the robot's velocity
    *
    * @param speeds A ChassisSpeeds object representing the robot's current velocity

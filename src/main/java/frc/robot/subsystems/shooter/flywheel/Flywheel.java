@@ -45,6 +45,10 @@ public class Flywheel extends SubsystemBase {
     io.setVelocity(velocityRPM / 60.0);
   }
 
+  public void setOpenLoop(double output) {
+    io.setOpenLoop(output);
+  }
+
   public void stop() {
     io.stop();
   }

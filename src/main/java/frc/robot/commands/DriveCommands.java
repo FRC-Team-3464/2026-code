@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.Direction;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -171,6 +172,34 @@ public class DriveCommands {
             drive)
         .until(angleController::atGoal)
         .beforeStarting(() -> angleController.reset(drive.getRawGyroRotation().getRadians()));
+  }
+
+  public static Command crabWalk(Drive drive, Direction direction) {
+    return drive.run(
+        () -> {
+          double speed = 1.0; // meters per second (tune this)
+
+          // Convert enum to vector
+          double dx = direction.getDx();
+          double dy = direction.getDy();
+
+          // Normalize so diagonals aren't faster
+          double magnitude = Math.hypot(dx, dy);
+          if (magnitude > 0) {
+            dx /= magnitude;
+            dy /= magnitude;
+          }
+
+          // Build chassis speeds (no rotation)
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  dx * speed, // vx (forward)
+                  dy * speed, // vy (left)
+                  0.0 // omega (no turning)
+                  );
+
+          drive.runVelocity(speeds);
+        });
   }
 
   // ----------------------- Characterization Commands -----------------------
