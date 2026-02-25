@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators.None;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.util.Color;
@@ -179,6 +180,12 @@ public LEDPattern pattern;
 
   @Override
   public void periodic() {
+    
+    if (DriverStation.isEStopped()) {
+      LEDPattern eStoppedPattern = LEDPattern.solid(Color.kRed);
+      eStoppedPattern.applyTo(ledBuffer);
+    }
+
     ledStrip.setData(ledBuffer);
     // This method will be called once per scheduler run
   }
