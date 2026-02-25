@@ -79,6 +79,10 @@ public class LEDs extends SubsystemBase {
       return LEDtype;
     }
 
+  //#endregion enum_setup
+
+  public LEDMode _curretstart;
+
     public Color getColor1() {
       return LEDcolor1;
     }
