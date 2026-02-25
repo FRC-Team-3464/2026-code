@@ -15,11 +15,20 @@ import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.SwerveMod;
 import frc.robot.subsystems.drive.SwerveMod.ModuleName;
+import frc.robot.subsystems.leds.LEDs;
+import frc.robot.subsystems.leds.LEDs.LEDMode;
 
 public class RobotContainer {
   private final XboxController driver = new XboxController(0);
 
   private final Drive drive;
+  private final LEDs ledsFlashWhite;
+  private final LEDs ledsFlashYellow;
+  private final LEDs ledsSolidRed;
+  private final LEDs ledsSolidGreen;
+  private final LEDs ledsRedAndPurpleGradient;
+  private final LEDs ledsRainbowChroma;
+  private final LEDs ledsOff;
 
   public RobotContainer() {
     if (Robot.isReal()) {
@@ -36,6 +45,14 @@ public class RobotContainer {
               new GyroIO() {});
     }
 
+    ledsFlashWhite = new LEDs(LEDMode.FLASH_WHITE);
+    ledsFlashYellow = new LEDs(LEDMode.FLASH_YELLOW);
+    ledsSolidRed = new LEDs(LEDMode.SOLID_RED);
+    ledsSolidGreen = new LEDs(LEDMode.SOLID_GREEN);
+    ledsRedAndPurpleGradient = new LEDs(LEDMode.RED_AND_PURPLE_GRADIENT);
+    ledsRainbowChroma = new LEDs(LEDMode.RAINBOW_CHROMA);
+    ledsOff = new LEDs(LEDMode.OFF);
+
     configureBindings();
   }
 
@@ -47,6 +64,10 @@ public class RobotContainer {
             () -> -driver.getLeftX(),
             () -> -driver.getRightX(),
             () -> false));
+
+    //Test
+    //Constants.OperatorConstants.testButton.whileTrue(ledsSolidGreen.setLEDPattern());
+
   }
 
   public void robotPeriodic() {

@@ -13,7 +13,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
 import java.util.Map;
 
 /**
@@ -164,6 +167,13 @@ public final class Constants {
             3, 3.0,
             4, 4.0);
   }
+
+  public class OperatorConstants {
+    public static Joystick auxStick = new Joystick(0);
+    //test for LEDs
+    //public static JoystickButton testButton = new JoystickButton(auxStick, 0);
+  }
+
 
   public static class LEDConstants {
     public static int kLEDStripPort = 0;
