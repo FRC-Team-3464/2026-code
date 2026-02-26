@@ -42,4 +42,8 @@ public final class Constants {
   }
 
   public static RobotConfig kRobotConfig;
+
+  public static final class DeviceIDs {
+    
+  }
 }

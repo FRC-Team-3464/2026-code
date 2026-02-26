@@ -19,6 +19,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
+
 import java.util.function.DoubleSupplier;
 
 public class TurretIOSparkMax implements TurretIO {
@@ -46,7 +47,6 @@ public class TurretIOSparkMax implements TurretIO {
 
     config
         .closedLoop
-        .pid(2.0, 0.0, 0.1)
         .positionWrappingEnabled(false)
         .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 

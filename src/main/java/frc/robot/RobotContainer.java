@@ -107,23 +107,6 @@ public class RobotContainer {
         rightShooter.trackTarget(
             () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
 
-    /**
-     * Driver Bindings:
-     *
-     * <p>LB: Toggle deploy/retract intake LT: Spin intake RB: Shoot LT + A: backspin intake RT:
-     * Climb RT + A: Unclimb X: reset Gyro D-Pad: CrabWalk LB + RB + Y: Aux Handoff
-     *
-     * <p>Back up Aux Controls:
-     *
-     * <p>Pancake up + down: Pitch of turrets Pancake left + right: rotation of turrets trigger
-     * button: Fires fuel from turrets
-     *
-     * <p>button 7: deploy intake button 8: run intake button 9: retract intake
-     *
-     * <p>button 6: climber up button 4: climber down
-     *
-     * <p>thumb button: Driver Handoff
-     */
     driver.povUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
     driver.povUpRight().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHEAST));
     driver.povRight().whileTrue(DriveCommands.crabWalk(drive, Direction.EAST));
@@ -131,7 +114,7 @@ public class RobotContainer {
     driver.povDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
     driver.povDownLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHWEST));
     driver.povLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.WEST));
-    driver.povUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
+    driver.povUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));    
 
     driver.rightBumper().whileTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
 
