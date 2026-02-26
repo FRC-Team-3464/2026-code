@@ -19,7 +19,6 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
-
 import java.util.function.DoubleSupplier;
 
 public class TurretIOSparkMax implements TurretIO {
@@ -45,10 +44,7 @@ public class TurretIOSparkMax implements TurretIO {
             2 * Math.PI / TurretConstants.kGearRatio) // No absolute encoder...
         .velocityConversionFactor(2 * Math.PI / TurretConstants.kGearRatio / 60.0);
 
-    config
-        .closedLoop
-        .positionWrappingEnabled(false)
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder);
+    config.closedLoop.positionWrappingEnabled(false).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
     config
         .softLimit

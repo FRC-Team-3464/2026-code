@@ -41,11 +41,9 @@ public class RobotContainer {
       new CommandXboxController(Constants.kDriverControllerPort);
 
   private Drive drive;
-  private Vision vision;
-  private Intake intake;
-  private Drive drive;
   private Shooter leftShooter;
   private Shooter rightShooter;
+  private Intake intake;
   // private Vision vision;
 
   public RobotContainer() {
@@ -118,7 +116,7 @@ public class RobotContainer {
     driver.povDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
     driver.povDownLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHWEST));
     driver.povLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.WEST));
-    driver.povUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));    
+    driver.povUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
 
     driver.rightBumper().whileTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
 
