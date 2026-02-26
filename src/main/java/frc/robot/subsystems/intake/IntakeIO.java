@@ -3,8 +3,7 @@ package frc.robot.subsystems.intake;
 import org.littletonrobotics.junction.AutoLog;
 
 /**
- * The {@code IntakeIO} class provides methods for interacting with the intake
- * motors and updating
+ * The {@code IntakeIO} class provides methods for interacting with the intake motors and updating
  * the intake inputs.
  *
  * @author Ryan Hefferon
@@ -13,8 +12,7 @@ import org.littletonrobotics.junction.AutoLog;
  * @author Julien Precourt
  */
 public interface IntakeIO {
-  default void updateInputs(IntakeIOInputs inputs) {
-  }
+  default void updateInputs(IntakeIOInputs inputs) {}
 
   @AutoLog
   public static class IntakeIOInputs {
@@ -33,14 +31,12 @@ public interface IntakeIO {
    *
    * @param speed determines the speed of the pivot on a scale of -1 to 1
    */
-  default void setPivotSpeed(double speed) {
-  }
+  default void setPivotSpeed(double speed) {}
 
   /**
    * method to set the speed of the wheel
    *
    * @param speed determines the speed of the wheel on a scale of -1 to 1
    */
-  default void setWheelSpeed(double speed) {
-  }
+  default void setWheelSpeed(double speed) {}
 }

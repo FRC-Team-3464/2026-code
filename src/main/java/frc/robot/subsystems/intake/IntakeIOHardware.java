@@ -9,7 +9,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.IntakeConstants;
 
 public class IntakeIOHardware implements IntakeIO {
   private SparkMax pivotMotor = new SparkMax(IntakeConstants.kPivotMotorID, MotorType.kBrushless);
@@ -21,7 +20,8 @@ public class IntakeIOHardware implements IntakeIO {
   public IntakeIOHardware() {
     pivotConfig = new SparkMaxConfig();
     wheelMotor.getConfigurator().apply(wheelMotorConfig);
-    pivotMotor.configure(pivotConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    pivotMotor.configure(
+        pivotConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
   @Override
@@ -36,8 +36,10 @@ public class IntakeIOHardware implements IntakeIO {
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    inputs.pivotVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(pivotEncoder.getVelocity());
-    inputs.wheelVelocityRadPerSec = Units.rotationsToRadians(wheelMotor.getVelocity().getValueAsDouble());
+    inputs.pivotVelocityRadPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(pivotEncoder.getVelocity());
+    inputs.wheelVelocityRadPerSec =
+        Units.rotationsToRadians(wheelMotor.getVelocity().getValueAsDouble());
     inputs.pivotPositionRad = Units.rotationsToRadians(pivotEncoder.getPosition());
     inputs.wheelPositionRad = Units.rotationsToRadians(wheelMotor.getPosition().getValueAsDouble());
     inputs.pivotAppliedVolts = pivotMotor.getAppliedOutput();

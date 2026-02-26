@@ -5,7 +5,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.Constants.IntakeConstants;
 
 public class IntakeIOSim implements IntakeIO {
 
@@ -21,15 +20,17 @@ public class IntakeIOSim implements IntakeIO {
   private double wheelAppliedVolts = 0.0;
 
   public IntakeIOSim() {
-    pivotSim = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(
-            pivotGearbox, 0.025, IntakeConstants.kPivotMotorGearRatio),
-        pivotGearbox);
+    pivotSim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(
+                pivotGearbox, 0.025, IntakeConstants.kPivotMotorGearRatio),
+            pivotGearbox);
 
-    wheelSim = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(
-            wheelGearbox, 0.025, IntakeConstants.kRollerMotorGearRatio),
-        wheelGearbox);
+    wheelSim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(
+                wheelGearbox, 0.025, IntakeConstants.kRollerMotorGearRatio),
+            wheelGearbox);
   }
 
   @Override

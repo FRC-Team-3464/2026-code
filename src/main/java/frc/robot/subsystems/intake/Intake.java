@@ -7,14 +7,13 @@ package frc.robot.subsystems.intake;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.IntakeConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
   private final IntakeIO io;
 
-  private final IntakeIOAutoLogged inputs = new IntakeIOAutoLogged();
+  private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
   public Intake(IntakeIO io) {
     this.io = io;
@@ -23,8 +22,7 @@ public class Intake extends SubsystemBase {
   /**
    * Command to run the pivot
    *
-   * @return runs the pivot at a speed on every iteration until end when it stops
-   *         the running
+   * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
   public Command runPivot() {
     return Commands.runEnd(
@@ -36,8 +34,7 @@ public class Intake extends SubsystemBase {
   /**
    * Command to run the pivot back
    *
-   * @return runs the pivot at a speed on every iteration until end when it stops
-   *         the running
+   * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
   public Command runPivotBack() {
     return Commands.runEnd(
@@ -49,8 +46,7 @@ public class Intake extends SubsystemBase {
   /**
    * Command to run the feeder
    *
-   * @return runs the feeder at a speed on every iteration until end when it stops
-   *         the running
+   * @return runs the feeder at a speed on every iteration until end when it stops the running
    */
   public Command runFeeder() {
     return Commands.runEnd(
@@ -62,8 +58,7 @@ public class Intake extends SubsystemBase {
   /**
    * Command to run the feeder backward
    *
-   * @return runs the feeder at a speed on every iteration until end when it stops
-   *         the running
+   * @return runs the feeder at a speed on every iteration until end when it stops the running
    */
   public Command runFeederBack() {
     return Commands.runEnd(
