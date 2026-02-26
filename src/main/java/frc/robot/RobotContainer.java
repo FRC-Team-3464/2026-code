@@ -25,6 +25,7 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -39,6 +40,9 @@ public class RobotContainer {
   private final CommandXboxController driver =
       new CommandXboxController(Constants.kDriverControllerPort);
 
+  private Drive drive;
+  private Vision vision;
+  private Intake intake;
   private Drive drive;
   private Shooter leftShooter;
   private Shooter rightShooter;
