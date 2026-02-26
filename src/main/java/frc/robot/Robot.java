@@ -75,7 +75,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
     CachedSupplier.invalidateAll();
-    robotContainer.robotContainerPeriodic();
+    robotContainer.robotPeriodic();
     CommandScheduler.getInstance().run();
 
     RobotVisualizer.getInstance().log("Mechanism3d/Robot");

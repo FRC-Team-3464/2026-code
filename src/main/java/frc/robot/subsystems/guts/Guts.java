@@ -4,50 +4,40 @@
 
 package frc.robot.subsystems.guts;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.GutsConstants;
+import org.littletonrobotics.junction.Logger;
 
 /**
- * This class updates and stores the values of the inputs periodically, and
- * contains commands to run the gut motor forward and backward.
- * 
+ * This class updates and stores the values of the inputs periodically, and contains commands to run
+ * the gut motor forward and backward.
+ *
  * @author Ryan Hefferon
  */
 public class Guts extends SubsystemBase {
 
   private final GutSide side;
-  public final GutsIO io;
-  public GutsIOInputsAutoLogged inputs = new GutsIOInputsAutoLogged();
-  public double speed = (side == GutSide.LEFT) ? (GutsConstants.kGutMotorSpeed) : -(GutsConstants.kGutMotorSpeed);
+  private final GutsIO io;
+  private GutsIOInputsAutoLogged inputs = new GutsIOInputsAutoLogged();
+  private final double speed;
 
   /** Creates a new Guts. */
   public Guts(GutSide side, GutsIO io) {
     this.io = io;
     this.side = side;
+    speed =
+        (side == GutSide.LEFT) ? (GutsConstants.kGutMotorSpeed) : -(GutsConstants.kGutMotorSpeed);
   }
 
-  /**
-   * Runs the gut motor forward at 0.5 speed, then stops it when finished.
-   */
+  /** Runs the gut motor forward at 0.5 speed, then stops it when finished. */
   public Command runGutForward() {
-    return Commands.runEnd(
-      () -> io.setGutMotorSpeed(speed),
-      () -> io.setGutMotorSpeed(0),
-      this);
+    return Commands.runEnd(() -> io.setGutMotorSpeed(speed), () -> io.setGutMotorSpeed(0), this);
   }
 
-  /**
-   * Runs the gut motor backward at 0.5 speed, then stops it when finished.
-   */
+  /** Runs the gut motor backward at 0.5 speed, then stops it when finished. */
   public Command runGutBackward() {
-      return Commands.runEnd(
-        () -> io.setGutMotorSpeed(-speed),
-        () -> io.setGutMotorSpeed(0),
-        this);
+    return Commands.runEnd(() -> io.setGutMotorSpeed(-speed), () -> io.setGutMotorSpeed(0), this);
   }
 
   @Override
