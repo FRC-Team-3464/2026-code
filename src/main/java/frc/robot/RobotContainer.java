@@ -35,6 +35,9 @@ import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.Direction;
 import frc.robot.util.FieldConstants;
 import frc.robot.util.FieldConstants.Hub;
+import frc.robot.subsystems.guts.Guts;
+import frc.robot.subsystems.guts.GutsIO;
+import frc.robot.subsystems.guts.Guts.GutSide;
 
 public class RobotContainer {
   private final CommandXboxController driver =
@@ -43,19 +46,20 @@ public class RobotContainer {
   private Drive drive;
   private Shooter leftShooter;
   private Shooter rightShooter;
+  private Guts leftGuts;
+  private Guts rightGuts;
   private Intake intake;
   // private Vision vision;
 
   public RobotContainer() {
     switch (Constants.kCurrentMode) {
       case REAL:
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(ModuleConstants.FrontLeft),
-                new ModuleIOTalonFX(ModuleConstants.FrontRight),
-                new ModuleIOTalonFX(ModuleConstants.BackLeft),
-                new ModuleIOTalonFX(ModuleConstants.BackRight));
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(ModuleConstants.FrontLeft),
+            new ModuleIOTalonFX(ModuleConstants.FrontRight),
+            new ModuleIOTalonFX(ModuleConstants.BackLeft),
+            new ModuleIOTalonFX(ModuleConstants.BackRight));
         // vision = new Vision(null, null);
         break;
       case SIM:
@@ -71,16 +75,35 @@ public class RobotContainer {
         rightShooter =
             new Shooter(ShooterSide.RIGHT, new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
         // vision = new Vision(null, null);
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(ModuleConstants.FrontLeft),
+            new ModuleIOSim(ModuleConstants.FrontRight),
+            new ModuleIOSim(ModuleConstants.BackLeft),
+            new ModuleIOSim(ModuleConstants.BackRight));
+        // vision = new Vision(null, null);
+        leftGuts = new Guts(GutSide.LEFT, new GutsIO() {
+
+        });
+        rightGuts = new Guts(GutSide.RIGHT, new GutsIO() {
+
+        });
+
         break;
       case REPLAY:
       default:
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
         // vision = new Vision(null, new CameraIO[] {});
         break;
     }
@@ -129,8 +152,7 @@ public class RobotContainer {
                 () -> -driver.getLeftX(), // ySupplier
                 () -> {
                   Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-                  Translation2d target =
-                      AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+                  Translation2d target = AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
 
                   Translation2d delta = target.minus(robotPose.getTranslation());
 
@@ -144,9 +166,10 @@ public class RobotContainer {
                 drive,
                 () -> RobotState.getInstance().getEstimatedPose(),
                 () -> Hub.innerCenterPoint.toTranslation2d()));
+
   }
 
-  public void robotContainerPeriodic() {
+  public void robotPeriodic() {
     OdometryObservation obs =
         new OdometryObservation(
             Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
