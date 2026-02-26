@@ -6,6 +6,8 @@ package frc.robot.subsystems.leds;
 
 import static edu.wpi.first.units.Units.Seconds;
 
+import java.util.random.RandomGenerator.LeapableGenerator;
+
 import com.fasterxml.jackson.annotation.ObjectIdGenerators.None;
 
 import edu.wpi.first.wpilibj.AddressableLED;
@@ -55,10 +57,29 @@ public class LEDs extends SubsystemBase {
     // #endregion param_desc
     FLASH_WHITE("FLASH", Color.kWhite, null, 1.5, 0),
     FLASH_YELLOW("FLASH", Color.kYellow, null, 0, 0),
+    FLASH_RED("FLASH", Color.kRed, null, 0, 0),
+    FLASH_BLUE("FLASH", Color.kBlue, null, 0, 0),
+    FLASH_PINK("FLASH", Color.kPink, null, 0, 0),
+    FLASH_GREEN("FLASH", Color.kGreen, null, 0, 0),
+    FLASH_PURPLE("FLASH", Color.kPurple, null, 0, 0),
+    FLASH_ORANGE("FLASH", Color.kOrange, null, 0, 0),
     SOLID_RED("SOLID", Color.kRed, null, 0, 0),
+    SOLID_WHITE("SOLID", Color.kWhite, null, 0, 0),
     SOLID_GREEN("SOLID", Color.kGreen, null, 0, 0),
+    SOLID_BLUE("SOLID", Color.kBlue, null, 0, 0),
+    SOLID_YELLOW("SOLID", Color.kYellow, null, 0, 0),
+    SOLID_PINK("SOLID", Color.kPink, null, 0, 0),
+    SOLID_PURPLE("SOLID", Color.kPurple, null, 0, 0),
+    SOLID_ORANGE("SOLID", Color.kOrange, null, 0, 0),
     RED_AND_PURPLE_GRADIENT("GRADIENT", Color.kRed, Color.kPurple, 0, 0),
+    ORANGE_AND_GREEN_GRADIENT("GRADIENT", Color.kOrange, Color.kGreen, 0, 0),
+    SCHOOL_COLORS_GRADIENT("GRADIENT", Color.kYellow, Color.kLightBlue, 0, 0),
+    RED_AND_PURPLE_BREATH("BREATH", Color.kRed, Color.kPurple, 0, 0),
+    ORANGE_AND_GREEN_BREATH("BREATH", Color.kOrange, Color.kGreen, 0, 0),
+    SCHOOL_COLORS_BREATH("BREATH", Color.kYellow, Color.kLightBlue, 1.5, 0),
+    RAINBOW_BREATH("RAINBOWBREATH", null, null, 1.5, 0),
     RAINBOW_CHROMA("RAINBOWCHROMA", null, null, 0, 0),
+    BREATH("BREATH", Color.kRed, Color.kBlue, 0, 0),
     OFF("OFF", null, null, 0, 0);
 
     private final String LEDtype;
@@ -80,9 +101,9 @@ public class LEDs extends SubsystemBase {
       return LEDtype;
     }
 
-  //#endregion enum_setup
+    // #endregion enum_setup
 
-  public LEDMode _curretstart;
+    public LEDMode _curretstart;
 
     public Color getColor1() {
       return LEDcolor1;
@@ -125,7 +146,7 @@ public class LEDs extends SubsystemBase {
     ledStrip.start();
   }
 
-public LEDPattern pattern;
+  public LEDPattern pattern;
 
   /**
    * This method sets the value of an LED pattern object depending on the
@@ -163,7 +184,14 @@ public LEDPattern pattern;
       LEDPattern pattern = LEDPattern.rainbow(0, 0);
     }
 
-    else {
+    else if (type == "BREATH") {
+      LEDPattern pattern = LEDPattern.gradient(LEDPattern.GradientType.kContinuous, color1, color2)
+          .breathe(Seconds.of(period1));
+    }
+
+    else if (type == "RAINBOWBREATH") {
+      LEDPattern pattern = LEDPattern.rainbow(0, 0).breathe(Seconds.of(period1));
+    } else {
       LEDPattern pattern = LEDPattern.solid(Color.kBlack);
     }
     return pattern;
@@ -180,7 +208,7 @@ public LEDPattern pattern;
 
   @Override
   public void periodic() {
-    
+
     if (DriverStation.isEStopped()) {
       LEDPattern eStoppedPattern = LEDPattern.solid(Color.kRed);
       eStoppedPattern.applyTo(ledBuffer);
