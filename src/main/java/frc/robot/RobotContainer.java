@@ -65,8 +65,7 @@ public class RobotContainer {
             () -> -driver.getRightX(),
             () -> false));
 
-    //Test
-    //Constants.OperatorConstants.testButton.whileTrue(ledsSolidGreen.setLEDPattern());
+    Constants.OperatorConstants.testButton.whileTrue(ledsSolidGreen.setLEDPattern());
 
   }
 
