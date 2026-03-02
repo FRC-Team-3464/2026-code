@@ -20,10 +20,8 @@ public class GutsIOSparkMax implements GutsIO {
   private final SparkMax gutMotor;
   private final RelativeEncoder gutEncoder;
   private final SparkMaxConfig gutMotorConfig;
-  private final int motorID;
 
   public GutsIOSparkMax(int motorID) {
-    this.motorID = motorID;
     gutMotor = new SparkMax(motorID, MotorType.kBrushless);
     gutEncoder = gutMotor.getEncoder();
     gutMotorConfig = new SparkMaxConfig();

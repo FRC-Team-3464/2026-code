@@ -16,21 +16,21 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
 import java.util.Queue;
 
 /** IO implementation for Pigeon 2. */
 public class GyroIOPigeon2 implements GyroIO {
   private final Pigeon2 pigeon =
-      new Pigeon2(ModuleConstants.DrivetrainConstants.Pigeon2Id, ModuleConstants.kCANBus);
+      new Pigeon2(TunerConstants.DrivetrainConstants.Pigeon2Id, TunerConstants.kCANBus);
   private final StatusSignal<Angle> yaw = pigeon.getYaw();
   private final Queue<Double> yawPositionQueue;
   private final Queue<Double> yawTimestampQueue;
   private final StatusSignal<AngularVelocity> yawVelocity = pigeon.getAngularVelocityZWorld();
 
   public GyroIOPigeon2() {
-    if (ModuleConstants.DrivetrainConstants.Pigeon2Configs != null) {
-      pigeon.getConfigurator().apply(ModuleConstants.DrivetrainConstants.Pigeon2Configs);
+    if (TunerConstants.DrivetrainConstants.Pigeon2Configs != null) {
+      pigeon.getConfigurator().apply(TunerConstants.DrivetrainConstants.Pigeon2Configs);
     } else {
       pigeon.getConfigurator().apply(new Pigeon2Configuration());
     }
@@ -57,5 +57,10 @@ public class GyroIOPigeon2 implements GyroIO {
             .toArray(Rotation2d[]::new);
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
+  }
+
+  @Override
+  public void setYaw(Rotation2d angle) {
+    pigeon.setYaw(angle.getDegrees());
   }
 }

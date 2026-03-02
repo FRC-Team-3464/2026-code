@@ -8,18 +8,19 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotState.OdometryObservation;
-import frc.robot.commands.DriveCommands;
+import frc.robot.control.Configurable;
+import frc.robot.control.DefaultControls;
+import frc.robot.control.DriverController;
+import frc.robot.control.DriverControls;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
@@ -29,19 +30,19 @@ import frc.robot.subsystems.guts.Guts;
 import frc.robot.subsystems.guts.Guts.GutSide;
 import frc.robot.subsystems.guts.GutsIOSim;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.turret.TurretIOSim;
 import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.Direction;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.Hub;
+import java.util.List;
 
 public class RobotContainer {
-  private final CommandXboxController driver =
-      new CommandXboxController(Constants.kDriverControllerPort);
+  private final DriverController driver = new DriverController.XboxDriverController(0);
+  private final Joystick operator = new Joystick(Constants.kOperatorControllerPort);
 
   private Drive drive;
   private Shooter leftShooter;
@@ -57,20 +58,35 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOTalonFX(ModuleConstants.FrontLeft),
-                new ModuleIOTalonFX(ModuleConstants.FrontRight),
-                new ModuleIOTalonFX(ModuleConstants.BackLeft),
-                new ModuleIOTalonFX(ModuleConstants.BackRight));
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
         // vision = new Vision(null, null);
+        // leftShooter =
+        //     new Shooter(
+        //         ShooterSide.LEFT,
+        //         new TurretIOSparkMax(DeviceIDs.kLeftTurretAzimuth),
+        //         new HoodIOSparkMax(DeviceIDs.kLeftTurretHood),
+        //         new FlywheelIOTalonFX(DeviceIDs.kLeftTurretFlywheel));
+        // rightShooter =
+        //     new Shooter(
+        //         ShooterSide.RIGHT,
+        //         new TurretIOSparkMax(DeviceIDs.kRightTurretAzimuth),
+        //         new HoodIOSparkMax(DeviceIDs.kRightTurretHood),
+        //         new FlywheelIOTalonFX(DeviceIDs.kRightTurretFlywheel));
+        // leftGuts = new Guts(GutSide.LEFT, new GutsIOSparkMax(DeviceIDs.kLeftGuts));
+        // rightGuts = new Guts(GutSide.RIGHT, new GutsIOSparkMax(DeviceIDs.kRightGuts));
+        // intake = new Intake(new IntakeIOHardware());
         break;
       case SIM:
         drive =
             new Drive(
                 new GyroIO() {},
-                new ModuleIOSim(ModuleConstants.FrontLeft),
-                new ModuleIOSim(ModuleConstants.FrontRight),
-                new ModuleIOSim(ModuleConstants.BackLeft),
-                new ModuleIOSim(ModuleConstants.BackRight));
+                new ModuleIOSim(TunerConstants.FrontLeft),
+                new ModuleIOSim(TunerConstants.FrontRight),
+                new ModuleIOSim(TunerConstants.BackLeft),
+                new ModuleIOSim(TunerConstants.BackRight));
         leftShooter =
             new Shooter(ShooterSide.LEFT, new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
         rightShooter =
@@ -79,13 +95,14 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
-                new ModuleIOSim(ModuleConstants.FrontLeft),
-                new ModuleIOSim(ModuleConstants.FrontRight),
-                new ModuleIOSim(ModuleConstants.BackLeft),
-                new ModuleIOSim(ModuleConstants.BackRight));
+                new ModuleIOSim(TunerConstants.FrontLeft),
+                new ModuleIOSim(TunerConstants.FrontRight),
+                new ModuleIOSim(TunerConstants.BackLeft),
+                new ModuleIOSim(TunerConstants.BackRight));
         // vision = new Vision(null, null);
         leftGuts = new Guts(GutSide.LEFT, new GutsIOSim());
         rightGuts = new Guts(GutSide.RIGHT, new GutsIOSim());
+        intake = new Intake(new IntakeIOSim());
 
         break;
       case REPLAY:
@@ -97,6 +114,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
+        leftShooter = new Shooter(null, null, null, null);
+        rightShooter = new Shooter(null, null, null, null);
         // vision = new Vision(null, new CameraIO[] {});
         break;
     }
@@ -115,51 +134,14 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
-    drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
-    leftShooter.setDefaultCommand(
-        leftShooter.trackTarget(
-            () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
-    rightShooter.setDefaultCommand(
-        rightShooter.trackTarget(
-            () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
-
-    driver.povUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
-    driver.povUpRight().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHEAST));
-    driver.povRight().whileTrue(DriveCommands.crabWalk(drive, Direction.EAST));
-    driver.povDownRight().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHEAST));
-    driver.povDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
-    driver.povDownLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHWEST));
-    driver.povLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.WEST));
-    driver.povUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
-
-    driver.rightBumper().whileTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
-
-    driver
-        .a()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(), // xSupplier
-                () -> -driver.getLeftX(), // ySupplier
-                () -> {
-                  Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-                  Translation2d target =
-                      AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
-
-                  Translation2d delta = target.minus(robotPose.getTranslation());
-
-                  return new Rotation2d(Math.atan2(delta.getY(), delta.getX()));
-                }));
-
-    driver
-        .y()
-        .onTrue(
-            DriveCommands.turnToPoint(
-                drive,
-                () -> RobotState.getInstance().getEstimatedPose(),
-                () -> Hub.innerCenterPoint.toTranslation2d()));
+    List.<Configurable>of(
+            new DefaultControls(driver, operator, drive, leftShooter, rightShooter),
+            new DriverControls(
+                driver, operator, drive, leftShooter, rightShooter, leftGuts, rightGuts, intake)
+            //         // TODO: Implement ZoneControls
+            //         // ,new ZoneControls()
+            )
+        .forEach(Configurable::configure);
   }
 
   public void robotPeriodic() {
@@ -167,6 +149,10 @@ public class RobotContainer {
         new OdometryObservation(
             Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation());
     RobotState.getInstance().addOdometryObservation(obs);
+    RobotState.getInstance().setRobotVelocity(drive.getChassisSpeeds());
+    // System.out.println(RobotState.getInstance().getEstimatedPose().getX());
+    // System.out.println(RobotState.getInstance().getRobotVelocity().vxMetersPerSecond);
+    // System.out.println(driver.getLeftX());
   }
 
   public Command getAutonomousCommand() {

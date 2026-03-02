@@ -9,6 +9,7 @@ package frc.robot;
 
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.subsystems.drive.DriveConstants;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -33,7 +34,7 @@ public final class Constants {
   }
 
   public static final int kDriverControllerPort = 0;
-  public static final int kAuxControllerPort = 1;
+  public static final int kOperatorControllerPort = 1;
 
   public static boolean kDisableHAL = false;
 
@@ -44,36 +45,49 @@ public final class Constants {
   public static RobotConfig kRobotConfig;
 
   public static final class DeviceIDs {
-    public static final int kPigeon = 0;
+    public static final int kPigeon2 =
+        DriveConstants.TunerConstants.DrivetrainConstants.Pigeon2Id; // 23
 
-    public static final int kLeftFrontModuleDrive = 0;
-    public static final int kLeftFrontModuleAzimuth = 0;
-    public static final int kLeftFrontModuleEncoder = 0;
+    public static final int kFrontLeftModuleDrive =
+        DriveConstants.TunerConstants.FrontLeft.DriveMotorId; // 1
+    public static final int kFrontLeftModuleAzimuth =
+        DriveConstants.TunerConstants.FrontLeft.SteerMotorId; // 2
+    public static final int kFrontLeftModuleEncoder =
+        DriveConstants.TunerConstants.FrontLeft.EncoderId; // 19
 
-    public static final int kRightFrontModuleDrive = 0;
-    public static final int kRightFrontModuleAzimuth = 0;
-    public static final int kRightFrontModuleEncoder = 0;
+    public static final int kFrontRightModuleDrive =
+        DriveConstants.TunerConstants.FrontRight.DriveMotorId; // 3
+    public static final int kFrontRightModuleAzimuth =
+        DriveConstants.TunerConstants.FrontRight.SteerMotorId; // 4
+    public static final int kFrontRightModuleEncoder =
+        DriveConstants.TunerConstants.FrontRight.EncoderId; // 20
 
-    public static final int kLeftBackModuleDrive = 0;
-    public static final int kLeftBackModuleAzimuth = 0;
-    public static final int kLeftBackModuleEncoder = 0;
+    public static final int kBackLeftModuleDrive =
+        DriveConstants.TunerConstants.BackLeft.DriveMotorId; // 5
+    public static final int kBackLeftModuleAzimuth =
+        DriveConstants.TunerConstants.BackLeft.SteerMotorId; // 6
+    public static final int kBackLeftModuleEncoder =
+        DriveConstants.TunerConstants.BackLeft.EncoderId; // 21
 
-    public static final int kRightBackModuleDrive = 0;
-    public static final int kRightBackModuleAzimuth = 0;
-    public static final int kRightBackModuleEncoder = 0;
+    public static final int kBackRightModuleDrive =
+        DriveConstants.TunerConstants.BackRight.DriveMotorId; // 7
+    public static final int kBackRightModuleAzimuth =
+        DriveConstants.TunerConstants.BackRight.SteerMotorId; // 8
+    public static final int kBackRightModuleEncoder =
+        DriveConstants.TunerConstants.BackRight.EncoderId; // 22
 
-    public static final int kLeftTurretFlywheel = 0;
-    public static final int kLeftTurretHood = 0;
-    public static final int kLeftTurretAzimuth = 0;
+    public static final int kLeftTurretFlywheel = 9;
+    public static final int kLeftTurretHood = 10;
+    public static final int kLeftTurretAzimuth = 11;
 
-    public static final int kRightTurretFlywheel = 0;
-    public static final int kRightTurretHood = 0;
-    public static final int kRightTurretAzimuth = 0;
+    public static final int kRightTurretFlywheel = 12;
+    public static final int kRightTurretHood = 13;
+    public static final int kRightTurretAzimuth = 14;
 
-    public static final int kLeftGuts = 0;
-    public static final int kRightGuts = 0;
+    public static final int kLeftGuts = 15;
+    public static final int kRightGuts = 16;
 
-    public static final int kIntakeDrive = 0;
-    public static final int kIntakePivot = 0;
+    public static final int kIntakeDrive = 17;
+    public static final int kIntakePivot = 18;
   }
 }

@@ -24,7 +24,7 @@ public class Intake extends SubsystemBase {
    *
    * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
-  public Command runPivot() {
+  public Command deploy() {
     return Commands.runEnd(
         () -> io.setPivotSpeed(IntakeConstants.kPivotMotorSpeed),
         () -> io.setPivotSpeed(0.0),
@@ -36,9 +36,9 @@ public class Intake extends SubsystemBase {
    *
    * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
-  public Command runPivotBack() {
+  public Command retract() {
     return Commands.runEnd(
-        () -> io.setPivotSpeed(-(IntakeConstants.kPivotMotorSpeed)),
+        () -> io.setPivotSpeed(-IntakeConstants.kPivotMotorSpeed),
         () -> io.setPivotSpeed(0.0),
         this);
   }
@@ -48,7 +48,7 @@ public class Intake extends SubsystemBase {
    *
    * @return runs the feeder at a speed on every iteration until end when it stops the running
    */
-  public Command runFeeder() {
+  public Command intake() {
     return Commands.runEnd(
         () -> io.setWheelSpeed(IntakeConstants.kRollerMotorSpeed),
         () -> io.setWheelSpeed(0.0),
@@ -60,7 +60,7 @@ public class Intake extends SubsystemBase {
    *
    * @return runs the feeder at a speed on every iteration until end when it stops the running
    */
-  public Command runFeederBack() {
+  public Command outtake() {
     return Commands.runEnd(
         () -> io.setWheelSpeed(-(IntakeConstants.kRollerMotorSpeed)),
         () -> io.setWheelSpeed(0.0),

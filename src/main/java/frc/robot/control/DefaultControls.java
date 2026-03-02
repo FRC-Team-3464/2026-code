@@ -30,6 +30,8 @@ public class DefaultControls implements Configurable {
   /** Configure all default commands for the subsystems (e.g. includes joystick driving). */
   @Override
   public void configure() {
-    drive.setDefaultCommand(DriveCommands.joystickDrive(drive, null, null, null));
+    drive.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            drive, () -> driver.getLeftY(), () -> driver.getLeftX(), () -> -driver.getRightX()));
   }
 }

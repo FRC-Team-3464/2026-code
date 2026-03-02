@@ -82,6 +82,11 @@ public class Module {
     io.setTurnPosition(state.angle);
   }
 
+  /** Runs the drive motor at the specified output */
+  public void runDriveOpenLoop(double output) {
+    io.setDriveOpenLoop(output);
+  }
+
   /** Runs the module with the specified output while controlling to zero degrees. */
   public void runCharacterization(double output) {
     io.setDriveOpenLoop(output);

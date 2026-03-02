@@ -23,7 +23,9 @@ public class RobotState {
   /** Pose Estimator */
   private SwerveDrivePoseEstimator poseEstimator;
 
-  private ChassisSpeeds robotVelocity;
+  private ChassisSpeeds robotVelocity = new ChassisSpeeds();
+
+  private Rotation2d gyroOffset = new Rotation2d();
 
   private RobotState() {
     poseEstimator =
@@ -92,11 +94,11 @@ public class RobotState {
   }
 
   public void resetRotation(Rotation2d rotation) {
-    poseEstimator.resetRotation(rotation);
+    gyroOffset = poseEstimator.getEstimatedPosition().getRotation().minus(rotation);
   }
 
   /**
-   * Set the robot's velocity
+   * Set the robot's velocity.
    *
    * @param speeds A ChassisSpeeds object representing the robot's current velocity
    */
@@ -124,7 +126,7 @@ public class RobotState {
 
   /** Get the rotation of the estimated pose. */
   public Rotation2d getRotation() {
-    return poseEstimator.getEstimatedPosition().getRotation();
+    return poseEstimator.getEstimatedPosition().getRotation().minus(gyroOffset);
   }
 
   public ChassisSpeeds getFieldVelocity() {

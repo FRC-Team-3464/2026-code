@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 /** Enum representing common compass directions (e.g., North, Northeast, East). */
 public enum Direction {
@@ -52,11 +53,11 @@ public enum Direction {
       case EAST:
       case NORTHEAST:
       case SOUTHEAST:
-        return 1;
+        return -1;
       case WEST:
       case NORTHWEST:
       case SOUTHWEST:
-        return -1;
+        return 1;
       default:
         return 0;
     }
@@ -77,6 +78,24 @@ public enum Direction {
     }
   }
 
+  public ChassisSpeeds toChassisSpeeds() {
+    double dx = getDx();
+    double dy = getDy();
+
+    // Normalize so diagonals aren't faster
+    double magnitude = Math.hypot(dx, dy);
+    if (magnitude > 0) {
+      dx /= magnitude;
+      dy /= magnitude;
+    }
+
+    // Build chassis speeds (no rotation)
+    return new ChassisSpeeds(
+        dy, // vx = forward
+        dx, // vy = left
+        0.0);
+  }
+
   public boolean isCardinal() {
     return this == NORTH || this == SOUTH || this == EAST || this == WEST;
   }
@@ -86,7 +105,7 @@ public enum Direction {
   }
 
   public static Direction fromAngle(double angleDegrees) {
-    angleDegrees = ((angleDegrees % 360) + 360) % 360; // normalize 0–359
+    angleDegrees = ((angleDegrees % 360) + 360) % 360; // Normalize 0–359
     int index = (int) Math.round(angleDegrees / 45.0) % 8;
     return values()[index];
   }

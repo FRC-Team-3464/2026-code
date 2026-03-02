@@ -27,9 +27,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
-import frc.robot.RobotState;
-import frc.robot.RobotState.OdometryObservation;
-import frc.robot.subsystems.drive.DriveConstants.ModuleConstants;
+import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -62,10 +60,10 @@ public class Drive extends SubsystemBase {
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
     this.gyroIO = gyroIO;
-    modules[0] = new Module(flModuleIO, 0, ModuleConstants.FrontLeft);
-    modules[1] = new Module(frModuleIO, 1, ModuleConstants.FrontRight);
-    modules[2] = new Module(blModuleIO, 2, ModuleConstants.BackLeft);
-    modules[3] = new Module(brModuleIO, 3, ModuleConstants.BackRight);
+    modules[0] = new Module(flModuleIO, 0, TunerConstants.FrontLeft);
+    modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
+    modules[2] = new Module(blModuleIO, 2, TunerConstants.BackLeft);
+    modules[3] = new Module(brModuleIO, 3, TunerConstants.BackRight);
 
     // Usage reporting for swerve template
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -123,7 +121,9 @@ public class Drive extends SubsystemBase {
                 modulePositions[moduleIndex].distanceMeters
                     - lastModulePositions[moduleIndex].distanceMeters,
                 modulePositions[moduleIndex].angle);
-        lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+        lastModulePositions[moduleIndex] =
+            new SwerveModulePosition(
+                modulePositions[moduleIndex].distanceMeters, modulePositions[moduleIndex].angle);
       }
 
       // Update gyro angle
@@ -136,11 +136,12 @@ public class Drive extends SubsystemBase {
         rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
 
-      // Apply update
-      RobotState.getInstance()
-          .addOdometryObservation(
-              new OdometryObservation(sampleTimestamps[i], modulePositions, rawGyroRotation));
-      RobotState.getInstance().setRobotVelocity(getChassisSpeeds());
+      // Apply update (doesn't work)
+      // RobotState.getInstance()
+      //     .addOdometryObservation(
+      //         new OdometryObservation(sampleTimestamps[i], modulePositions, rawGyroRotation));
+
+      Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
     }
 
     // Update gyro alert
@@ -156,7 +157,7 @@ public class Drive extends SubsystemBase {
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, ModuleConstants.kSpeedAt12Volts);
+    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
 
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
@@ -178,6 +179,13 @@ public class Drive extends SubsystemBase {
     }
   }
 
+  /** Runs all modules' drive motor at the specified output */
+  public void runDriveOpenLoop(double output) {
+    for (int i = 0; i < 4; i++) {
+      modules[i].runDriveOpenLoop(output);
+    }
+  }
+
   /** Stops the drive. */
   public void stop() {
     runVelocity(new ChassisSpeeds());
@@ -194,6 +202,21 @@ public class Drive extends SubsystemBase {
     }
     kinematics.resetHeadings(headings);
     stop();
+  }
+
+  /**
+   * Sets the gyro yaw to the specified angle.
+   *
+   * @param angle The angle to set the gyro to.
+   */
+  public void setYaw(Rotation2d angle) {
+    gyroIO.setYaw(angle);
+    rawGyroRotation = angle;
+  }
+
+  /** Zeros the gyro yaw. */
+  public void zeroYaw() {
+    setYaw(Rotation2d.kZero);
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */
@@ -229,7 +252,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 
@@ -258,7 +281,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the maximum linear speed in meters per sec. */
   public double getMaxLinearSpeedMetersPerSec() {
-    return ModuleConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   }
 
   /** Returns the maximum angular speed in radians per sec. */
@@ -269,10 +292,10 @@ public class Drive extends SubsystemBase {
   /** Returns an array of module translations. */
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
-      new Translation2d(ModuleConstants.FrontLeft.LocationX, ModuleConstants.FrontLeft.LocationY),
-      new Translation2d(ModuleConstants.FrontRight.LocationX, ModuleConstants.FrontRight.LocationY),
-      new Translation2d(ModuleConstants.BackLeft.LocationX, ModuleConstants.BackLeft.LocationY),
-      new Translation2d(ModuleConstants.BackRight.LocationX, ModuleConstants.BackRight.LocationY)
+      new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+      new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+      new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+      new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
 }

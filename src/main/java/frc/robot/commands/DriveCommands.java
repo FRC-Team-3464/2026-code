@@ -177,26 +177,10 @@ public class DriveCommands {
   public static Command crabWalk(Drive drive, Direction direction) {
     return drive.run(
         () -> {
+          // TODO: tune ts
           double speed = 1.0; // meters per second (tune this)
 
-          // Convert enum to vector
-          double dx = direction.getDx();
-          double dy = direction.getDy();
-
-          // Normalize so diagonals aren't faster
-          double magnitude = Math.hypot(dx, dy);
-          if (magnitude > 0) {
-            dx /= magnitude;
-            dy /= magnitude;
-          }
-
-          // Build chassis speeds (no rotation)
-          ChassisSpeeds speeds =
-              new ChassisSpeeds(
-                  dx * speed, // vx (forward)
-                  dy * speed, // vy (left)
-                  0.0 // omega (no turning)
-                  );
+          ChassisSpeeds speeds = direction.toChassisSpeeds().times(speed);
 
           drive.runVelocity(speeds);
         });

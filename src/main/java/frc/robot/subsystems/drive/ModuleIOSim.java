@@ -106,7 +106,7 @@ public class ModuleIOSim implements ModuleIO {
 
     // Update odometry inputs (50Hz because high-frequency odometry in sim doesn't
     // matter)
-    inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
+    inputs.odometryTimestamps = new double[] {Timer.getTimestamp()};
     inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
     inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnPosition};
   }

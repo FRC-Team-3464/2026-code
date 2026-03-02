@@ -40,4 +40,9 @@ public class GyroIONavX implements GyroIO {
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
   }
+
+  @Override
+  public void setYaw(Rotation2d angle) {
+    navX.setAngleAdjustment(angle.getDegrees());
+  }
 }

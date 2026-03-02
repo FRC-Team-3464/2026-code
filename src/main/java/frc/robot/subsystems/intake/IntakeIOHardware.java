@@ -9,17 +9,18 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants.DeviceIDs;
 
 public class IntakeIOHardware implements IntakeIO {
-  private SparkMax pivotMotor = new SparkMax(IntakeConstants.kPivotMotorID, MotorType.kBrushless);
+  private SparkMax pivotMotor = new SparkMax(DeviceIDs.kIntakePivot, MotorType.kBrushless);
   private RelativeEncoder pivotEncoder = pivotMotor.getEncoder();
-  private TalonFX wheelMotor = new TalonFX(IntakeConstants.kRollerMotorID);
+  private TalonFX driveMotor = new TalonFX(DeviceIDs.kIntakeDrive);
   private SparkMaxConfig pivotConfig;
   private TalonFXConfiguration wheelMotorConfig;
 
   public IntakeIOHardware() {
     pivotConfig = new SparkMaxConfig();
-    wheelMotor.getConfigurator().apply(wheelMotorConfig);
+    driveMotor.getConfigurator().apply(wheelMotorConfig);
     pivotMotor.configure(
         pivotConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
   }
@@ -31,7 +32,7 @@ public class IntakeIOHardware implements IntakeIO {
 
   @Override
   public void setWheelSpeed(double speed) {
-    wheelMotor.set(speed);
+    driveMotor.set(speed);
   }
 
   @Override
@@ -39,12 +40,12 @@ public class IntakeIOHardware implements IntakeIO {
     inputs.pivotVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(pivotEncoder.getVelocity());
     inputs.wheelVelocityRadPerSec =
-        Units.rotationsToRadians(wheelMotor.getVelocity().getValueAsDouble());
+        Units.rotationsToRadians(driveMotor.getVelocity().getValueAsDouble());
     inputs.pivotPositionRad = Units.rotationsToRadians(pivotEncoder.getPosition());
-    inputs.wheelPositionRad = Units.rotationsToRadians(wheelMotor.getPosition().getValueAsDouble());
+    inputs.wheelPositionRad = Units.rotationsToRadians(driveMotor.getPosition().getValueAsDouble());
     inputs.pivotAppliedVolts = pivotMotor.getAppliedOutput();
-    inputs.wheelAppliedVolts = wheelMotor.getTorqueCurrent().getValueAsDouble();
+    inputs.wheelAppliedVolts = driveMotor.getTorqueCurrent().getValueAsDouble();
     inputs.pivotCurrentDrawAmps = pivotMotor.getOutputCurrent();
-    inputs.wheelCurrentDrawAmps = wheelMotor.getMotorVoltage().getValueAsDouble();
+    inputs.wheelCurrentDrawAmps = driveMotor.getMotorVoltage().getValueAsDouble();
   }
 }

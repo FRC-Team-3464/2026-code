@@ -31,6 +31,8 @@ public class Turret extends SubsystemBase {
   private boolean atGoal = false;
   private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
 
+  private boolean zeroed = false;
+
   /** Creates a new Turret. */
   public Turret(ShooterSide side, TurretIO io) {
     this.side = side;

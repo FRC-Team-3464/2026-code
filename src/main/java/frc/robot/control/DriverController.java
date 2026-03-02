@@ -1,5 +1,6 @@
 package frc.robot.control;
 
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -50,11 +51,13 @@ public interface DriverController {
 
   double getRightY();
 
+  void rumble(RumbleType rumbleType, double intensity);
+
   class XboxDriverController implements DriverController {
     private final CommandXboxController controller;
 
-    public XboxDriverController(CommandXboxController controller) {
-      this.controller = controller;
+    public XboxDriverController(int controllerID) {
+      this.controller = new CommandXboxController(controllerID);
     }
 
     @Override
@@ -156,13 +159,18 @@ public interface DriverController {
     public double getRightY() {
       return controller.getRightY();
     }
+
+    @Override
+    public void rumble(RumbleType rumbleType, double intensity) {
+      controller.setRumble(rumbleType, intensity);
+    }
   }
 
   class PS5DriverController implements DriverController {
     private final CommandPS5Controller controller;
 
-    public PS5DriverController(CommandPS5Controller controller) {
-      this.controller = controller;
+    public PS5DriverController(int controllerID) {
+      this.controller = new CommandPS5Controller(controllerID);
     }
 
     @Override
@@ -263,6 +271,11 @@ public interface DriverController {
     @Override
     public double getRightY() {
       return controller.getRightY();
+    }
+
+    @Override
+    public void rumble(RumbleType rumbleType, double intensity) {
+      controller.setRumble(rumbleType, intensity);
     }
   }
 }
