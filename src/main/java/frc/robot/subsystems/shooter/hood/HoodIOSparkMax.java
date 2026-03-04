@@ -13,6 +13,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import frc.robot.Constants.DeviceIDs;
+import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 import java.util.function.DoubleSupplier;
 
@@ -22,14 +24,19 @@ public class HoodIOSparkMax implements HoodIO {
   private final SparkClosedLoopController motorController;
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
-  public HoodIOSparkMax(int motorID) {
-    motor = new SparkMax(motorID, MotorType.kBrushless);
+  public HoodIOSparkMax(ShooterSide side) {
+    motor =
+        new SparkMax(
+            side == ShooterSide.LEFT ? DeviceIDs.kLeftTurretHood : DeviceIDs.kRightTurretHood,
+            MotorType.kBrushless);
     encoder = motor.getEncoder();
     motorController = motor.getClosedLoopController();
 
     SparkMaxConfig config = new SparkMaxConfig();
 
     config.idleMode(IdleMode.kCoast);
+
+    config.inverted(side == ShooterSide.LEFT);
 
     config
         .encoder

@@ -96,7 +96,11 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
-    return Commands.idle(this).alongWith(turret.trackTarget(targetSupplier));
+    return turret.trackTarget(targetSupplier);
+  }
+
+  public Command zeroTurret() {
+    return turret.zero();
   }
 
   public void setFlywheelVelocity(double velocityRPM) {

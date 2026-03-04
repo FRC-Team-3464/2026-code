@@ -17,7 +17,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.Constants.DeviceIDs;
+import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 import java.util.function.DoubleSupplier;
 
@@ -28,14 +29,19 @@ public class TurretIOSparkMax implements TurretIO {
 
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
-  public TurretIOSparkMax(int motorID) {
-    motor = new SparkMax(motorID, MotorType.kBrushless);
+  public TurretIOSparkMax(ShooterSide side) {
+    motor =
+        new SparkMax(
+            side == ShooterSide.LEFT ? DeviceIDs.kLeftTurretAzimuth : DeviceIDs.kRightTurretAzimuth,
+            MotorType.kBrushless);
     encoder = motor.getEncoder();
     motorController = motor.getClosedLoopController();
 
     SparkMaxConfig config = new SparkMaxConfig();
 
     config.idleMode(IdleMode.kCoast);
+    // TODO: Tune
+    config.inverted(side == ShooterSide.LEFT);
     // .smartCurrentLimit(30);
 
     config
@@ -78,23 +84,20 @@ public class TurretIOSparkMax implements TurretIO {
   }
 
   @Override
-  public void setPosition(Rotation2d position) {
-    double clampedPosition =
-        MathUtil.clamp(
-            position.getRadians(),
-            TurretConstants.kMinTurretAngleRad,
-            TurretConstants.kMaxTurretAngleRad);
+  public void applyOutputs(TurretIOOutputs outputs) {
+    switch (outputs.mode) {
+      case CLOSED_LOOP -> {
+        double clampedPosition =
+            MathUtil.clamp(
+                outputs.closedLoopTarget.getRadians(),
+                TurretConstants.kMinTurretAngleRad,
+                TurretConstants.kMaxTurretAngleRad);
 
-    motorController.setSetpoint(clampedPosition, ControlType.kPosition);
-  }
-
-  @Override
-  public void setOpenLoop(double output) {
-    motor.set(MathUtil.clamp(output, -1.0, 1.0));
-  }
-
-  @Override
-  public void stop() {
-    motor.stopMotor();
+        motorController.setSetpoint(clampedPosition, ControlType.kPosition);
+      }
+      case OPEN_LOOP -> {
+        motor.set(MathUtil.clamp(outputs.openLoopOutput, -1.0, 1.0));
+      }
+    }
   }
 }

@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface TurretIO {
-  public default void updateInputs(TurretIOInputs inputs) {}
 
   @AutoLog
   public static class TurretIOInputs {
@@ -13,12 +12,22 @@ public interface TurretIO {
     public double velocityRadPerSec = 0.0;
     public double appliedVolts = 0.0;
     public double currentDrawAmps = 0.0;
+    public boolean limitTriggered = false;
   }
 
-  public default void setPosition(Rotation2d position) {}
+  public static enum TurretIOOutputMode {
+    CLOSED_LOOP,
+    OPEN_LOOP
+  }
 
-  /** Run motor at the specified open loop value. */
-  public default void setOpenLoop(double output) {}
+  public class TurretIOOutputs {
+    public TurretIOOutputMode mode = TurretIOOutputMode.CLOSED_LOOP;
 
-  default void stop() {}
+    public double openLoopOutput = 0.0;
+    public Rotation2d closedLoopTarget = Rotation2d.kZero;
+  }
+
+  void updateInputs(TurretIOInputs inputs);
+
+  void applyOutputs(TurretIOOutputs outputs);
 }

@@ -2,7 +2,6 @@ package frc.robot.subsystems.shooter.turret;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -41,18 +40,15 @@ public class TurretIOSim implements TurretIO {
   }
 
   @Override
-  public void setPosition(Rotation2d position) {
-    pid.setSetpoint(position.getRadians());
-    appliedVolts = pid.calculate(sim.getAngularPositionRad());
-  }
-
-  @Override
-  public void setOpenLoop(double output) {
-    appliedVolts = 12.0 * output;
-  }
-
-  @Override
-  public void stop() {
-    appliedVolts = 0.0;
+  public void applyOutputs(TurretIOOutputs outputs) {
+    switch (outputs.mode) {
+      case CLOSED_LOOP -> {
+        pid.setSetpoint(outputs.closedLoopTarget.getRadians());
+        appliedVolts = pid.calculate(sim.getAngularPositionRad());
+      }
+      case OPEN_LOOP -> {
+        appliedVolts = 12.0 * outputs.openLoopOutput;
+      }
+    }
   }
 }

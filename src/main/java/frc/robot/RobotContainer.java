@@ -12,9 +12,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.RobotState.OdometryObservation;
+import frc.robot.commands.DriveCommands;
 import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
@@ -156,7 +156,8 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+    return leftShooter.zeroTurret().alongWith(rightShooter.zeroTurret());
+    // return Commands.print("No autonomous command configured");
   }
 
   public void configurePathPlanner() {

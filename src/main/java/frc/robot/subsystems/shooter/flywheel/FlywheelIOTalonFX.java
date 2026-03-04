@@ -5,13 +5,17 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants.DeviceIDs;
+import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
@@ -25,12 +29,26 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
-  public FlywheelIOTalonFX(int motorID) {
-    motor = new TalonFX(motorID);
-    motorConfig =
-        new TalonFXConfiguration()
-            .withSlot0(FlywheelConstants.kGains)
-            .withMotorOutput(FlywheelConstants.kOutputConfigs);
+  public FlywheelIOTalonFX(ShooterSide side) {
+    motor = new TalonFX(
+        side == ShooterSide.LEFT
+            ? DeviceIDs.kLeftTurretFlywheel
+            : DeviceIDs.kRightTurretFlywheel);
+    motorConfig = new TalonFXConfiguration()
+        .withMotorOutput(
+            new MotorOutputConfigs()
+                .withInverted(
+                    side == ShooterSide.LEFT
+                        ? InvertedValue.Clockwise_Positive
+                        : InvertedValue.CounterClockwise_Positive))
+        .withSlot0(FlywheelConstants.kGains)
+        /**
+         * TODO: Update gains
+         * Peiwei, Ben: see the FlywheelConstants.kGains above... thats where the values are
+         * You also might have to check if the inverted values are correct, positive
+         * should spin the right way for shooting (line above that has the withInverted() method)
+         */
+        .withMotorOutput(FlywheelConstants.kOutputConfigs);
     tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig, 0.25));
 
     velocitySignal = motor.getVelocity();
@@ -45,10 +63,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
-    inputs.connected =
-        BaseStatusSignal.refreshAll(
-                velocitySignal, accelerationSignal, voltageSignal, currentSignal)
-            .isOK();
+    inputs.connected = BaseStatusSignal.refreshAll(
+        velocitySignal, accelerationSignal, voltageSignal, currentSignal)
+        .isOK();
     inputs.velocityRadPerSec = velocitySignal.getValue().in(RadiansPerSecond);
     inputs.appliedVolts = voltageSignal.getValueAsDouble();
     inputs.currentDrawAmps = currentSignal.getValueAsDouble();

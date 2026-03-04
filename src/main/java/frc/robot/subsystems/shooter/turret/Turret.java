@@ -12,26 +12,29 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
+import frc.robot.subsystems.shooter.turret.TurretIO.TurretIOOutputMode;
+import frc.robot.subsystems.shooter.turret.TurretIO.TurretIOOutputs;
+import frc.robot.util.FullSubsystem;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
-public class Turret extends SubsystemBase {
+public class Turret extends FullSubsystem {
   private final ShooterSide side;
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
+  private final TurretIOOutputs outputs = new TurretIOOutputs();
 
   private Rotation2d targetAngle = Rotation2d.kZero;
 
   private boolean atGoal = false;
-  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
+  private Debouncer atGoalDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
-  private boolean zeroed = false;
+  private boolean isZeroed = false;
 
   /** Creates a new Turret. */
   public Turret(ShooterSide side, TurretIO io) {
@@ -44,6 +47,10 @@ public class Turret extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs(("Turret/" + side.getName()), inputs);
 
+    if (inputs.limitTriggered) {
+      isZeroed = true;
+    }
+
     if (side == ShooterSide.LEFT) {
       RobotVisualizer.getInstance().setLeftTurretAngle(Rotation2d.fromRadians(inputs.positionRad));
     } else if (side == ShooterSide.RIGHT) {
@@ -51,6 +58,11 @@ public class Turret extends SubsystemBase {
     }
 
     Logger.recordOutput(("Turret/" + side.getName() + "/TargetAngle"), targetAngle);
+  }
+
+  @Override
+  public void periodicAfterScheduler() {
+    io.applyOutputs(outputs);
   }
 
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
@@ -85,6 +97,10 @@ public class Turret extends SubsystemBase {
         this);
   }
 
+  public Command zero() {
+    return Commands.startEnd(() -> setOpenLoop(0.2), () -> stop()).until(this::isZeroed);
+  }
+
   /**
    * Set the target angle for the turret.
    *
@@ -93,9 +109,9 @@ public class Turret extends SubsystemBase {
    * @param position A {@link Rotation2d} object representing the target position of the turret.
    */
   public void setPosition(Rotation2d position) {
-    atGoal =
-        atGoalDebouncer.calculate(
-            Math.abs(position.getRadians() - inputs.positionRad) < TurretConstants.kAngleTolerance);
+    if (!isZeroed) return; // safety
+
+    targetAngle = position;
 
     position =
         Rotation2d.fromRadians(
@@ -104,11 +120,22 @@ public class Turret extends SubsystemBase {
                 TurretConstants.kMinTurretAngleRad,
                 TurretConstants.kMaxTurretAngleRad));
 
-    io.setPosition(position);
+    outputs.mode = TurretIOOutputMode.CLOSED_LOOP;
+    outputs.closedLoopTarget = position;
+
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(position.getRadians() - inputs.positionRad) < TurretConstants.kAngleTolerance);
   }
 
   public void setOpenLoop(double output) {
-    io.setOpenLoop(output);
+    outputs.mode = TurretIOOutputMode.OPEN_LOOP;
+    outputs.openLoopOutput = MathUtil.clamp(output, -1.0, 1.0);
+  }
+
+  public void stop() {
+    outputs.mode = TurretIOOutputMode.OPEN_LOOP;
+    outputs.openLoopOutput = 0.0;
   }
 
   public double getPosition() {
@@ -121,6 +148,10 @@ public class Turret extends SubsystemBase {
 
   public boolean atGoal() {
     return atGoal;
+  }
+
+  public boolean isZeroed() {
+    return isZeroed;
   }
 
   public ShooterSide getSide() {
