@@ -16,7 +16,7 @@ public final class ShooterConstants {
     public static final double kLatencySeconds = 0.05;
 
     public static final class TurretConstants {
-        public static final double kGearRatio = 10 / 1;
+        public static final double kGearRatio = 10 / 1; // Motor / Turret
         public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
         public static final double kMaxTurretAngleRad = Units.degreesToRadians(90);
         public static final double kAngleTolerance = Units.degreesToRadians(2);

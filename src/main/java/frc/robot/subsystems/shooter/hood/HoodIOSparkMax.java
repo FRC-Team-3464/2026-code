@@ -1,9 +1,12 @@
 package frc.robot.subsystems.shooter.hood;
 
+import static frc.robot.util.SparkUtil.tryUntilOk;
 import static frc.robot.util.SparkUtil.ifOk;
 import static frc.robot.util.SparkUtil.sparkStickyFault;
 
+import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -44,6 +47,14 @@ public class HoodIOSparkMax implements HoodIO {
         .velocityConversionFactor(2 * Math.PI / HoodConstants.kGearRatio / 60.0);
 
     config.closedLoop.feedForward.kS(0);
+
+    tryUntilOk(
+        motor,
+        5,
+        () ->
+            motor.configure(
+                config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(motor, 5, () -> encoder.setPosition(0));
   }
 
   @Override

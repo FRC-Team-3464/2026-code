@@ -62,7 +62,7 @@ public class Intake extends SubsystemBase {
    */
   public Command outtake() {
     return Commands.runEnd(
-        () -> io.setWheelSpeed(-(IntakeConstants.kRollerMotorSpeed)),
+        () -> io.setWheelSpeed(-IntakeConstants.kRollerMotorSpeed),
         () -> io.setWheelSpeed(0.0),
         this);
   }

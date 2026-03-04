@@ -26,6 +26,12 @@ public class IntakeIOHardware implements IntakeIO {
   }
 
   @Override
+  public void setPivotPosition(double positionRad) {
+      // TODO Auto-generated method stub
+      IntakeIO.super.setPivotPosition(positionRad);
+  }
+
+  @Override
   public void setPivotSpeed(double speed) {
     pivotMotor.set(speed);
   }

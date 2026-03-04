@@ -54,14 +54,6 @@ public class DriverControls implements Configurable {
     // Neutral controls (regardless of whether we are in one or two driver mode)
     driver.xSquare().onTrue(Commands.runOnce(drive::zeroYaw));
 
-    driver
-        .bCircle()
-        .onTrue(
-            Commands.runEnd(
-                    () -> driver.rumble(RumbleType.kBothRumble, 1),
-                    () -> driver.rumble(RumbleType.kBothRumble, 0.0))
-                .withTimeout(0.25));
-
     driver.dPadUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
     driver.dPadUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
     driver.dPadUpRight().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHEAST));
@@ -78,26 +70,31 @@ public class DriverControls implements Configurable {
   /*
    * Driver Bindings:
    *
-   * <p>LB: Toggle deploy/retract intake LT: Spin intake RB: Shoot LT + A:
-   * backspin intake RT:
-   * Climb RT + A: Unclimb X: reset Gyro D-Pad: CrabWalk LB + RB + Y: Aux Handoff
+   * LB: Toggle deploy/retract intake
+   * LT: Spin intake
+   * RB: Shoot
+   * LT + A: backspin intake
+   * RT: Climb RT + A: Unclimb
+   * X: reset Gyro
+   * D-Pad: CrabWalk
+   * LB + RB + Y: Aux Handoff
    *
    */
-
   private void configureOneDriver() {
 
     // driver
-    //     .rightBumper()
-    //     .and(this::isOneDriver)
-    //     .onTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
+    // .rightBumper()
+    // .and(this::isOneDriver)
+    // .onTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
 
     // driver.leftBumper().and(this::isOneDriver).onTrue(intake.deploy().withTimeout(0.5));
 
-    // driver.leftBumper().and(this::isOneDriver).onTrue(intake.retract().withTimeout(0.5));
+    driver.leftBumper().and(this::isOneDriver).onTrue(intake.retract().withTimeout(0.5));
 
-    // driver.leftTrigger().and(this::isOneDriver).whileTrue(intake.intake());
+    driver.leftTrigger().and(this::isOneDriver).whileTrue(intake.intake());
 
-    // driver.leftTrigger().and(this::isOneDriver).whileTrue(intake.outtake());
+    driver.leftBumper().and(driver.rightBumper()).and(driver.yTriangle())
+        .onTrue(Commands.runOnce(() -> this.setMode(DriverMode.TWO_DRIVERS)));
   }
 
   /*
@@ -113,7 +110,8 @@ public class DriverControls implements Configurable {
    *
    * <p>thumb button: Driver Handoff
    */
-  private void configureTwoDrivers() {}
+  private void configureTwoDrivers() {
+  }
 
   private boolean isOneDriver() {
     return mode == DriverMode.ONE_DRIVER;
