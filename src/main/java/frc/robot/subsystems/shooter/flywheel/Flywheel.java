@@ -7,6 +7,7 @@ package frc.robot.subsystems.shooter.flywheel;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
@@ -20,6 +21,7 @@ public class Flywheel extends SubsystemBase {
 
   private boolean atGoal = false;
   private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
+  private double goalRPM = 0.0;
 
   /** Creates a new Flywheel. */
   public Flywheel(ShooterSide side, FlywheelIO io) {
@@ -32,9 +34,13 @@ public class Flywheel extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Shooter/" + side.getName() + "/Flywheel", inputs);
     Logger.recordOutput("Shooter/" + side.getName() + "/Flywheel/AtGoal", atGoal);
+
+    SmartDashboard.putNumber("Flywheel Velo", getVelocity());
+    SmartDashboard.putNumber("Flywheel Setpoint", goalRPM);
   }
 
   public void setVelocity(double velocityRPM) {
+    goalRPM = velocityRPM;
     atGoal =
         atGoalDebouncer.calculate(
             Math.abs(

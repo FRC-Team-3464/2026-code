@@ -37,6 +37,7 @@ public final class Constants {
   public static final int kOperatorControllerPort = 1;
 
   public static boolean kDisableHAL = false;
+  public static boolean kTuningMode = true;
 
   public static void disableHAL() {
     kDisableHAL = true;

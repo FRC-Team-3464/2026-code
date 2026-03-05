@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.DeviceIDs;
 import frc.robot.RobotState.OdometryObservation;
+import frc.robot.commands.DriveCommands;
 import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
@@ -138,8 +139,8 @@ public class RobotContainer {
             new DefaultControls(driver, operator, drive, leftShooter, rightShooter),
             new DriverControls(
                 driver, operator, drive, leftShooter, rightShooter, leftGuts, rightGuts, intake)
-            //         // TODO: Implement ZoneControls
-            //         // ,new ZoneControls()
+            // // TODO: Implement ZoneControls
+            // // ,new ZoneControls()
             )
         .forEach(Configurable::configure);
   }
@@ -177,10 +178,22 @@ public class RobotContainer {
         new InstantCommand(() -> RobotState.getInstance().resetRotation(Rotation2d.kZero)));
 
     NamedCommands.registerCommand(
-        "scoreBothShooters",
-        Shooter.shootBothAtTarget(
-            leftShooter,
-            rightShooter,
+        "Shoot Both At Hub",
+        Shooter.shootBothAtTargetNoTurret(
+                leftShooter,
+                rightShooter,
+                () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d()))
+            .alongWith(leftGuts.runGutForward(), rightGuts.runGutForward()));
+
+    NamedCommands.registerCommand("Intake/Index Fuel", intake.intake());
+    NamedCommands.registerCommand("Deploy Intake", intake.intake());
+    NamedCommands.registerCommand("Retract Intake", intake.intake());
+
+    NamedCommands.registerCommand(
+        "Turn Robot To Hub",
+        DriveCommands.turnToPoint(
+            drive,
+            () -> RobotState.getInstance().getEstimatedPose(),
             () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
   }
 }

@@ -80,7 +80,7 @@ public final class ShooterConstants {
     public static final int kRightFlywheelID = -1;
 
     public static final Slot0Configs kGains =
-        new Slot0Configs().withKP(0).withKI(0).withKD(0).withKS(0).withKV(0).withKA(0);
+        new Slot0Configs().withKP(0).withKI(0).withKD(0).withKS(0.1).withKV(0).withKA(0);
     public static final MotorOutputConfigs kOutputConfigs =
         new MotorOutputConfigs()
             .withNeutralMode(NeutralModeValue.Coast)

@@ -9,10 +9,9 @@ import java.util.List;
 
 public class Leds extends SubsystemBase {
 
-  private static Leds instance;
+  private static final Leds instance = new Leds();
 
   public static Leds getInstance() {
-    if (instance == null) instance = new Leds();
     return instance;
   }
 
@@ -22,7 +21,7 @@ public class Leds extends SubsystemBase {
   public record Section(int start, int end) {}
 
   public enum LedSection {
-    ALL(new Section(0, LedConstants.kFullLength)),
+    ALL(new Section(0, LedConstants.kFullLength - 1)),
     ALL_LEFT(
         new Section(
             0, LedConstants.kLeftTurretBottomLength + LedConstants.kLeftTurretTopLength - 1)),
@@ -60,7 +59,7 @@ public class Leds extends SubsystemBase {
     }
   }
 
-  public Leds() {
+  private Leds() {
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
@@ -68,12 +67,16 @@ public class Leds extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // Default pattern (change this however you want)
-    solid(LedSection.ALL, Color.kAquamarine);
+    solid(LedSection.ALL, Color.kAqua);
+    // solid(LedSection.TOP_LEFT_TURRET, Color.kLimeGreen);
+    // solid(LedSection.BOTTOM_LEFT_TURRET, Color.kYellow);
+    // solid(LedSection.BOTTOM_RIGHT_TURRET, Color.kSkyBlue);
+    leds.setData(buffer);
   }
 
   public void solid(LedSection section, Color color) {
-    for (int i = section.section.start(); i < section.section.end(); i++) {
+    Section s = section.getSection();
+    for (int i = s.start(); i < s.end(); i++) {
       buffer.setLED(i, color);
     }
   }
@@ -97,20 +100,22 @@ public class Leds extends SubsystemBase {
   }
 
   public void rainbow(LedSection section, double cycleLength, double duration) {
+    Section s = section.getSection();
     double baseHue = (1 - ((Timer.getTimestamp() / duration) % 1.0)) * 180.0;
     double huePerLed = 180.0 / cycleLength;
 
-    for (int i = section.section.start(); i < section.section.end(); i++) {
-      int hue = (int) ((baseHue + huePerLed * (i - section.section.start())) % 180);
+    for (int i = s.start(); i < s.end(); i++) {
+      int hue = (int) ((baseHue + huePerLed * (i - s.start())) % 180);
       buffer.setHSV(i, hue, 255, 255);
     }
   }
 
   public void wave(LedSection section, Color c1, Color c2, double cycleLength, double duration) {
+    Section s = section.getSection();
     double x = (1 - ((Timer.getTimestamp() % duration) / duration)) * 2.0 * Math.PI;
     double xDiff = (2.0 * Math.PI) / cycleLength;
 
-    for (int i = section.section.start(); i < section.section.end(); i++) {
+    for (int i = s.start(); i < s.end(); i++) {
       double ratio = (Math.pow(Math.sin(x), LedConstants.kWaveExponent) + 1.0) / 2.0;
 
       Color mixed =
@@ -125,10 +130,11 @@ public class Leds extends SubsystemBase {
   }
 
   public void stripes(LedSection section, List<Color> colors, int stripeLength, double duration) {
+    Section s = section.getSection();
     int offset =
         (int) ((Timer.getTimestamp() % duration) / duration * stripeLength * colors.size());
 
-    for (int i = section.section.start(); i < section.section.end(); i++) {
+    for (int i = s.start(); i < s.end(); i++) {
       int index =
           (int) (Math.floor((double) (i - offset) / stripeLength) + colors.size()) % colors.size();
       buffer.setLED(i, colors.get(index));

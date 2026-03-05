@@ -2,6 +2,7 @@ package frc.robot.control;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -98,6 +99,10 @@ public class DriverControls implements Configurable {
                     leftShooter,
                     rightShooter)
                 .alongWith(leftGuts.runGutForward(), rightGuts.runGutForward()));
+
+    driver
+        .aCross()
+        .onTrue(new InstantCommand(() -> rightShooter.setFlywheelVelocity(1000), rightShooter));
 
     driver.leftBumper().and(this::isOneDriver).whileTrue(intake.deploy());
     driver.rightTrigger().and(this::isOneDriver).whileTrue(intake.retract());

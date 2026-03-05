@@ -69,6 +69,18 @@ public class Shooter extends SubsystemBase {
         rightShooter);
   }
 
+  public static Command shootBothAtTargetNoTurret(
+      Shooter leftShooter, Shooter rightShooter, Supplier<Translation2d> targetSupplier) {
+    return Commands.run(
+        () -> {
+          var cmds = TrajectoryCalculator.calculateBoth(targetSupplier.get());
+          leftShooter.applyCommandNoRotation(cmds.left());
+          rightShooter.applyCommandNoRotation(cmds.right());
+        },
+        leftShooter,
+        rightShooter);
+  }
+
   /**
    * Apply a pre-calculated shooter command to this shooter. This does not require the shooter
    * subsystem - use when combining with other shooters.
@@ -79,6 +91,11 @@ public class Shooter extends SubsystemBase {
     flywheel.setVelocity(cmd.wheelRPM());
     hood.setAngle(cmd.hoodAngle());
     turret.setPosition(cmd.turretAngle());
+  }
+
+  public void applyCommandNoRotation(ShooterCommand cmd) {
+    flywheel.setVelocity(cmd.wheelRPM());
+    hood.setAngle(cmd.hoodAngle());
   }
 
   public Command shootAtTarget(Supplier<Translation2d> targetSupplier) {
