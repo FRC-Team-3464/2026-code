@@ -6,10 +6,6 @@ package frc.robot.subsystems.leds;
 
 import static edu.wpi.first.units.Units.Seconds;
 
-import java.util.random.RandomGenerator.LeapableGenerator;
-
-import com.fasterxml.jackson.annotation.ObjectIdGenerators.None;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.LEDPattern;
@@ -40,7 +36,7 @@ public class LEDs extends SubsystemBase {
    * and contains a method to initialize all the parameters. It also has five
    * methods to return the values of each parameter.
    */
-  public enum LEDMode { // temporary states to be changed later
+  public enum LEDMode { 
     // if only one period of time is specified, the default will be blinking
     // both on and off for this amount of time
 
@@ -53,14 +49,16 @@ public class LEDs extends SubsystemBase {
      * param 5: period 2
      */
     // #endregion param_desc
+
     FLASH_WHITE("FLASH", Color.kWhite, null, 1.5, 0),
-    FLASH_YELLOW("FLASH", Color.kYellow, null, 0, 0),
-    FLASH_RED("FLASH", Color.kRed, null, 0, 0),
-    FLASH_BLUE("FLASH", Color.kBlue, null, 0, 0),
-    FLASH_PINK("FLASH", Color.kPink, null, 0, 0),
-    FLASH_GREEN("FLASH", Color.kGreen, null, 0, 0),
-    FLASH_PURPLE("FLASH", Color.kPurple, null, 0, 0),
-    FLASH_ORANGE("FLASH", Color.kOrange, null, 0, 0),
+    FLASH_YELLOW("FLASH", Color.kYellow, null, 1.5, 0),
+    FLASH_RED("FLASH", Color.kRed, null, 1.5, 0),
+    FLASH_BLUE("FLASH", Color.kBlue, null, 1.5, 0),
+    FLASH_PINK("FLASH", Color.kPink, null, 1.5, 0),
+    FLASH_GREEN("FLASH", Color.kGreen, null, 1.5, 0),
+    FLASH_PURPLE("FLASH", Color.kPurple, null, 1.5, 0),
+    FLASH_ORANGE("FLASH", Color.kOrange, null, 1.5, 0),
+
     SOLID_RED("SOLID", Color.kRed, null, 0, 0),
     SOLID_WHITE("SOLID", Color.kWhite, null, 0, 0),
     SOLID_GREEN("SOLID", Color.kGreen, null, 0, 0),
@@ -69,15 +67,23 @@ public class LEDs extends SubsystemBase {
     SOLID_PINK("SOLID", Color.kPink, null, 0, 0),
     SOLID_PURPLE("SOLID", Color.kPurple, null, 0, 0),
     SOLID_ORANGE("SOLID", Color.kOrange, null, 0, 0),
+
     RED_AND_PURPLE_GRADIENT("GRADIENT", Color.kRed, Color.kPurple, 0, 0),
     ORANGE_AND_GREEN_GRADIENT("GRADIENT", Color.kOrange, Color.kGreen, 0, 0),
+    ORANGE_AND_YELLOW_GRADIENT("GRADIENT", Color.kOrange, Color.kYellow, 0, 0),
+    GREEN_AND_BLUE_GRADIENT("GRADIENT", Color.kGreen, Color.kBlue, 0, 0),
+    BLUE_AND_PURPLE_GRADIENT("GRADIENT", Color.kBlue, Color.kPurple, 0, 0),
     SCHOOL_COLORS_GRADIENT("GRADIENT", Color.kYellow, Color.kLightBlue, 0, 0),
-    RED_AND_PURPLE_BREATH("BREATH", Color.kRed, Color.kPurple, 0, 0),
-    ORANGE_AND_GREEN_BREATH("BREATH", Color.kOrange, Color.kGreen, 0, 0),
+
+    RED_AND_PURPLE_BREATH("BREATH", Color.kRed, Color.kPurple, 1.5, 0),
+    ORANGE_AND_GREEN_BREATH("BREATH", Color.kOrange, Color.kGreen, 1.5, 0),
+    RED_AND_BLUE_BREATH("BREATH", Color.kRed, Color.kBlue, 1.5, 0),
     SCHOOL_COLORS_BREATH("BREATH", Color.kYellow, Color.kLightBlue, 1.5, 0),
+
     RAINBOW_BREATH("RAINBOWBREATH", null, null, 1.5, 0),
+
     RAINBOW_CHROMA("RAINBOWCHROMA", null, null, 0, 0),
-    BREATH("BREATH", Color.kRed, Color.kBlue, 0, 0),
+    
     OFF("OFF", null, null, 0, 0);
 
     private final String LEDtype;
@@ -122,15 +128,15 @@ public class LEDs extends SubsystemBase {
   }
   // #endregion enum_setup
 
-  //initial value is off
+  // initial value is off
   /** This is the enum object. */
   public LEDMode _currentLEDMode = LEDMode.OFF;
 
-  public void setCurrentMode(LEDMode _modeToSet){
+  public void setCurrentMode(LEDMode _modeToSet) {
     _currentLEDMode = _modeToSet;
   }
 
-  public LEDMode getCurrentMode(){
+  public LEDMode getCurrentMode() {
     return _currentLEDMode;
   }
 
@@ -155,7 +161,7 @@ public class LEDs extends SubsystemBase {
 
   public LEDPattern pattern;
 
-  //#region oldLEDCode
+  // #region oldLEDCode
   /**
    * This method sets the value of an LED pattern object depending on the
    * parameters specified in the enum.
@@ -199,15 +205,15 @@ public class LEDs extends SubsystemBase {
 
     else if (type == "RAINBOWBREATH") {
       LEDPattern pattern = LEDPattern.rainbow(0, 0).breathe(Seconds.of(period1));
-    } 
+    }
 
     else {
       LEDPattern pattern = LEDPattern.solid(Color.kBlack);
     }
     return pattern;
   }
-  //#endregion oldLEDcode
-  
+  // #endregion oldLEDcode
+
   /**
    * This command implements the start method above and sets data to the LED
    * buffer depending on what the LED pattern is.
