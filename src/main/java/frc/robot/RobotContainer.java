@@ -11,10 +11,11 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants.DeviceIDs;
 import frc.robot.RobotState.OdometryObservation;
-import frc.robot.commands.DriveCommands;
 import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
@@ -29,13 +30,21 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.guts.Guts;
 import frc.robot.subsystems.guts.Guts.GutSide;
 import frc.robot.subsystems.guts.GutsIOSim;
+import frc.robot.subsystems.guts.GutsIOSparkMax;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIOHardware;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.leds.Leds;
+import frc.robot.subsystems.leds.Leds.LedSection;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOSparkMax;
 import frc.robot.subsystems.shooter.turret.TurretIOSim;
+import frc.robot.subsystems.shooter.turret.TurretIOSparkMax;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import java.util.List;
@@ -50,7 +59,7 @@ public class RobotContainer {
   private Guts leftGuts;
   private Guts rightGuts;
   private Intake intake;
-  // private Vision vision;
+  private Vision vision;
 
   public RobotContainer() {
     switch (Constants.kCurrentMode) {
@@ -63,21 +72,21 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         // vision = new Vision(null, null);
-        // leftShooter =
-        //     new Shooter(
-        //         ShooterSide.LEFT,
-        //         new TurretIOSparkMax(DeviceIDs.kLeftTurretAzimuth),
-        //         new HoodIOSparkMax(DeviceIDs.kLeftTurretHood),
-        //         new FlywheelIOTalonFX(DeviceIDs.kLeftTurretFlywheel));
-        // rightShooter =
-        //     new Shooter(
-        //         ShooterSide.RIGHT,
-        //         new TurretIOSparkMax(DeviceIDs.kRightTurretAzimuth),
-        //         new HoodIOSparkMax(DeviceIDs.kRightTurretHood),
-        //         new FlywheelIOTalonFX(DeviceIDs.kRightTurretFlywheel));
-        // leftGuts = new Guts(GutSide.LEFT, new GutsIOSparkMax(DeviceIDs.kLeftGuts));
-        // rightGuts = new Guts(GutSide.RIGHT, new GutsIOSparkMax(DeviceIDs.kRightGuts));
-        // intake = new Intake(new IntakeIOHardware());
+        leftShooter =
+            new Shooter(
+                ShooterSide.LEFT,
+                new TurretIOSparkMax(ShooterSide.LEFT),
+                new HoodIOSparkMax(ShooterSide.LEFT),
+                new FlywheelIOTalonFX(ShooterSide.LEFT));
+        rightShooter =
+            new Shooter(
+                ShooterSide.RIGHT,
+                new TurretIOSparkMax(ShooterSide.RIGHT),
+                new HoodIOSparkMax(ShooterSide.RIGHT),
+                new FlywheelIOTalonFX(ShooterSide.RIGHT));
+        leftGuts = new Guts(GutSide.LEFT, new GutsIOSparkMax(DeviceIDs.kLeftGuts));
+        rightGuts = new Guts(GutSide.RIGHT, new GutsIOSparkMax(DeviceIDs.kRightGuts));
+        intake = new Intake(new IntakeIOHardware());
         break;
       case SIM:
         drive =
@@ -119,17 +128,8 @@ public class RobotContainer {
         // vision = new Vision(null, new CameraIO[] {});
         break;
     }
+    Leds.getInstance().solid(LedSection.ALL, Color.kCyan);
 
-    // if (Constants.kCurrentMode == Constants.Mode.REAL) {
-    // try {
-    // Constants.kRobotConfig = RobotConfig.fromGUISettings();
-    // } catch (Exception e) {
-    // // Handle exception as needed
-    // e.printStackTrace();
-    // }
-    // }
-
-    // configurePathPlanner();
     configureBindings();
   }
 

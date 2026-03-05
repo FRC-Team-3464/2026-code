@@ -20,15 +20,16 @@ public class IntakeIOHardware implements IntakeIO {
 
   public IntakeIOHardware() {
     pivotConfig = new SparkMaxConfig();
-    driveMotor.getConfigurator().apply(wheelMotorConfig);
+    // wheelMotorConfig = new TalonFXConfiguration();
+    // driveMotor.getConfigurator().apply(wheelMotorConfig);
     pivotMotor.configure(
         pivotConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
   }
 
   @Override
   public void setPivotPosition(double positionRad) {
-      // TODO Auto-generated method stub
-      IntakeIO.super.setPivotPosition(positionRad);
+    // TODO Auto-generated method stub
+    IntakeIO.super.setPivotPosition(positionRad);
   }
 
   @Override

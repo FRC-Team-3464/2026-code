@@ -26,8 +26,7 @@ public class Guts extends SubsystemBase {
   public Guts(GutSide side, GutsIO io) {
     this.io = io;
     this.side = side;
-    speed =
-        (side == GutSide.LEFT) ? (GutsConstants.kGutMotorSpeed) : -(GutsConstants.kGutMotorSpeed);
+    speed = GutsConstants.kGutMotorSpeed;
   }
 
   /** Runs the gut motor forward at 0.5 speed, then stops it when finished. */

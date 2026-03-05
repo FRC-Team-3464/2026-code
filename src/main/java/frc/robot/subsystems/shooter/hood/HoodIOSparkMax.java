@@ -1,8 +1,8 @@
 package frc.robot.subsystems.shooter.hood;
 
-import static frc.robot.util.SparkUtil.tryUntilOk;
 import static frc.robot.util.SparkUtil.ifOk;
 import static frc.robot.util.SparkUtil.sparkStickyFault;
+import static frc.robot.util.SparkUtil.tryUntilOk;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;

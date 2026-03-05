@@ -1,8 +1,8 @@
 package frc.robot.control;
 
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.guts.Guts;
@@ -82,18 +82,34 @@ public class DriverControls implements Configurable {
    */
   private void configureOneDriver() {
 
-    // driver
-    // .rightBumper()
-    // .and(this::isOneDriver)
-    // .onTrue(Shooter.shootBothAtHub(leftShooter, rightShooter));
+    driver
+        .rightBumper()
+        .and(this::isOneDriver)
+        .whileTrue(
+            new StartEndCommand(
+                    () -> {
+                      leftShooter.setFlywheelOpenLoop(0.75);
+                      rightShooter.setFlywheelOpenLoop(-0.75);
+                    },
+                    () -> {
+                      leftShooter.setFlywheelOpenLoop(0);
+                      rightShooter.setFlywheelOpenLoop(0);
+                    },
+                    leftShooter,
+                    rightShooter)
+                .alongWith(leftGuts.runGutForward(), rightGuts.runGutForward()));
 
-    // driver.leftBumper().and(this::isOneDriver).onTrue(intake.deploy().withTimeout(0.5));
+    driver.leftBumper().and(this::isOneDriver).whileTrue(intake.deploy());
+    driver.rightTrigger().and(this::isOneDriver).whileTrue(intake.retract());
 
-    driver.leftBumper().and(this::isOneDriver).onTrue(intake.retract().withTimeout(0.5));
+    // driver.leftBumper().and(this::isOneDriver).onTrue(intake.retract().withTimeout(0.5));
 
     driver.leftTrigger().and(this::isOneDriver).whileTrue(intake.intake());
 
-    driver.leftBumper().and(driver.rightBumper()).and(driver.yTriangle())
+    driver
+        .leftBumper()
+        .and(driver.rightBumper())
+        .and(driver.yTriangle())
         .onTrue(Commands.runOnce(() -> this.setMode(DriverMode.TWO_DRIVERS)));
   }
 
@@ -110,8 +126,7 @@ public class DriverControls implements Configurable {
    *
    * <p>thumb button: Driver Handoff
    */
-  private void configureTwoDrivers() {
-  }
+  private void configureTwoDrivers() {}
 
   private boolean isOneDriver() {
     return mode == DriverMode.ONE_DRIVER;

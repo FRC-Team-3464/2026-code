@@ -24,7 +24,7 @@ public interface IntakeIO {
 
     public double pivotAppliedVolts = 0.0;
     public double wheelAppliedVolts = 0.0;
-    
+
     public double pivotCurrentDrawAmps = 0.0;
     public double wheelCurrentDrawAmps = 0.0;
   }
