@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.62702380952381,
+        "y": 4.027441666673263
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.8603928571428576,
+        "y": 4.229357142857142
+      },
+      "isLocked": false,
+      "linkedName": "MS26"
+    },
+    {
+      "anchor": {
+        "x": 3.6918095238087307,
+        "y": 5.190345238091416
+      },
+      "prevControl": {
+        "x": 3.0007619047619056,
+        "y": 5.1579523809523815
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LTBump26"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 2.6,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "MS Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.0655476190476194,
+        "y": 7.069130952380952
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.7180840978146676,
+        "y": 6.557127768372483
+      },
+      "isLocked": false,
+      "linkedName": "LTCorner3"
+    },
+    {
+      "anchor": {
+        "x": 0.9816071428571436,
+        "y": 5.902988095238095
+      },
+      "prevControl": {
+        "x": 1.99534891528081,
+        "y": 6.048770164765715
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "DP26"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "LT Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -71.565051177078
+  },
+  "useDefaultConstraints": true
+}

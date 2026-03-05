@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.356380952380952,
+        "y": 1.4111785714285725
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.854063306316862,
+        "y": 1.8650666541486076
+      },
+      "isLocked": false,
+      "linkedName": "BPBR26"
+    },
+    {
+      "anchor": {
+        "x": 3.6702142857111344,
+        "y": 2.804071428574048
+      },
+      "prevControl": {
+        "x": 3.345638995226698,
+        "y": 2.9060051858551628
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "RTBump"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 2.6,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Return to Alliance",
+  "idealStartingState": {
+    "velocity": 5.2,
+    "rotation": 80.0
+  },
+  "useDefaultConstraints": true
+}

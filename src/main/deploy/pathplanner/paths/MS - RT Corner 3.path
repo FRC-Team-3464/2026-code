@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.62702380952381,
+        "y": 4.027441666673263
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.1693452380952394,
+        "y": 3.8298452380952384
+      },
+      "isLocked": false,
+      "linkedName": "MS26"
+    },
+    {
+      "anchor": {
+        "x": 3.2491071428625617,
+        "y": 0.7417261904740291
+      },
+      "prevControl": {
+        "x": 1.651059523809525,
+        "y": 1.5407500000000005
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "RTCorner3"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 5.2,
+    "rotation": 68.19859051479783
+  },
+  "reversed": false,
+  "folder": "Misc.",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}

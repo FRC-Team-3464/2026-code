@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.5622380952380954,
+        "y": 7.252690476190476
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.0854071663965237,
+        "y": 6.8510872698347525
+      },
+      "isLocked": false,
+      "linkedName": "LTedge"
+    },
+    {
+      "anchor": {
+        "x": 0.9816071428571436,
+        "y": 5.902988095238095
+      },
+      "prevControl": {
+        "x": 3.7063552838449105,
+        "y": 6.4144083322574375
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "DP26"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "LT Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 138.01278750418322
+  },
+  "useDefaultConstraints": true
+}

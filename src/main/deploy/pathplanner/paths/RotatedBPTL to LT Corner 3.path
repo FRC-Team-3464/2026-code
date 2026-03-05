@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 6.734404761908865
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 8.788285714285713,
+        "y": 6.820785714285714
+      },
+      "isLocked": false,
+      "linkedName": "Rotated BPTL"
+    },
+    {
+      "anchor": {
+        "x": 3.0655476190476194,
+        "y": 7.069130952380952
+      },
+      "prevControl": {
+        "x": 4.19929761904762,
+        "y": 8.202880952380953
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LTCorner3"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 5.2,
+    "rotation": -71.565051177078
+  },
+  "reversed": false,
+  "folder": "Misc.",
+  "idealStartingState": {
+    "velocity": 5.2,
+    "rotation": -80.0
+  },
+  "useDefaultConstraints": true
+}
