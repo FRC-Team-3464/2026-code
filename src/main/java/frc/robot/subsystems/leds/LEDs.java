@@ -12,9 +12,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators.None;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.LEDPattern;
-import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -101,9 +99,9 @@ public class LEDs extends SubsystemBase {
       return LEDtype;
     }
 
-    // #endregion enum_setup
+    // #region enum_setup
 
-    public LEDMode _curretstart;
+    // public LEDMode _currentLEDMode;
 
     public Color getColor1() {
       return LEDcolor1;
@@ -124,23 +122,32 @@ public class LEDs extends SubsystemBase {
   }
   // #endregion enum_setup
 
+  //initial value is off
   /** This is the enum object. */
-  public LEDMode _curretStart;
+  public LEDMode _currentLEDMode = LEDMode.OFF;
+
+  public void setCurrentMode(LEDMode _modeToSet){
+    _currentLEDMode = _modeToSet;
+  }
+
+  public LEDMode getCurrentMode(){
+    return _currentLEDMode;
+  }
 
   /**
    * Creates a new LED subsystem object if there is not already one.
    * 
    * @return The new LED subsystem object.
    */
-  public static LEDs getInstance(LEDMode mode) {
+  public static LEDs getInstance() {
     if (instance == null) {
-      instance = new LEDs(mode);
+      instance = new LEDs();
     }
     return instance;
   }
 
   /** Creates a new LEDs. */
-  public LEDs(LEDMode mode) {
+  public LEDs() {
     ledStrip.setLength(ledBuffer.getLength());
     ledStrip.setData(ledBuffer);
     ledStrip.start();
@@ -148,17 +155,18 @@ public class LEDs extends SubsystemBase {
 
   public LEDPattern pattern;
 
+  //#region oldLEDCode
   /**
    * This method sets the value of an LED pattern object depending on the
    * parameters specified in the enum.
    */
   public LEDPattern Start() {
 
-    String type = _curretStart.getType();
-    Color color1 = _curretStart.getColor1();
-    Color color2 = _curretStart.getColor2();
-    double period1 = _curretStart.getPeriod1();
-    double period2 = _curretStart.getPeriod2();
+    String type = _currentLEDMode.getType();
+    Color color1 = _currentLEDMode.getColor1();
+    Color color2 = _currentLEDMode.getColor2();
+    double period1 = _currentLEDMode.getPeriod1();
+    double period2 = _currentLEDMode.getPeriod2();
 
     System.out.print(type);
 
@@ -191,28 +199,26 @@ public class LEDs extends SubsystemBase {
 
     else if (type == "RAINBOWBREATH") {
       LEDPattern pattern = LEDPattern.rainbow(0, 0).breathe(Seconds.of(period1));
-    } else {
+    } 
+
+    else {
       LEDPattern pattern = LEDPattern.solid(Color.kBlack);
     }
     return pattern;
   }
-
+  //#endregion oldLEDcode
+  
   /**
    * This command implements the start method above and sets data to the LED
    * buffer depending on what the LED pattern is.
    */
-  public Command setLEDPattern() {
+  public Command setLEDPattern(LEDMode mode) {
     LEDPattern pattern = Start();
     return run(() -> pattern.applyTo(ledBuffer));
   }
 
   @Override
   public void periodic() {
-
-    if (DriverStation.isEStopped()) {
-      LEDPattern eStoppedPattern = LEDPattern.solid(Color.kRed);
-      eStoppedPattern.applyTo(ledBuffer);
-    }
 
     ledStrip.setData(ledBuffer);
     // This method will be called once per scheduler run

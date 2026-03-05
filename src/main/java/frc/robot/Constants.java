@@ -170,10 +170,8 @@ public final class Constants {
 
   public class OperatorConstants {
     public static Joystick auxStick = new Joystick(0);
+    
     public static JoystickButton testButton = new JoystickButton(auxStick, 0);
-
-    //test for LEDs
-    //public static JoystickButton testButton = new JoystickButton(auxStick, 0);
   }
 
 

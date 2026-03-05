@@ -22,13 +22,7 @@ public class RobotContainer {
   private final XboxController driver = new XboxController(0);
 
   private final Drive drive;
-  private final LEDs ledsFlashWhite;
-  private final LEDs ledsFlashYellow;
-  private final LEDs ledsSolidRed;
-  private final LEDs ledsSolidGreen;
-  private final LEDs ledsRedAndPurpleGradient;
-  private final LEDs ledsRainbowChroma;
-  private final LEDs ledsOff;
+  private final LEDs leds;
 
   public RobotContainer() {
     if (Robot.isReal()) {
@@ -45,13 +39,7 @@ public class RobotContainer {
               new GyroIO() {});
     }
 
-    ledsFlashWhite = new LEDs(LEDMode.FLASH_WHITE);
-    ledsFlashYellow = new LEDs(LEDMode.FLASH_YELLOW);
-    ledsSolidRed = new LEDs(LEDMode.SOLID_RED);
-    ledsSolidGreen = new LEDs(LEDMode.SOLID_GREEN);
-    ledsRedAndPurpleGradient = new LEDs(LEDMode.RED_AND_PURPLE_GRADIENT);
-    ledsRainbowChroma = new LEDs(LEDMode.RAINBOW_CHROMA);
-    ledsOff = new LEDs(LEDMode.OFF);
+    leds = new LEDs();
 
     configureBindings();
   }
@@ -65,7 +53,7 @@ public class RobotContainer {
             () -> -driver.getRightX(),
             () -> false));
 
-    Constants.OperatorConstants.testButton.whileTrue(ledsSolidGreen.setLEDPattern());
+    Constants.OperatorConstants.testButton.whileTrue(leds.setLEDPattern(LEDMode.SOLID_BLUE));
 
   }
 
