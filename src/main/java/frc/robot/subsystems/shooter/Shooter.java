@@ -120,8 +120,8 @@ public class Shooter extends SubsystemBase {
     return turret.zero();
   }
 
-  public void setFlywheelVelocity(double velocityRPM) {
-    flywheel.setVelocity(velocityRPM);
+  public Command setFlywheelVelocity(double velocityRPM) {
+    return flywheel.runVelocity(velocityRPM);
   }
 
   public void setHoodAngle(double angle) {

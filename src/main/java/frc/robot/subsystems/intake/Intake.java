@@ -55,6 +55,13 @@ public class Intake extends SubsystemBase {
         this);
   }
 
+  public Command intakeSignificantlyFaster() {
+    return Commands.runEnd(
+        () -> io.setWheelSpeed(IntakeConstants.kRollerMotorSpeed),
+        () -> io.setWheelSpeed(0.0),
+        this);
+  }
+
   /**
    * Command to run the feeder backward
    *

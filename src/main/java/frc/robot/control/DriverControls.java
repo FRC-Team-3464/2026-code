@@ -1,15 +1,20 @@
 package frc.robot.control;
 
-import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.guts.Guts;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.Direction;
+import frc.robot.util.FieldConstants;
+import frc.robot.util.FieldConstants.Hub;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 public class DriverControls implements Configurable {
@@ -22,7 +27,7 @@ public class DriverControls implements Configurable {
   }
 
   private final DriverController driver;
-  private final Joystick operator;
+  private final DriverController operator;
   private final Drive drive;
   private final Shooter leftShooter;
   private final Shooter rightShooter;
@@ -32,7 +37,7 @@ public class DriverControls implements Configurable {
 
   public DriverControls(
       DriverController driver,
-      Joystick operator,
+      DriverController operator,
       Drive drive,
       Shooter leftShooter,
       Shooter rightShooter,
@@ -53,7 +58,8 @@ public class DriverControls implements Configurable {
   public void configure() {
 
     // Neutral controls (regardless of whether we are in one or two driver mode)
-    driver.xSquare().onTrue(Commands.runOnce(drive::zeroYaw));
+    driver.xSquare().onTrue(Commands.runOnce(drive::zeroYaw, drive));
+    driver.bCircle().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     driver.dPadUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
     driver.dPadUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
@@ -64,8 +70,65 @@ public class DriverControls implements Configurable {
     driver.dPadDownRight().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHEAST));
     driver.dPadDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
 
-    configureOneDriver();
-    configureTwoDrivers();
+    driver
+        .leftBumper()
+        .whileTrue(
+            DriveCommands.joystickDriveAtAngle(
+                drive,
+                () -> -driver.getLeftY(), // xSupplier
+                () -> -driver.getLeftX(), // ySupplier
+                () -> {
+                  Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+                  Translation2d target =
+                      AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+
+                  Translation2d delta = target.minus(robotPose.getTranslation());
+
+                  return new Rotation2d(Math.atan2(delta.getY(), delta.getX()));
+                }));
+
+    operator.leftBumper().and(operator.leftTrigger().negate()).whileTrue(intake.intake());
+
+    operator
+        .rightBumper()
+        .whileTrue(
+            rightShooter
+                .setFlywheelVelocity(7000)
+                .alongWith(leftShooter.setFlywheelVelocity(7000)));
+
+    operator.rightBumper().whileTrue(leftGuts.runGutForward());
+    operator.rightBumper().whileTrue(rightGuts.runGutForward());
+
+    operator
+        .dPadUp()
+        .whileTrue(
+            new StartEndCommand(
+                () -> {
+                  leftShooter.setHoodOpenLoop(0.01);
+                  rightShooter.setHoodOpenLoop(0.01);
+                },
+                () -> {
+                  leftShooter.setHoodOpenLoop(0);
+                  rightShooter.setHoodOpenLoop(0);
+                }));
+
+    operator
+        .dPadDown()
+        .whileTrue(
+            new StartEndCommand(
+                () -> {
+                  leftShooter.setHoodOpenLoop(-0.01);
+                  rightShooter.setHoodOpenLoop(-0.01);
+                },
+                () -> {
+                  leftShooter.setHoodOpenLoop(0);
+                  rightShooter.setHoodOpenLoop(0);
+                }));
+
+    operator.leftTrigger().whileTrue(intake.intakeSignificantlyFaster());
+    operator.aCross().whileTrue(intake.outtake());
+    operator.xSquare().whileTrue(intake.deploy());
+    operator.yTriangle().whileTrue(intake.retract());
   }
 
   /*
@@ -81,42 +144,7 @@ public class DriverControls implements Configurable {
    * LB + RB + Y: Aux Handoff
    *
    */
-  private void configureOneDriver() {
-
-    driver
-        .rightBumper()
-        .and(this::isOneDriver)
-        .whileTrue(
-            new StartEndCommand(
-                    () -> {
-                      leftShooter.setFlywheelOpenLoop(0.75);
-                      rightShooter.setFlywheelOpenLoop(-0.75);
-                    },
-                    () -> {
-                      leftShooter.setFlywheelOpenLoop(0);
-                      rightShooter.setFlywheelOpenLoop(0);
-                    },
-                    leftShooter,
-                    rightShooter)
-                .alongWith(leftGuts.runGutForward(), rightGuts.runGutForward()));
-
-    driver
-        .aCross()
-        .onTrue(new InstantCommand(() -> rightShooter.setFlywheelVelocity(1000), rightShooter));
-
-    driver.leftBumper().and(this::isOneDriver).whileTrue(intake.deploy());
-    driver.rightTrigger().and(this::isOneDriver).whileTrue(intake.retract());
-
-    // driver.leftBumper().and(this::isOneDriver).onTrue(intake.retract().withTimeout(0.5));
-
-    driver.leftTrigger().and(this::isOneDriver).whileTrue(intake.intake());
-
-    driver
-        .leftBumper()
-        .and(driver.rightBumper())
-        .and(driver.yTriangle())
-        .onTrue(Commands.runOnce(() -> this.setMode(DriverMode.TWO_DRIVERS)));
-  }
+  private void configureOneDriver() {}
 
   /*
    * <p>Back up Operator Controls:

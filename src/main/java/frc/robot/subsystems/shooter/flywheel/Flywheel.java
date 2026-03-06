@@ -8,6 +8,8 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
@@ -37,6 +39,17 @@ public class Flywheel extends SubsystemBase {
 
     SmartDashboard.putNumber("Flywheel Velo", getVelocity());
     SmartDashboard.putNumber("Flywheel Setpoint", goalRPM);
+  }
+
+  public Command runVelocity(double velocityRPM) {
+    return Commands.startEnd(
+        () -> {
+          setVelocity(velocityRPM);
+        },
+        () -> {
+          stop();
+        },
+        this);
   }
 
   public void setVelocity(double velocityRPM) {

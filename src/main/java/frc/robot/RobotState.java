@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -67,7 +66,7 @@ public class RobotState {
    */
   public void addVisionMeasurement(VisionMeasurement measurement) {
     poseEstimator.addVisionMeasurement(
-        measurement.visionPose().toPose2d(), measurement.timestamp(), measurement.stdDevs());
+        measurement.visionPose(), measurement.timestamp(), measurement.stdDevs());
 
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
   }
@@ -136,5 +135,5 @@ public class RobotState {
   public record OdometryObservation(
       double timestamp, SwerveModulePosition[] modulePositions, Rotation2d gyroAngle) {}
 
-  public record VisionMeasurement(double timestamp, Pose3d visionPose, Matrix<N3, N1> stdDevs) {}
+  public record VisionMeasurement(double timestamp, Pose2d visionPose, Matrix<N3, N1> stdDevs) {}
 }

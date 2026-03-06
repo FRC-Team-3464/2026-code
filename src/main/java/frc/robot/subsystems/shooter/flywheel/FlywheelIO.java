@@ -16,7 +16,7 @@ public interface FlywheelIO {
   /**
    * Set the shooter motor to a specified velocity.
    *
-   * @param velocity The velocity to set the motor to (in RPM).
+   * @param velocity The velocity to set the motor to (in RPS).
    */
   default void setVelocity(double velocity) {}
 

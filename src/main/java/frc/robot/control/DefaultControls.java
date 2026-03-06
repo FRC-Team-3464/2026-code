@@ -1,6 +1,5 @@
 package frc.robot.control;
 
-import edu.wpi.first.wpilibj.Joystick;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
@@ -8,7 +7,7 @@ import frc.robot.subsystems.shooter.Shooter;
 public class DefaultControls implements Configurable {
 
   private final DriverController driver;
-  private final Joystick operator;
+  private final DriverController operator;
   private final Drive drive;
   private final Shooter leftShooter;
   private final Shooter rightShooter;
@@ -16,7 +15,7 @@ public class DefaultControls implements Configurable {
   /** Creates a new DefaultControls. */
   public DefaultControls(
       DriverController driver,
-      Joystick operator,
+      DriverController operator,
       Drive drive,
       Shooter leftShooter,
       Shooter rightShooter) {
