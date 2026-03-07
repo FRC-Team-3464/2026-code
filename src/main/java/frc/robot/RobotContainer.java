@@ -48,7 +48,6 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOSparkMax;
 import frc.robot.subsystems.shooter.turret.TurretIOSim;
-import frc.robot.subsystems.shooter.turret.TurretIOSparkMax;
 import frc.robot.subsystems.vision.CameraIOLimelight;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
@@ -82,13 +81,11 @@ public class RobotContainer {
         leftShooter =
             new Shooter(
                 ShooterSide.LEFT,
-                new TurretIOSparkMax(ShooterSide.LEFT),
                 new HoodIOSparkMax(ShooterSide.LEFT),
                 new FlywheelIOTalonFX(ShooterSide.LEFT));
         rightShooter =
             new Shooter(
                 ShooterSide.RIGHT,
-                new TurretIOSparkMax(ShooterSide.RIGHT),
                 new HoodIOSparkMax(ShooterSide.RIGHT),
                 new FlywheelIOTalonFX(ShooterSide.RIGHT));
         leftGuts = new Guts(GutSide.LEFT, new GutsIOSparkMax(DeviceIDs.kLeftGuts));
@@ -181,7 +178,7 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return leftShooter.zeroTurret().alongWith(rightShooter.zeroTurret());
+    return DriveCommands.feedforwardCharacterization(drive);
     // return Commands.print("No autonomous command configured");
   }
 

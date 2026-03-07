@@ -23,9 +23,9 @@ import java.util.function.Supplier;
 public class Shooter extends SubsystemBase {
   private final ShooterSide side;
 
-  private final Turret turret;
-  private final Hood hood;
-  private final Flywheel flywheel;
+  private Turret turret;
+  private Hood hood;
+  private Flywheel flywheel;
 
   /** Creates a new Shooter. */
   public Shooter(ShooterSide side, TurretIO turretIO, HoodIO hoodIO, FlywheelIO flywheelIO) {
@@ -35,10 +35,19 @@ public class Shooter extends SubsystemBase {
     this.flywheel = new Flywheel(side, flywheelIO);
   }
 
+  public Shooter(ShooterSide side, HoodIO hoodIO, FlywheelIO flywheelIO) {
+    this.side = side;
+    this.turret = null;
+    this.hood = new Hood(side, hoodIO);
+    this.flywheel = new Flywheel(side, flywheelIO);
+  }
+
   @Override
   public void periodic() {
-    turret.periodic();
     hood.periodic();
+    if (turret != null) {
+      turret.periodic();
+    }
     flywheel.periodic();
   }
 
@@ -90,7 +99,9 @@ public class Shooter extends SubsystemBase {
   public void applyCommand(ShooterCommand cmd) {
     flywheel.setVelocity(cmd.wheelRPM());
     hood.setAngle(cmd.hoodAngle());
-    turret.setPosition(cmd.turretAngle());
+    if (turret != null) {
+      turret.setPosition(cmd.turretAngle());
+    }
   }
 
   public void applyCommandNoRotation(ShooterCommand cmd) {
@@ -98,7 +109,7 @@ public class Shooter extends SubsystemBase {
     hood.setAngle(cmd.hoodAngle());
   }
 
-  public Command shootAtTarget(Supplier<Translation2d> targetSupplier) {
+  public Command shootAtTargetRotation(Supplier<Translation2d> targetSupplier) {
     return Commands.run(
         () -> {
           ShooterCommand cmd = TrajectoryCalculator.calculate(side, targetSupplier.get());
@@ -108,6 +119,18 @@ public class Shooter extends SubsystemBase {
         },
         this,
         turret,
+        hood,
+        flywheel);
+  }
+
+  public Command shootAtTargetNoRotation(Supplier<Translation2d> targetSupplier) {
+    return Commands.run(
+        () -> {
+          ShooterCommand cmd = TrajectoryCalculator.calculate(side, targetSupplier.get());
+          flywheel.setVelocity(cmd.wheelRPM());
+          hood.setAngle(cmd.hoodAngle());
+        },
+        this,
         hood,
         flywheel);
   }

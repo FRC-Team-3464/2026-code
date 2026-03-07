@@ -39,7 +39,7 @@ public class HoodIOSparkMax implements HoodIO {
 
     config.idleMode(IdleMode.kCoast);
 
-    config.inverted(side == ShooterSide.LEFT);
+    config.inverted(side == ShooterSide.RIGHT);
 
     config
         .encoder

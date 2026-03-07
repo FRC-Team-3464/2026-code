@@ -21,7 +21,6 @@ import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 public class FlywheelIOTalonFX implements FlywheelIO {
   private final TalonFX motor;
   private final TalonFXConfiguration motorConfig;
-  private final ShooterSide side;
 
   private final StatusSignal<AngularVelocity> velocitySignal;
   private final StatusSignal<AngularAcceleration> accelerationSignal;
@@ -31,7 +30,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
   public FlywheelIOTalonFX(ShooterSide side) {
-    this.side = side;
     motor =
         new TalonFX(
             side == ShooterSide.LEFT
@@ -42,15 +40,17 @@ public class FlywheelIOTalonFX implements FlywheelIO {
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withInverted(
-                        side == ShooterSide.LEFT
+                        side == ShooterSide.RIGHT
                             ? InvertedValue.Clockwise_Positive
                             : InvertedValue.CounterClockwise_Positive))
-            .withSlot0(FlywheelConstants.kGains);
-    /**
-     * TODO: Update gains Peiwei, Ben: see the FlywheelConstants.kGains above... thats where the
-     * values are You also might have to check if the inverted values are correct, positive should
-     * spin the right way for shooting (line above that has the withInverted() method)
-     */
+            .withSlot0(FlywheelConstants.kGains)
+            /**
+             * TODO: Update gains Peiwei, Ben: see the FlywheelConstants.kGains above... thats where
+             * the values are You also might have to check if the inverted values are correct,
+             * positive should spin the right way for shooting (line above that has the
+             * withInverted() method)
+             */
+            .withMotorOutput(FlywheelConstants.kOutputConfigs);
     tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig, 0.25));
 
     velocitySignal = motor.getVelocity();

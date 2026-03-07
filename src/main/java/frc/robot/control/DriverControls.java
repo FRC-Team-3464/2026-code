@@ -14,12 +14,11 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.Direction;
 import frc.robot.util.FieldConstants;
-import frc.robot.util.FieldConstants.Hub;
 import org.littletonrobotics.junction.AutoLogOutput;
 
 public class DriverControls implements Configurable {
   @AutoLogOutput(key = "Control/DriverControls/mode")
-  private DriverMode mode = DriverMode.ONE_DRIVER;
+  private DriverMode mode = DriverMode.TWO_DRIVERS;
 
   public enum DriverMode {
     ONE_DRIVER,
@@ -93,19 +92,17 @@ public class DriverControls implements Configurable {
         .rightBumper()
         .whileTrue(
             rightShooter
-                .setFlywheelVelocity(7000)
-                .alongWith(leftShooter.setFlywheelVelocity(7000)));
-
-    operator.rightBumper().whileTrue(leftGuts.runGutForward());
-    operator.rightBumper().whileTrue(rightGuts.runGutForward());
+                .setFlywheelVelocity(1000)
+                .alongWith(leftShooter.setFlywheelVelocity(-1000))
+                .alongWith(leftGuts.runGutForward(), rightGuts.runGutForward()));
 
     operator
         .dPadUp()
         .whileTrue(
             new StartEndCommand(
                 () -> {
-                  leftShooter.setHoodOpenLoop(0.01);
-                  rightShooter.setHoodOpenLoop(0.01);
+                  leftShooter.setHoodOpenLoop(0.05);
+                  rightShooter.setHoodOpenLoop(0.05);
                 },
                 () -> {
                   leftShooter.setHoodOpenLoop(0);
@@ -117,8 +114,8 @@ public class DriverControls implements Configurable {
         .whileTrue(
             new StartEndCommand(
                 () -> {
-                  leftShooter.setHoodOpenLoop(-0.01);
-                  rightShooter.setHoodOpenLoop(-0.01);
+                  leftShooter.setHoodOpenLoop(-0.05);
+                  rightShooter.setHoodOpenLoop(-0.05);
                 },
                 () -> {
                   leftShooter.setHoodOpenLoop(0);

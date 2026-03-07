@@ -35,7 +35,6 @@ public class GyroIOPigeon2 implements GyroIO {
       pigeon.getConfigurator().apply(new Pigeon2Configuration());
     }
 
-    pigeon.setYaw(180.0);
     yaw.setUpdateFrequency(DriveConstants.kOdometryFrequency);
     yawVelocity.setUpdateFrequency(50.0);
     pigeon.optimizeBusUtilization();
@@ -46,7 +45,7 @@ public class GyroIOPigeon2 implements GyroIO {
   @Override
   public void updateInputs(GyroIOInputs inputs) {
     inputs.connected = BaseStatusSignal.refreshAll(yaw, yawVelocity).equals(StatusCode.OK);
-    inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble());
+    inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble()).rotateBy(Rotation2d.kPi);
     inputs.yawVelocityRadPerSec = Units.degreesToRadians(yawVelocity.getValueAsDouble());
 
     inputs.odometryYawTimestamps =
@@ -61,6 +60,6 @@ public class GyroIOPigeon2 implements GyroIO {
 
   @Override
   public void setYaw(Rotation2d angle) {
-    pigeon.setYaw(angle.getDegrees());
+    pigeon.setYaw(angle.rotateBy(Rotation2d.kPi).getDegrees());
   }
 }

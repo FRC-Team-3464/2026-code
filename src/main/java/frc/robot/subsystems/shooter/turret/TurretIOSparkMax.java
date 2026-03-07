@@ -41,7 +41,7 @@ public class TurretIOSparkMax implements TurretIO {
 
     config.idleMode(IdleMode.kCoast);
     // TODO: Tune
-    config.inverted(side == ShooterSide.LEFT);
+    config.inverted(side == ShooterSide.RIGHT);
     // .smartCurrentLimit(30);
 
     config
