@@ -26,7 +26,7 @@ public class TrajectoryCalculator {
   static {
     shooterTable.put(1.5, new TrajectoryParams(2800.0, 35.0, 0.38));
     shooterTable.put(2.0, new TrajectoryParams(3100.0, 38.0, 0.45));
-    shooterTable.put(2.5, new TrajectoryParams(3400.0, 42.0, 0.52));
+    shooterTable.put(2.6289, new TrajectoryParams(5000.0, 42.0, 0.52));
     shooterTable.put(3.0, new TrajectoryParams(3650.0, 46.0, 0.60));
     shooterTable.put(3.5, new TrajectoryParams(3900.0, 50.0, 0.68));
     shooterTable.put(4.0, new TrajectoryParams(4100.0, 54.0, 0.76));
@@ -43,6 +43,10 @@ public class TrajectoryCalculator {
   public static ShooterCommand calculate(ShooterSide side, Translation2d targetLocation) {
     RobotStateData state = getCompensatedRobotState();
     return calculateWithState(side, targetLocation, state);
+  }
+
+  public static double calculateRPM(Translation2d targetLocation, Pose2d robotPose) {
+    return shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).wheelRPM;
   }
 
   /**

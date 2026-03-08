@@ -1,8 +1,8 @@
 package frc.robot.subsystems.intake;
 
 public final class IntakeConstants {
-  public static final double kPivotMotorSpeed = 0.5;
-  public static final double kRollerMotorSpeed = -0.3;
+  public static final double kPivotMotorSpeed = 0.4;
+  public static final double kRollerMotorSpeed = -0.8;
   public static final double kSignificantlyFasterRollerMotorSpeed = -0.75;
 
   // Change Gear Ratios later

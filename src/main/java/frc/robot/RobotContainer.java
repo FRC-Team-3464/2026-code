@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.config.PIDConstants;
@@ -178,7 +180,18 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    return DriveCommands.feedforwardCharacterization(drive);
+    return intake
+        .deploy()
+        .withTimeout(Seconds.of(2))
+        .andThen(
+            rightShooter
+                .setFlywheelVelocity(8500)
+                .alongWith(
+                    leftShooter.setFlywheelVelocity(-8500),
+                    leftGuts.runGutForward(),
+                    rightGuts.runGutForward(),
+                    intake.intake())
+                .withTimeout(10));
     // return Commands.print("No autonomous command configured");
   }
 

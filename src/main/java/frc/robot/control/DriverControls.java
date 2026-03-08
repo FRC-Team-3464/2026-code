@@ -92,9 +92,12 @@ public class DriverControls implements Configurable {
         .rightBumper()
         .whileTrue(
             rightShooter
-                .setFlywheelVelocity(1000)
-                .alongWith(leftShooter.setFlywheelVelocity(-1000))
-                .alongWith(leftGuts.runGutForward(), rightGuts.runGutForward()));
+                .setFlywheelVelocity(8500)
+                .alongWith(leftShooter.setFlywheelVelocity(-8500)));
+
+    operator
+        .rightTrigger()
+        .whileTrue(leftGuts.runGutForward().alongWith(rightGuts.runGutForward()));
 
     operator
         .dPadUp()
@@ -122,10 +125,19 @@ public class DriverControls implements Configurable {
                   rightShooter.setHoodOpenLoop(0);
                 }));
 
-    operator.leftTrigger().whileTrue(intake.intakeSignificantlyFaster());
+    operator.leftTrigger().whileTrue(intake.outtake());
     operator.aCross().whileTrue(intake.outtake());
     operator.xSquare().whileTrue(intake.deploy());
     operator.yTriangle().whileTrue(intake.retract());
+    operator
+        .bCircle()
+        .whileTrue(
+            rightShooter
+                .setFlywheelVelocity(2000)
+                .alongWith(
+                    leftShooter.setFlywheelVelocity(-2000),
+                    rightGuts.runGutForward(),
+                    leftGuts.runGutForward()));
   }
 
   /*

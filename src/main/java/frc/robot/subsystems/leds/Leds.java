@@ -2,6 +2,7 @@ package frc.robot.subsystems.leds;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -67,7 +68,13 @@ public class Leds extends SubsystemBase {
 
   @Override
   public void periodic() {
-    solid(LedSection.ALL, Color.kAqua);
+    if (RobotState.isAutonomous()) {
+      solid(LedSection.ALL, Color.kOrange);
+    } else if (RobotState.isDisabled()) {
+      breath(LedSection.ALL, Color.kRed, Color.kBlack, 3);
+    } else {
+      solid(LedSection.ALL, Color.kAqua);
+    }
     // solid(LedSection.TOP_LEFT_TURRET, Color.kLimeGreen);
     // solid(LedSection.BOTTOM_LEFT_TURRET, Color.kYellow);
     // solid(LedSection.BOTTOM_RIGHT_TURRET, Color.kSkyBlue);
