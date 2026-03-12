@@ -34,7 +34,7 @@ public class Turret extends FullSubsystem {
   private boolean atGoal = false;
   private Debouncer atGoalDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
-  private boolean isZeroed = false;
+  private boolean isZeroed = true;
 
   /** Creates a new Turret. */
   public Turret(ShooterSide side, TurretIO io) {
@@ -56,45 +56,49 @@ public class Turret extends FullSubsystem {
     } else if (side == ShooterSide.RIGHT) {
       RobotVisualizer.getInstance().setRightTurretAngle(Rotation2d.fromRadians(inputs.positionRad));
     }
-
-    Logger.recordOutput(("Turret/" + side.getName() + "/TargetAngle"), targetAngle);
   }
 
   @Override
   public void periodicAfterScheduler() {
     io.applyOutputs(outputs);
+    Logger.recordOutput("Turret/Mode", outputs.mode.toString());
+    Logger.recordOutput(("Turret/" + side.getName() + "/TargetAngle"), targetAngle);
+    Logger.recordOutput(
+        ("Turret/" + side.getName() + "/TargetAngleDegrees"), targetAngle.getDegrees());
+    Logger.recordOutput(
+        ("Turret/" + side.getName() + "/TargetOffsetDegrees"),
+        targetAngle.minus(Rotation2d.fromRadians(inputs.positionRad)).getDegrees());
   }
 
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
 
     return Commands.run(
-        () -> {
-          Translation2d target = targetSupplier.get();
-          Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+            () -> {
+              Translation2d target = targetSupplier.get();
+              Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
 
-          Translation2d turretOffset =
-              (this.side == ShooterSide.LEFT
-                  ? TurretConstants.kRobotToLeftTurret.getTranslation().toTranslation2d()
-                  : TurretConstants.kRobotToRightTurret.getTranslation().toTranslation2d());
+              Translation2d turretOffset = Translation2d.kZero;
 
-          // Turret position in field coordinates
-          Translation2d turretFieldPos =
-              robotPose.getTranslation().plus(turretOffset.rotateBy(robotPose.getRotation()));
+              // Turret position in field coordinates
+              Translation2d turretFieldPos =
+                  robotPose.getTranslation().plus(turretOffset.rotateBy(robotPose.getRotation()));
 
-          // Vector from turret -> target (field frame)
-          Translation2d deltaField = target.minus(turretFieldPos);
+              // Vector from turret -> target (field frame)
+              Translation2d deltaField = target.minus(turretFieldPos);
+              Logger.recordOutput("Turret Target Distance", deltaField.getNorm());
 
-          // Convert to robot frame
-          Translation2d deltaRobot = deltaField.rotateBy(robotPose.getRotation().unaryMinus());
+              // Convert to robot frame
+              Translation2d deltaRobot = deltaField.rotateBy(robotPose.getRotation().unaryMinus());
 
-          // Angle turret should point (robot-relative)
-          Rotation2d targetAngle = new Rotation2d(Math.atan2(deltaRobot.getY(), deltaRobot.getX()));
+              // Angle turret should point (robot-relative)
+              Rotation2d targetAngle =
+                  Rotation2d.fromRadians(Math.atan2(deltaRobot.getY(), deltaRobot.getX()));
 
-          this.targetAngle = targetAngle;
-
-          setPosition(targetAngle);
-        },
-        this);
+              this.targetAngle = targetAngle;
+              setPosition(targetAngle);
+            },
+            this)
+        .until(() -> this.atGoal);
   }
 
   public Command zero() {
@@ -112,13 +116,6 @@ public class Turret extends FullSubsystem {
     if (!isZeroed) return; // safety
 
     targetAngle = position;
-
-    position =
-        Rotation2d.fromRadians(
-            MathUtil.clamp(
-                position.getRadians(),
-                TurretConstants.kMinTurretAngleRad,
-                TurretConstants.kMaxTurretAngleRad));
 
     outputs.mode = TurretIOOutputMode.CLOSED_LOOP;
     outputs.closedLoopTarget = position;

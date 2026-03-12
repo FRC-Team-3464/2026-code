@@ -14,7 +14,6 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -44,7 +43,7 @@ public class Drive extends SubsystemBase {
 
   private final SwerveDriveKinematics kinematics = DriveConstants.kSwerveKinematics;
 
-  private Rotation2d rawGyroRotation = Rotation2d.kZero;
+  private Rotation2d rawGyroRotation;
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -70,6 +69,7 @@ public class Drive extends SubsystemBase {
 
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
+    rawGyroRotation = Rotation2d.kZero;
 
     // Configure SysId
     sysId =
@@ -88,6 +88,7 @@ public class Drive extends SubsystemBase {
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
+    rawGyroRotation = gyroInputs.yawPosition;
     for (var module : modules) {
       module.periodic();
     }
@@ -126,15 +127,15 @@ public class Drive extends SubsystemBase {
                 modulePositions[moduleIndex].distanceMeters, modulePositions[moduleIndex].angle);
       }
 
-      // Update gyro angle
-      if (gyroInputs.connected) {
-        // Use the real gyro angle
-        rawGyroRotation = gyroInputs.odometryYawPositions[i];
-      } else {
-        // Use the angle delta from the kinematics and module deltas
-        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-        rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-      }
+      // // Update gyro angle
+      // if (gyroInputs.connected) {
+      //   // Use the real gyro angle
+      //   rawGyroRotation = gyroInputs.yawPosition;
+      // } else {
+      //   // Use the angle delta from the kinematics and module deltas
+      //   Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+      //   rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
+      // }
 
       // Apply update (doesn't work)
       // RobotState.getInstance()

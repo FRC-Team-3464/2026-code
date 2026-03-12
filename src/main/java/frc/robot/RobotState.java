@@ -57,6 +57,9 @@ public class RobotState {
         observation.timestamp(), observation.gyroAngle(), observation.modulePositions());
 
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
+    Logger.recordOutput(
+        "RobotState/EstimatedRotation",
+        poseEstimator.getEstimatedPosition().getRotation().getDegrees());
   }
 
   /**
@@ -65,8 +68,7 @@ public class RobotState {
    * @param measurement A {@link VisionMeasurement} object representing the vision pose estimate.
    */
   public void addVisionMeasurement(VisionMeasurement measurement) {
-    poseEstimator.addVisionMeasurement(
-        measurement.visionPose(), measurement.timestamp(), measurement.stdDevs());
+    poseEstimator.addVisionMeasurement(measurement.visionPose(), measurement.timestamp());
 
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
   }

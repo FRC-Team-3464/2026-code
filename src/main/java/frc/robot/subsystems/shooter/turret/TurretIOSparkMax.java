@@ -7,6 +7,7 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -37,6 +38,8 @@ public class TurretIOSparkMax implements TurretIO {
     encoder = motor.getEncoder();
     motorController = motor.getClosedLoopController();
 
+    encoder.setPosition(0);
+
     SparkMaxConfig config = new SparkMaxConfig();
 
     config.idleMode(IdleMode.kCoast);
@@ -50,16 +53,15 @@ public class TurretIOSparkMax implements TurretIO {
             2 * Math.PI / TurretConstants.kGearRatio) // No absolute encoder...
         .velocityConversionFactor(2 * Math.PI / TurretConstants.kGearRatio / 60.0);
 
-    config.closedLoop.positionWrappingEnabled(false).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
+    config.closedLoop.positionWrappingEnabled(true).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
-    config
-        .softLimit
-        .reverseSoftLimitEnabled(true)
-        .forwardSoftLimitEnabled(true)
-        .reverseSoftLimit(TurretConstants.kMinTurretAngleRad)
-        .forwardSoftLimit(TurretConstants.kMaxTurretAngleRad);
+    config.softLimit.reverseSoftLimitEnabled(false).forwardSoftLimitEnabled(false);
 
-    config.closedLoop.feedForward.kS(0);
+    config.closedLoop.feedForward.kS(0.025 * 12);
+    config.closedLoop.p(0.7);
+    config.closedLoop.d(0.5);
+    config.closedLoop.allowedClosedLoopError(
+        TurretConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
 
     tryUntilOk(
         motor,
@@ -87,16 +89,16 @@ public class TurretIOSparkMax implements TurretIO {
   public void applyOutputs(TurretIOOutputs outputs) {
     switch (outputs.mode) {
       case CLOSED_LOOP -> {
-        double clampedPosition =
-            MathUtil.clamp(
-                outputs.closedLoopTarget.getRadians(),
-                TurretConstants.kMinTurretAngleRad,
-                TurretConstants.kMaxTurretAngleRad);
+        // double clampedPosition =
+        //     MathUtil.clamp(
+        //         outputs.closedLoopTarget.getRadians(),
+        //         TurretConstants.kMinTurretAngleRad,
+        //         TurretConstants.kMaxTurretAngleRad);
 
-        motorController.setSetpoint(clampedPosition, ControlType.kPosition);
+        motorController.setSetpoint(outputs.closedLoopTarget.getRadians(), ControlType.kPosition);
       }
       case OPEN_LOOP -> {
-        motor.set(MathUtil.clamp(outputs.openLoopOutput, -1.0, 1.0));
+        motor.set((MathUtil.clamp(outputs.openLoopOutput, -1.0, 1.0)));
       }
     }
   }

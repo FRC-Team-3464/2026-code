@@ -19,7 +19,7 @@ public final class ShooterConstants {
     public static final double kGearRatio = 10 / 1; // Motor / Turret
     public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
     public static final double kMaxTurretAngleRad = Units.degreesToRadians(90);
-    public static final double kAngleTolerance = Units.degreesToRadians(2);
+    public static final double kAngleTolerance = Units.degreesToRadians(0.5);
 
     public static final double kLeftMotorId = 12;
     public static final double kRightMotorId = 13;

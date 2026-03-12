@@ -16,6 +16,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.CameraIO.PoseObservationType;
 import java.util.LinkedList;
@@ -62,6 +63,8 @@ public class Vision extends SubsystemBase {
       io[i].updateInputs(inputs[i]);
       Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
     }
+
+    if (Timer.getTimestamp() % 2 < 0.07) System.out.println(inputs[0].connected);
 
     // Initialize logging values
     List<Pose3d> allTagPoses = new LinkedList<>();
@@ -132,6 +135,7 @@ public class Vision extends SubsystemBase {
           angularStdDev *= VisionConstants.kCameraStdDevFactors[cameraIndex];
         }
 
+        // if (Timer.getTimestamp() % 2 < 0.07) System.out.println("Linear STDev " + linearStdDev);
         // Send vision observation
         consumer.accept(
             observation.pose().toPose2d(),
