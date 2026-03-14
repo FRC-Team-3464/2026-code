@@ -140,7 +140,7 @@ public class CameraIOLimelight implements CameraIO {
   }
 
   /** Parses the 3D pose from a Limelight botpose array. */
-  private static Pose3d parsePose(double[] rawLLArray) {
+  public static Pose3d parsePose(double[] rawLLArray) {
     return new Pose3d(
         rawLLArray[0],
         rawLLArray[1],

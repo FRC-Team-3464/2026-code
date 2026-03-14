@@ -24,14 +24,15 @@ public class TrajectoryCalculator {
   private static final double MAX_SHOOTING_DISTANCE = 5.0;
 
   static {
-    shooterTable.put(1.5, new TrajectoryParams(2800.0, 35.0, 0.38));
-    shooterTable.put(2.0, new TrajectoryParams(3100.0, 38.0, 0.45));
-    shooterTable.put(2.6289, new TrajectoryParams(5000.0, 42.0, 0.52));
-    shooterTable.put(3.0, new TrajectoryParams(3650.0, 46.0, 0.60));
-    shooterTable.put(3.5, new TrajectoryParams(3900.0, 50.0, 0.68));
-    shooterTable.put(4.0, new TrajectoryParams(4100.0, 54.0, 0.76));
-    shooterTable.put(4.5, new TrajectoryParams(4350.0, 58.0, 0.85));
-    shooterTable.put(5.0, new TrajectoryParams(4550.0, 62.0, 0.94));
+    shooterTable.put(1.5, new TrajectoryParams(2800.0, 0, 0.38));
+    shooterTable.put(2.0, new TrajectoryParams(3100.0, 0.0349, 0.45));
+    shooterTable.put(2.5, new TrajectoryParams(3250.0, 0.0698, 0.52));
+    shooterTable.put(3.0, new TrajectoryParams(3650.0, 0.104, 0.60));
+    shooterTable.put(3.5, new TrajectoryParams(3900.0, 0.1396, 0.68));
+    shooterTable.put(4.0, new TrajectoryParams(4100.0, 0.174, 0.76));
+    shooterTable.put(4.5, new TrajectoryParams(4350.0, 0.209, 0.85));
+    shooterTable.put(5.0, new TrajectoryParams(4550.0, 0.244, 0.94));
+    shooterTable.put(5.5, new TrajectoryParams(4550.0, 0.279, 1.05));
   }
 
   // ========== PUBLIC API ==========
@@ -47,6 +48,10 @@ public class TrajectoryCalculator {
 
   public static double calculateRPM(Translation2d targetLocation, Pose2d robotPose) {
     return shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).wheelRPM;
+  }
+
+  public static double calculateHoodAngle(Translation2d targetLocation, Pose2d robotPose) {
+    return 20 * shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).hoodAngle;
   }
 
   /**

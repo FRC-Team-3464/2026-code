@@ -16,7 +16,7 @@ public final class ShooterConstants {
   public static final double kLatencySeconds = 0.05;
 
   public static final class TurretConstants {
-    public static final double kGearRatio = 10 / 1; // Motor / Turret
+    public static final double kGearRatio = 200 / 19; // Motor / Turret
     public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
     public static final double kMaxTurretAngleRad = Units.degreesToRadians(90);
     public static final double kAngleTolerance = Units.degreesToRadians(0.5);
@@ -34,7 +34,7 @@ public final class ShooterConstants {
 
   public static final class HoodConstants {
     public static final double kTurretToHoodInches = 1.878;
-    public static final double kGearRatio = 100 / 1;
+    public static final double kGearRatio = 19.2;
 
     public static final double kLeftHoodID = -1;
     public static final double kRightHoodID = -1;
@@ -69,15 +69,12 @@ public final class ShooterConstants {
                             Inches.of(-7.270121), Inches.of(0), Inches.of(0), new Rotation3d())));
 
     public static final double kMinAngleRad = Units.degreesToRadians(0);
-    public static final double kMaxAngleRad = Units.degreesToRadians(30);
+    public static final double kMaxAngleRad = 5.9;
   }
 
   public static final class FlywheelConstants {
     public static final double kGearRatio = 300;
     public static final double kSpeedTolerance = 25.0;
-
-    public static final int kLeftFlywheelID = -1;
-    public static final int kRightFlywheelID = -1;
 
     public static final Slot0Configs kGains =
         new Slot0Configs()

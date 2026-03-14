@@ -58,8 +58,8 @@ public class TurretIOSparkMax implements TurretIO {
     config.softLimit.reverseSoftLimitEnabled(false).forwardSoftLimitEnabled(false);
 
     config.closedLoop.feedForward.kS(0.025 * 12);
-    config.closedLoop.p(0.7);
-    config.closedLoop.d(0.5);
+    config.closedLoop.p(0.1);
+    config.closedLoop.d(0.01);
     config.closedLoop.allowedClosedLoopError(
         TurretConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
 
@@ -89,13 +89,13 @@ public class TurretIOSparkMax implements TurretIO {
   public void applyOutputs(TurretIOOutputs outputs) {
     switch (outputs.mode) {
       case CLOSED_LOOP -> {
-        // double clampedPosition =
-        //     MathUtil.clamp(
-        //         outputs.closedLoopTarget.getRadians(),
-        //         TurretConstants.kMinTurretAngleRad,
-        //         TurretConstants.kMaxTurretAngleRad);
+        double clampedPosition =
+            MathUtil.clamp(
+                outputs.closedLoopTarget.getRadians(),
+                TurretConstants.kMinTurretAngleRad,
+                TurretConstants.kMaxTurretAngleRad);
 
-        motorController.setSetpoint(outputs.closedLoopTarget.getRadians(), ControlType.kPosition);
+        motorController.setSetpoint(clampedPosition, ControlType.kPosition);
       }
       case OPEN_LOOP -> {
         motor.set((MathUtil.clamp(outputs.openLoopOutput, -1.0, 1.0)));

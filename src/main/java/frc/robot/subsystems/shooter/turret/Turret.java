@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotContainer;
 import frc.robot.RobotState;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.shooter.Shooter.ShooterSide;
@@ -73,32 +74,36 @@ public class Turret extends FullSubsystem {
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
 
     return Commands.run(
-            () -> {
-              Translation2d target = targetSupplier.get();
-              Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+        () -> {
+          Translation2d target = targetSupplier.get();
+          Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+          RobotContainer.field2d.setRobotPose(robotPose);
 
-              Translation2d turretOffset = Translation2d.kZero;
+          Translation2d turretOffset = Translation2d.kZero;
 
-              // Turret position in field coordinates
-              Translation2d turretFieldPos =
-                  robotPose.getTranslation().plus(turretOffset.rotateBy(robotPose.getRotation()));
+          // Turret position in field coordinates
+          Translation2d turretFieldPos =
+              robotPose.getTranslation().plus(turretOffset.rotateBy(robotPose.getRotation()));
 
-              // Vector from turret -> target (field frame)
-              Translation2d deltaField = target.minus(turretFieldPos);
-              Logger.recordOutput("Turret Target Distance", deltaField.getNorm());
+          // Vector from turret -> target (field frame)
+          Translation2d deltaField = target.minus(turretFieldPos);
+          Logger.recordOutput("Turret Target Distance X", deltaField.getX());
+          Logger.recordOutput("Turret Target Distance", deltaField.getDistance(target));
+          Logger.recordOutput("Turret Target Norm", deltaField.getNorm());
+          Logger.recordOutput("Turret Target Distance Y", deltaField.getY());
+          Logger.recordOutput("Turret Target Angle?", deltaField.getAngle().getDegrees());
 
-              // Convert to robot frame
-              Translation2d deltaRobot = deltaField.rotateBy(robotPose.getRotation().unaryMinus());
+          // Convert to robot frame
+          Translation2d deltaRobot = deltaField.rotateBy(robotPose.getRotation().unaryMinus());
 
-              // Angle turret should point (robot-relative)
-              Rotation2d targetAngle =
-                  Rotation2d.fromRadians(Math.atan2(deltaRobot.getY(), deltaRobot.getX()));
+          // Angle turret should point (robot-relative)
+          Rotation2d targetAngle =
+              Rotation2d.fromRadians(Math.atan2(deltaRobot.getY(), deltaRobot.getX()));
 
-              this.targetAngle = targetAngle;
-              setPosition(targetAngle);
-            },
-            this)
-        .until(() -> this.atGoal);
+          this.targetAngle = targetAngle;
+          setPosition(targetAngle.unaryMinus());
+        },
+        this);
   }
 
   public Command zero() {

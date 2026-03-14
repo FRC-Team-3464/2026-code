@@ -46,7 +46,8 @@ public class HoodIOSparkMax implements HoodIO {
         .positionConversionFactor(2 * Math.PI / HoodConstants.kGearRatio) // No absolute encoder...
         .velocityConversionFactor(2 * Math.PI / HoodConstants.kGearRatio / 60.0);
 
-    config.closedLoop.feedForward.kS(0);
+    config.closedLoop.feedForward.kS(0.015 * 12);
+    config.closedLoop.p(0.1);
 
     tryUntilOk(
         motor,

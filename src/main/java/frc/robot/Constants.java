@@ -78,14 +78,13 @@ public final class Constants {
         DriveConstants.TunerConstants.BackRight.EncoderId; // 22
 
     public static final int kLeftTurretFlywheel = 12;
-    public static final int kLeftTurretHood = 13;
+    public static final int kLeftTurretHood = 15;
     public static final int kLeftTurretAzimuth = 14;
 
     public static final int kRightTurretFlywheel = 9;
     public static final int kRightTurretHood = 10;
     public static final int kRightTurretAzimuth = 11;
 
-    public static final int kLeftGuts = 15;
     public static final int kRightGuts = 16;
 
     public static final int kIntakeDrive = 17;
