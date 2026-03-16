@@ -20,7 +20,8 @@ import frc.robot.control.DriverController;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIOSparkMax;
 import frc.robot.subsystems.shooter.turret.Turret;
@@ -28,29 +29,35 @@ import frc.robot.subsystems.shooter.turret.TurretIOSparkMax;
 import frc.robot.subsystems.vision.CameraIOLimelight;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.FieldConstants;
+import frc.robot.util.GeomUtil;
 import java.util.function.Supplier;
 
 public class RobotContainer {
   private final DriverController driver = new DriverController.XboxDriverController(0);
   private final DriverController operator = new DriverController.XboxDriverController(1);
 
-  private Turret turret;
-  private Hood hood;
   private Vision vision;
   private Drive drive;
 
   public static Field2d field2d = new Field2d();
+  public static Field2d targetField2d = new Field2d();
 
   public RobotContainer() {
-    turret = new Turret(ShooterSide.LEFT, new TurretIOSparkMax(ShooterSide.LEFT));
-    hood = new Hood(ShooterSide.LEFT, new HoodIOSparkMax(ShooterSide.LEFT));
 
     Supplier<Rotation2d> robotRotationSupplier = () -> RobotState.getInstance().getRotation();
 
     SmartDashboard.putData("FieldInstance", field2d);
+    SmartDashboard.putData("TargetField", targetField2d);
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
+    switch (Constants.kCurrentMode) {
+      case REAL:
+        
+      case SIM:
+
+      case REPLAY:
+      default:
+        
+    }
     vision =
         new Vision(
             new VisionConsumer() {
@@ -75,30 +82,6 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             new ModuleIO() {});
-
-    turret.setDefaultCommand(
-        turret.trackTarget(
-            () -> AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
-
-    // driver.aCross().onTrue(new InstantCommand(() -> hood.setAngle(0), hood));
-    // driver.bCircle().onTrue(new InstantCommand(() -> hood.setAngle(10), hood));
-
-    driver
-        .xSquare()
-        .whileTrue(
-            hood.trackTarget(
-                () ->
-                    AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d())));
-
-    driver
-        .rightBumper()
-        .whileTrue(
-            Commands.runEnd(() -> turret.setOpenLoop(0.1), () -> turret.setOpenLoop(0), turret));
-
-    driver
-        .leftBumper()
-        .whileTrue(
-            Commands.runEnd(() -> turret.setOpenLoop(-0.1), () -> turret.setOpenLoop(0), turret));
   }
 
   public void robotPeriodic() {
@@ -113,6 +96,8 @@ public class RobotContainer {
                   new SwerveModulePosition()
                 },
                 drive.getRawGyroRotation()));
+
+    targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getTurretTarget()));
   }
 
   public Command getAutonomousCommand() {

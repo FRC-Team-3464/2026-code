@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotContainer;
 import frc.robot.RobotState;
 import frc.robot.RobotVisualizer;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 import frc.robot.subsystems.shooter.turret.TurretIO.TurretIOOutputMode;
 import frc.robot.subsystems.shooter.turret.TurretIO.TurretIOOutputs;
@@ -24,8 +23,6 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Turret extends FullSubsystem {
-  private final ShooterSide side;
-
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
   private final TurretIOOutputs outputs = new TurretIOOutputs();
@@ -38,36 +35,31 @@ public class Turret extends FullSubsystem {
   private boolean isZeroed = true;
 
   /** Creates a new Turret. */
-  public Turret(ShooterSide side, TurretIO io) {
-    this.side = side;
+  public Turret(TurretIO io) {
     this.io = io;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs(("Turret/" + side.getName()), inputs);
+    Logger.processInputs("Turret", inputs);
 
     if (inputs.limitTriggered) {
       isZeroed = true;
     }
-
-    if (side == ShooterSide.LEFT) {
-      RobotVisualizer.getInstance().setLeftTurretAngle(Rotation2d.fromRadians(inputs.positionRad));
-    } else if (side == ShooterSide.RIGHT) {
-      RobotVisualizer.getInstance().setRightTurretAngle(Rotation2d.fromRadians(inputs.positionRad));
-    }
+    
+    RobotVisualizer.getInstance().setTurretAzimuthAngle(Rotation2d.fromRadians(inputs.positionRad));
   }
 
   @Override
   public void periodicAfterScheduler() {
     io.applyOutputs(outputs);
     Logger.recordOutput("Turret/Mode", outputs.mode.toString());
-    Logger.recordOutput(("Turret/" + side.getName() + "/TargetAngle"), targetAngle);
+    Logger.recordOutput(("Turret/TargetAngle"), targetAngle);
     Logger.recordOutput(
-        ("Turret/" + side.getName() + "/TargetAngleDegrees"), targetAngle.getDegrees());
+        ("Turret/TargetAngleDegrees"), targetAngle.getDegrees());
     Logger.recordOutput(
-        ("Turret/" + side.getName() + "/TargetOffsetDegrees"),
+        ("Turret/TargetOffsetDegrees"),
         targetAngle.minus(Rotation2d.fromRadians(inputs.positionRad)).getDegrees());
   }
 
@@ -154,9 +146,5 @@ public class Turret extends FullSubsystem {
 
   public boolean isZeroed() {
     return isZeroed;
-  }
-
-  public ShooterSide getSide() {
-    return this.side;
   }
 }

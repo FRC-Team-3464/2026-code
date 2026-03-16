@@ -17,7 +17,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import frc.robot.Constants.DeviceIDs;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 import java.util.function.DoubleSupplier;
 
@@ -27,10 +26,10 @@ public class HoodIOSparkMax implements HoodIO {
   private final SparkClosedLoopController motorController;
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
-  public HoodIOSparkMax(ShooterSide side) {
+  public HoodIOSparkMax() {
     motor =
         new SparkMax(
-            side == ShooterSide.LEFT ? DeviceIDs.kLeftTurretHood : DeviceIDs.kRightTurretHood,
+            DeviceIDs.kTurretHood,
             MotorType.kBrushless);
     encoder = motor.getEncoder();
     motorController = motor.getClosedLoopController();
@@ -38,8 +37,6 @@ public class HoodIOSparkMax implements HoodIO {
     SparkMaxConfig config = new SparkMaxConfig();
 
     config.idleMode(IdleMode.kCoast);
-
-    config.inverted(side == ShooterSide.RIGHT);
 
     config
         .encoder

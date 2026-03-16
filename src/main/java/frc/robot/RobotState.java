@@ -1,5 +1,7 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -10,6 +12,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class RobotState {
@@ -26,8 +30,6 @@ public class RobotState {
   private ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
   private Rotation2d gyroOffset = new Rotation2d();
-
-  private Translation2d turretTarget = new Translation2d();
 
   private RobotState() {
     poseEstimator =
@@ -138,7 +140,16 @@ public class RobotState {
   }
 
   public Translation2d getTurretTarget() {
-      return turretTarget;
+    Pose2d estimatedPose = getEstimatedPose();
+    if (estimatedPose.getX()
+        < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
+      if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center)) {
+        return AllianceFlipUtil.apply(new Translation2d(Meters.of(2), Meters.of(1)));
+      }
+      return AllianceFlipUtil.apply(
+          new Translation2d(Meters.of(2), Meters.of(FieldConstants.fieldWidth - 1)));
+    }
+    return AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
   }
 
   public record OdometryObservation(

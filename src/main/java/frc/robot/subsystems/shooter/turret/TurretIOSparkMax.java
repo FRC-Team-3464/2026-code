@@ -4,6 +4,7 @@ import static frc.robot.util.SparkUtil.ifOk;
 import static frc.robot.util.SparkUtil.sparkStickyFault;
 import static frc.robot.util.SparkUtil.tryUntilOk;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -19,39 +20,27 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import frc.robot.Constants.DeviceIDs;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 import java.util.function.DoubleSupplier;
 
 public class TurretIOSparkMax implements TurretIO {
   private final SparkMax motor;
-  private final RelativeEncoder encoder;
+  private final AbsoluteEncoder encoder;
   private final SparkClosedLoopController motorController;
 
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
-  public TurretIOSparkMax(ShooterSide side) {
+  public TurretIOSparkMax() {
     motor =
         new SparkMax(
-            side == ShooterSide.LEFT ? DeviceIDs.kLeftTurretAzimuth : DeviceIDs.kRightTurretAzimuth,
+            DeviceIDs.kTurretAzimuth,
             MotorType.kBrushless);
-    encoder = motor.getEncoder();
+    encoder = motor.getAbsoluteEncoder();
     motorController = motor.getClosedLoopController();
-
-    encoder.setPosition(0);
 
     SparkMaxConfig config = new SparkMaxConfig();
 
     config.idleMode(IdleMode.kCoast);
-    // TODO: Tune
-    config.inverted(side == ShooterSide.RIGHT);
-    // .smartCurrentLimit(30);
-
-    config
-        .encoder
-        .positionConversionFactor(
-            2 * Math.PI / TurretConstants.kGearRatio) // No absolute encoder...
-        .velocityConversionFactor(2 * Math.PI / TurretConstants.kGearRatio / 60.0);
 
     config.closedLoop.positionWrappingEnabled(true).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
@@ -69,7 +58,6 @@ public class TurretIOSparkMax implements TurretIO {
         () ->
             motor.configure(
                 config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    tryUntilOk(motor, 5, () -> encoder.setPosition(0));
   }
 
   @Override

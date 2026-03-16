@@ -20,8 +20,8 @@ public class RobotVisualizer {
     return instance;
   }
 
-  private Rotation2d[] turretAngles = {Rotation2d.kZero, Rotation2d.kZero}; // Left, Right
-  private double[] hoodAngles = {0.0, 0.0}; // Left, Right
+  private Rotation2d turretAngle = Rotation2d.kZero;
+  private double hoodAngle = 0.0;
 
   private RobotVisualizer() {}
 
@@ -31,33 +31,21 @@ public class RobotVisualizer {
    * @param key A String representing the output location.
    */
   public void log(String key) {
-    Pose3d leftTurretPose =
-        GeomUtil.toPose3d(TurretConstants.kRobotToLeftTurret)
+    Pose3d turretPose =
+        GeomUtil.toPose3d(TurretConstants.kRobotToTurret)
             .transformBy(
                 new Transform3d(
                     Translation3d.kZero,
-                    new Rotation3d(0.0, 0.0, turretAngles[0].plus(Rotation2d.kPi).getRadians())));
-    Pose3d rightTurretPose =
-        GeomUtil.toPose3d(TurretConstants.kRobotToRightTurret)
-            .transformBy(
-                new Transform3d(
-                    Translation3d.kZero,
-                    new Rotation3d(0.0, 0.0, turretAngles[1].plus(Rotation2d.kPi).getRadians())));
+                    new Rotation3d(0.0, 0.0, turretAngle.plus(Rotation2d.kPi).getRadians())));
 
-    Pose3d leftHoodPose =
-        leftTurretPose.transformBy(
+    Pose3d hoodPose =
+        turretPose.transformBy(
             new Transform3d(
-                HoodConstants.kLeftTurretToLeftHood.getTranslation(),
-                new Rotation3d(0.0, hoodAngles[0], 0.0)));
-
-    Pose3d rightHoodPose =
-        rightTurretPose.transformBy(
-            new Transform3d(
-                HoodConstants.kRightTurretToRightHood.getTranslation(),
-                new Rotation3d(0.0, hoodAngles[1], 0.0)));
+                HoodConstants.kTurretToHood.getTranslation(),
+                new Rotation3d(0.0, hoodAngle, 0.0)));
 
     Logger.recordOutput(
-        key + "/Components", leftTurretPose, rightTurretPose, leftHoodPose, rightHoodPose);
+        key + "/Components", turretPose, hoodPose);
   }
 
   /**
@@ -65,17 +53,8 @@ public class RobotVisualizer {
    *
    * @return A Rotation2d object representing the left turret angle.
    */
-  public Rotation2d getLeftTurretAngle() {
-    return turretAngles[0];
-  }
-
-  /**
-   * Gets the right turret angle.
-   *
-   * @return A Rotation2d object representing the right turret angle.
-   */
-  public Rotation2d getRightTurretAngle() {
-    return turretAngles[1];
+  public Rotation2d getTurretAzimuthAngle() {
+    return turretAngle;
   }
 
   /**
@@ -83,17 +62,8 @@ public class RobotVisualizer {
    *
    * @param angle A Rotation2d object to be inserted in the angles array.
    */
-  public void setLeftTurretAngle(Rotation2d angle) {
-    turretAngles[0] = angle;
-  }
-
-  /**
-   * Sets the right turret angle.
-   *
-   * @param angle A Rotation2d object to be inserted in the angles array.
-   */
-  public void setRightTurretAngle(Rotation2d angle) {
-    turretAngles[1] = angle;
+  public void setTurretAzimuthAngle(Rotation2d angle) {
+    turretAngle = angle;
   }
 
   /**
@@ -101,17 +71,8 @@ public class RobotVisualizer {
    *
    * @return A double representing the left hood angle in radians.
    */
-  public double getLeftHoodAngle() {
-    return hoodAngles[0];
-  }
-
-  /**
-   * Gets the left hood angle.
-   *
-   * @return A double representing the right hood angle in radians.
-   */
-  public double getRightHoodAngle() {
-    return hoodAngles[1];
+  public double getTurretHoodAngle() {
+    return hoodAngle;
   }
 
   /**
@@ -119,16 +80,7 @@ public class RobotVisualizer {
    *
    * @param angle A Rotation2d object to be inserted in the angles array.
    */
-  public void setLeftHoodAngle(double angle) {
-    hoodAngles[0] = angle;
-  }
-
-  /**
-   * Sets the right hood angle in radians.
-   *
-   * @param angle A double to be inserted in the angles array.
-   */
-  public void setRightHoodAngle(double angle) {
-    hoodAngles[1] = angle;
+  public void setTurretHoodAngle(double angle) {
+    hoodAngle = angle;
   }
 }

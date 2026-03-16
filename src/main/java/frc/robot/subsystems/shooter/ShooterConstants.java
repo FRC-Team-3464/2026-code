@@ -17,19 +17,16 @@ public final class ShooterConstants {
 
   public static final class TurretConstants {
     public static final double kGearRatio = 200 / 19; // Motor / Turret
-    public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
-    public static final double kMaxTurretAngleRad = Units.degreesToRadians(90);
+    public static final double kMinTurretAngleRad = Units.degreesToRadians(-120);
+    public static final double kMaxTurretAngleRad = Units.degreesToRadians(120);
     public static final double kAngleTolerance = Units.degreesToRadians(0.5);
 
     public static final double kLeftMotorId = 12;
     public static final double kRightMotorId = 13;
 
     // +X = Forward, +Y = Left
-    public static final Transform3d kRobotToLeftTurret =
+    public static final Transform3d kRobotToTurret =
         new Transform3d(Inches.of(3.749), Inches.of(8.186), Inches.of(13.401), Rotation3d.kZero);
-
-    public static final Transform3d kRobotToRightTurret =
-        new Transform3d(Inches.of(3.749), Inches.of(-8.314), Inches.of(13.401), Rotation3d.kZero);
   }
 
   public static final class HoodConstants {
@@ -41,32 +38,17 @@ public final class ShooterConstants {
 
     public static final double kAngleTolerance = Units.degreesToRadians(5);
 
-    public static final Transform3d kRobotToLeftHood =
+    public static final Transform3d kRobotToHood =
         new Transform3d(
             Inches.of(7.268715), Meters.of(0.20792316), Inches.of(16.018516), Rotation3d.kZero);
 
-    public static final Transform3d kRobotToRightHood =
-        new Transform3d(
-            Inches.of(-7.270121),
-            Inches.of(-(12.062888 - (7.5 / 2.0))),
-            Inches.of(16.018516),
-            Rotation3d.kZero);
-
-    public static final Transform3d kLeftTurretToLeftHood =
-        GeomUtil.toPose3d(HoodConstants.kRobotToLeftHood)
+    public static final Transform3d kTurretToHood =
+        GeomUtil.toPose3d(HoodConstants.kRobotToHood)
             .minus(
-                GeomUtil.toPose3d(TurretConstants.kRobotToLeftTurret)
+                GeomUtil.toPose3d(TurretConstants.kRobotToTurret)
                     .plus(
                         new Transform3d(
                             Inches.of(7.268715), Inches.of(0), Inches.of(0), new Rotation3d())));
-
-    public static final Transform3d kRightTurretToRightHood =
-        GeomUtil.toPose3d(HoodConstants.kRobotToRightHood)
-            .minus(
-                GeomUtil.toPose3d(TurretConstants.kRobotToRightTurret)
-                    .plus(
-                        new Transform3d(
-                            Inches.of(-7.270121), Inches.of(0), Inches.of(0), new Rotation3d())));
 
     public static final double kMinAngleRad = Units.degreesToRadians(0);
     public static final double kMaxAngleRad = 5.9;

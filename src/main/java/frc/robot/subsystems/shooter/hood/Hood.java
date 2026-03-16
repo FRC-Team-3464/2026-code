@@ -13,15 +13,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotState;
 import frc.robot.RobotVisualizer;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 import frc.robot.subsystems.shooter.TrajectoryCalculator;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Hood extends SubsystemBase {
-  private final ShooterSide side;
-
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
@@ -31,21 +28,16 @@ public class Hood extends SubsystemBase {
   private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
 
   /** Creates a new Hood. */
-  public Hood(ShooterSide side, HoodIO io) {
-    this.side = side;
+  public Hood(HoodIO io) {
     this.io = io;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs(("Hood/" + side.getName()), inputs);
+    Logger.processInputs("Hood", inputs);
 
-    if (side == ShooterSide.LEFT) {
-      RobotVisualizer.getInstance().setLeftHoodAngle(inputs.positionRad);
-    } else if (side == ShooterSide.RIGHT) {
-      RobotVisualizer.getInstance().setRightHoodAngle(inputs.positionRad);
-    }
+    RobotVisualizer.getInstance().setTurretHoodAngle(inputs.positionRad);
 
     io.setAngle(targetAngleRad);
   }
@@ -89,9 +81,5 @@ public class Hood extends SubsystemBase {
 
   public boolean atGoal() {
     return atGoal;
-  }
-
-  public ShooterSide getSide() {
-    return this.side;
   }
 }

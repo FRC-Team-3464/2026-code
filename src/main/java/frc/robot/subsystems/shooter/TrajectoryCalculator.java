@@ -10,7 +10,6 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.RobotState;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 import frc.robot.util.GeomUtil;
 import org.littletonrobotics.junction.Logger;
@@ -41,9 +40,9 @@ public class TrajectoryCalculator {
    * Calculate shooter command for a single shooter. Use this when only one shooter needs
    * calculation.
    */
-  public static ShooterCommand calculate(ShooterSide side, Translation2d targetLocation) {
+  public static ShooterCommand calculate(Translation2d targetLocation) {
     RobotStateData state = getCompensatedRobotState();
-    return calculateWithState(side, targetLocation, state);
+    return calculateWithState(targetLocation, state);
   }
 
   public static double calculateRPM(Translation2d targetLocation, Pose2d robotPose) {
@@ -52,17 +51,6 @@ public class TrajectoryCalculator {
 
   public static double calculateHoodAngle(Translation2d targetLocation, Pose2d robotPose) {
     return 20 * shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).hoodAngle;
-  }
-
-  /**
-   * Calculate shooter commands for both shooters efficiently. Use this when both shooters need
-   * calculation - avoids duplicate state queries.
-   */
-  public static DualShooterCommands calculateBoth(Translation2d targetLocation) {
-    RobotStateData state = getCompensatedRobotState();
-    return new DualShooterCommands(
-        calculateWithState(ShooterSide.LEFT, targetLocation, state),
-        calculateWithState(ShooterSide.RIGHT, targetLocation, state));
   }
 
   // ========== PRIVATE IMPLEMENTATION ==========
@@ -84,21 +72,10 @@ public class TrajectoryCalculator {
   }
 
   /** Calculate shooter command for a specific side using pre-computed robot state. */
-  private static ShooterCommand calculateWithState(
-      ShooterSide side, Translation2d targetLocation, RobotStateData state) {
+  private static ShooterCommand calculateWithState(Translation2d targetLocation, RobotStateData state) {
 
     // 2. Identify Turret Offset and Position
-    Transform3d robotToTurret;
-    switch (side) {
-      case LEFT:
-        robotToTurret = TurretConstants.kRobotToLeftTurret;
-        break;
-      case RIGHT:
-        robotToTurret = TurretConstants.kRobotToRightTurret;
-      default:
-        robotToTurret = new Transform3d();
-        break;
-    }
+    Transform3d robotToTurret = TurretConstants.kRobotToTurret;
 
     Pose2d turretPose =
         state.compensatedRobotPose.transformBy(GeomUtil.toTransform2d(robotToTurret));
@@ -141,15 +118,15 @@ public class TrajectoryCalculator {
         lookaheadTurretPose.transformBy(GeomUtil.toTransform2d(robotToTurret).inverse());
 
     Logger.recordOutput(
-        "LaunchCalculator/" + side.getName() + "/LookaheadRobotPose", lookaheadRobotPose);
+        "LaunchCalculator/LookaheadRobotPose", lookaheadRobotPose);
     Logger.recordOutput(
-        "LaunchCalculator/" + side.getName() + "/ShotVector",
+        "LaunchCalculator/ShotVector",
         new Pose2d(lookaheadRobotPose.getTranslation(), turretAngleField));
-    Logger.recordOutput("LaunchCalculator/" + side.getName() + "/Distance", lookaheadDistance);
+    Logger.recordOutput("LaunchCalculator/Distance", lookaheadDistance);
     Logger.recordOutput(
-        "LaunchCalculator/" + side.getName() + "/DistanceClamped", clampedFinalDistance);
+        "LaunchCalculator/DistanceClamped", clampedFinalDistance);
     Logger.recordOutput(
-        "LaunchCalculator/" + side.getName() + "/IsInRange",
+        "LaunchCalculator/IsInRange",
         lookaheadDistance >= MIN_SHOOTING_DISTANCE && lookaheadDistance <= MAX_SHOOTING_DISTANCE);
 
     return new ShooterCommand(params.wheelRPM(), params.hoodAngle(), turretAngleRobot);

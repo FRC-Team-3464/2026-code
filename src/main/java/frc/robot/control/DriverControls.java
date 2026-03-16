@@ -1,30 +1,15 @@
 package frc.robot.control;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.guts.Guts;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.Direction;
-import frc.robot.util.FieldConstants;
-import org.littletonrobotics.junction.AutoLogOutput;
 
 public class DriverControls implements Configurable {
-  @AutoLogOutput(key = "Control/DriverControls/mode")
-  private DriverMode mode = DriverMode.TWO_DRIVERS;
-
-  public enum DriverMode {
-    ONE_DRIVER,
-    TWO_DRIVERS;
-  }
-
   private final DriverController driver;
   private final DriverController operator;
   private final Drive drive;
@@ -55,8 +40,11 @@ public class DriverControls implements Configurable {
 
   @Override
   public void configure() {
+    configureDriverControls();
+    configureOperatorControls();
+  }
 
-    // Neutral controls (regardless of whether we are in one or two driver mode)
+  private void configureDriverControls() {
     driver.xSquare().onTrue(Commands.runOnce(drive::zeroYaw, drive));
     driver.bCircle().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -69,23 +57,25 @@ public class DriverControls implements Configurable {
     driver.dPadDownRight().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHEAST));
     driver.dPadDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
 
-    driver
-        .leftBumper()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -driver.getLeftY(), // xSupplier
-                () -> -driver.getLeftX(), // ySupplier
-                () -> {
-                  Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-                  Translation2d target =
-                      AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+    // driver
+    // .leftBumper()
+    // .whileTrue(
+    // DriveCommands.joystickDriveAtAngle(
+    // drive,
+    // () -> -driver.getLeftY(), // xSupplier
+    // () -> -driver.getLeftX(), // ySupplier
+    // () -> {
+    // Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+    // Translation2d target =
+    // AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
 
-                  Translation2d delta = target.minus(robotPose.getTranslation());
+    // Translation2d delta = target.minus(robotPose.getTranslation());
 
-                  return new Rotation2d(Math.atan2(delta.getY(), delta.getX()));
-                }));
+    // return new Rotation2d(Math.atan2(delta.getY(), delta.getX()));
+    // }));
+  }
 
+  private void configureOperatorControls() {
     operator.leftBumper().and(operator.leftTrigger().negate()).whileTrue(intake.intake());
 
     operator
@@ -138,52 +128,5 @@ public class DriverControls implements Configurable {
                     leftShooter.setFlywheelVelocity(-2000),
                     rightGuts.runGutForward(),
                     leftGuts.runGutForward()));
-  }
-
-  /*
-   * Driver Bindings:
-   *
-   * LB: Toggle deploy/retract intake
-   * LT: Spin intake
-   * RB: Shoot
-   * LT + A: backspin intake
-   * RT: Climb RT + A: Unclimb
-   * X: reset Gyro
-   * D-Pad: CrabWalk
-   * LB + RB + Y: Aux Handoff
-   *
-   */
-  private void configureOneDriver() {}
-
-  /*
-   * <p>Back up Operator Controls:
-   *
-   * <p>Pancake up + down: Pitch of turrets Pancake left + right: rotation of
-   * turrets trigger
-   * button: Fires fuel from turrets
-   *
-   * <p>button 7: deploy intake button 8: run intake button 9: retract intake
-   *
-   * <p>button 6: climber up button 4: climber down
-   *
-   * <p>thumb button: Driver Handoff
-   */
-  private void configureTwoDrivers() {}
-
-  private boolean isOneDriver() {
-    return mode == DriverMode.ONE_DRIVER;
-  }
-
-  private boolean isTwoDrivers() {
-    return mode == DriverMode.TWO_DRIVERS;
-  }
-
-  public void setMode(DriverMode mode) {
-    this.mode = mode;
-    configure();
-  }
-
-  public DriverMode getMode() {
-    return mode;
   }
 }

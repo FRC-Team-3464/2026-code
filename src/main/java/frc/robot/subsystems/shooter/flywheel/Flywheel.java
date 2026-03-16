@@ -11,12 +11,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.shooter.Shooter.ShooterSide;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {
-  private final ShooterSide side;
 
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
@@ -26,16 +24,15 @@ public class Flywheel extends SubsystemBase {
   private double goalRPM = 0.0;
 
   /** Creates a new Flywheel. */
-  public Flywheel(ShooterSide side, FlywheelIO io) {
-    this.side = side;
+  public Flywheel(FlywheelIO io) {
     this.io = io;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Shooter/" + side.getName() + "/Flywheel", inputs);
-    Logger.recordOutput("Shooter/" + side.getName() + "/Flywheel/AtGoal", atGoal);
+    Logger.processInputs("Shooter/Flywheel", inputs);
+    Logger.recordOutput("Shooter/Flywheel/AtGoal", atGoal);
 
     SmartDashboard.putNumber("Flywheel Velo", getVelocity());
     SmartDashboard.putNumber("Flywheel Setpoint", goalRPM);
@@ -79,9 +76,5 @@ public class Flywheel extends SubsystemBase {
    */
   public double getVelocity() {
     return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
-  }
-
-  public ShooterSide getSide() {
-    return this.side;
   }
 }
