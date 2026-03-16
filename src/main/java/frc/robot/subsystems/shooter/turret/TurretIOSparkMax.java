@@ -6,7 +6,6 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
@@ -31,10 +30,7 @@ public class TurretIOSparkMax implements TurretIO {
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public TurretIOSparkMax() {
-    motor =
-        new SparkMax(
-            DeviceIDs.kTurretAzimuth,
-            MotorType.kBrushless);
+    motor = new SparkMax(DeviceIDs.kTurretAzimuth, MotorType.kBrushless);
     encoder = motor.getAbsoluteEncoder();
     motorController = motor.getClosedLoopController();
 

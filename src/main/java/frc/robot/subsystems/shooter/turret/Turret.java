@@ -47,7 +47,7 @@ public class Turret extends FullSubsystem {
     if (inputs.limitTriggered) {
       isZeroed = true;
     }
-    
+
     RobotVisualizer.getInstance().setTurretAzimuthAngle(Rotation2d.fromRadians(inputs.positionRad));
   }
 
@@ -56,8 +56,7 @@ public class Turret extends FullSubsystem {
     io.applyOutputs(outputs);
     Logger.recordOutput("Turret/Mode", outputs.mode.toString());
     Logger.recordOutput(("Turret/TargetAngle"), targetAngle);
-    Logger.recordOutput(
-        ("Turret/TargetAngleDegrees"), targetAngle.getDegrees());
+    Logger.recordOutput(("Turret/TargetAngleDegrees"), targetAngle.getDegrees());
     Logger.recordOutput(
         ("Turret/TargetOffsetDegrees"),
         targetAngle.minus(Rotation2d.fromRadians(inputs.positionRad)).getDegrees());

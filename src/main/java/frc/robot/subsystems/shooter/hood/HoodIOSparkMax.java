@@ -27,10 +27,7 @@ public class HoodIOSparkMax implements HoodIO {
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public HoodIOSparkMax() {
-    motor =
-        new SparkMax(
-            DeviceIDs.kTurretHood,
-            MotorType.kBrushless);
+    motor = new SparkMax(DeviceIDs.kTurretHood, MotorType.kBrushless);
     encoder = motor.getEncoder();
     motorController = motor.getClosedLoopController();
 

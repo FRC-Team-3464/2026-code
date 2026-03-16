@@ -72,7 +72,8 @@ public class TrajectoryCalculator {
   }
 
   /** Calculate shooter command for a specific side using pre-computed robot state. */
-  private static ShooterCommand calculateWithState(Translation2d targetLocation, RobotStateData state) {
+  private static ShooterCommand calculateWithState(
+      Translation2d targetLocation, RobotStateData state) {
 
     // 2. Identify Turret Offset and Position
     Transform3d robotToTurret = TurretConstants.kRobotToTurret;
@@ -117,14 +118,12 @@ public class TrajectoryCalculator {
     Pose2d lookaheadRobotPose =
         lookaheadTurretPose.transformBy(GeomUtil.toTransform2d(robotToTurret).inverse());
 
-    Logger.recordOutput(
-        "LaunchCalculator/LookaheadRobotPose", lookaheadRobotPose);
+    Logger.recordOutput("LaunchCalculator/LookaheadRobotPose", lookaheadRobotPose);
     Logger.recordOutput(
         "LaunchCalculator/ShotVector",
         new Pose2d(lookaheadRobotPose.getTranslation(), turretAngleField));
     Logger.recordOutput("LaunchCalculator/Distance", lookaheadDistance);
-    Logger.recordOutput(
-        "LaunchCalculator/DistanceClamped", clampedFinalDistance);
+    Logger.recordOutput("LaunchCalculator/DistanceClamped", clampedFinalDistance);
     Logger.recordOutput(
         "LaunchCalculator/IsInRange",
         lookaheadDistance >= MIN_SHOOTING_DISTANCE && lookaheadDistance <= MAX_SHOOTING_DISTANCE);

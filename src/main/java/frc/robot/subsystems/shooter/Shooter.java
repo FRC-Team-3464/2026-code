@@ -16,8 +16,6 @@ import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.turret.Turret;
 import frc.robot.subsystems.shooter.turret.TurretIO;
-import frc.robot.util.AllianceFlipUtil;
-import frc.robot.util.FieldConstants.Hub;
 import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {

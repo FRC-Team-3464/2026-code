@@ -16,20 +16,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.RobotState.VisionMeasurement;
+import frc.robot.control.Configurable;
 import frc.robot.control.DriverController;
+import frc.robot.control.ZoneControls;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.hood.Hood;
-import frc.robot.subsystems.shooter.hood.HoodIOSparkMax;
-import frc.robot.subsystems.shooter.turret.Turret;
-import frc.robot.subsystems.shooter.turret.TurretIOSparkMax;
 import frc.robot.subsystems.vision.CameraIOLimelight;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import frc.robot.util.GeomUtil;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class RobotContainer {
@@ -51,12 +48,11 @@ public class RobotContainer {
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
     switch (Constants.kCurrentMode) {
       case REAL:
-        
+
       case SIM:
 
       case REPLAY:
       default:
-        
     }
     vision =
         new Vision(
@@ -82,6 +78,12 @@ public class RobotContainer {
             new ModuleIO() {},
             new ModuleIO() {},
             new ModuleIO() {});
+
+    configureBindings();
+  }
+
+  private void configureBindings() {
+    List.<Configurable>of(new ZoneControls()).forEach(Configurable::configure);
   }
 
   public void robotPeriodic() {

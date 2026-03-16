@@ -41,11 +41,9 @@ public class RobotVisualizer {
     Pose3d hoodPose =
         turretPose.transformBy(
             new Transform3d(
-                HoodConstants.kTurretToHood.getTranslation(),
-                new Rotation3d(0.0, hoodAngle, 0.0)));
+                HoodConstants.kTurretToHood.getTranslation(), new Rotation3d(0.0, hoodAngle, 0.0)));
 
-    Logger.recordOutput(
-        key + "/Components", turretPose, hoodPose);
+    Logger.recordOutput(key + "/Components", turretPose, hoodPose);
   }
 
   /**
