@@ -40,7 +40,8 @@ public class Shooter extends SubsystemBase {
   }
 
   /**
-   * Apply a pre-calculated shooter command to this shooter. This does not require the shooter
+   * Apply a pre-calculated shooter command to this shooter. This does not require
+   * the shooter
    * subsystem - use when combining with other shooters.
    *
    * @param cmd The shot parameters to apply.
@@ -84,12 +85,12 @@ public class Shooter extends SubsystemBase {
         flywheel);
   }
 
-  public Command trackTarget(Supplier<Translation2d> targetSupplier) {
-    return turret.trackTarget(targetSupplier);
+  public Command hoodDown() {
+    return hood.down();
   }
 
-  public Command zeroTurret() {
-    return turret.zero();
+  public Command trackTarget(Supplier<Translation2d> targetSupplier) {
+    return turret.trackTarget(targetSupplier);
   }
 
   public Command setFlywheelVelocity(double velocityRPM) {
@@ -114,5 +115,17 @@ public class Shooter extends SubsystemBase {
 
   public void setTurretOpenLoop(double output) {
     turret.setOpenLoop(output);
+  }
+
+  public void setTurretDefaultCommand(Command defaultCommand) {
+    turret.setDefaultCommand(defaultCommand);
+  }
+
+  public void setHoodDefaultCommand(Command defaultCommand) {
+    hood.setDefaultCommand(defaultCommand);
+  }
+
+  public void setFlywheelDefaultCommand(Command defaultCommand) {
+    flywheel.setDefaultCommand(defaultCommand);
   }
 }

@@ -32,8 +32,6 @@ public class Turret extends FullSubsystem {
   private boolean atGoal = false;
   private Debouncer atGoalDebouncer = new Debouncer(0.1, DebounceType.kFalling);
 
-  private boolean isZeroed = true;
-
   /** Creates a new Turret. */
   public Turret(TurretIO io) {
     this.io = io;
@@ -43,10 +41,6 @@ public class Turret extends FullSubsystem {
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Turret", inputs);
-
-    if (inputs.limitTriggered) {
-      isZeroed = true;
-    }
 
     RobotVisualizer.getInstance().setTurretAzimuthAngle(Rotation2d.fromRadians(inputs.positionRad));
   }
@@ -97,10 +91,6 @@ public class Turret extends FullSubsystem {
         this);
   }
 
-  public Command zero() {
-    return Commands.startEnd(() -> setOpenLoop(0.2), () -> stop()).until(this::isZeroed);
-  }
-
   /**
    * Set the target angle for the turret.
    *
@@ -109,8 +99,6 @@ public class Turret extends FullSubsystem {
    * @param position A {@link Rotation2d} object representing the target position of the turret.
    */
   public void setPosition(Rotation2d position) {
-    if (!isZeroed) return; // safety
-
     targetAngle = position;
 
     outputs.mode = TurretIOOutputMode.CLOSED_LOOP;
@@ -141,9 +129,5 @@ public class Turret extends FullSubsystem {
 
   public boolean atGoal() {
     return atGoal;
-  }
-
-  public boolean isZeroed() {
-    return isZeroed;
   }
 }

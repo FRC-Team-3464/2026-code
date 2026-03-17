@@ -55,15 +55,18 @@ public class Hood extends SubsystemBase {
         this);
   }
 
+  public Command down() {
+    return Commands.run(() -> setAngle(0), this);
+  }
+
   /**
    * Sets the hood to the target angle.
    *
    * @param angle The target angle (in radians).
    */
   public void setAngle(double angle) {
-    atGoal =
-        atGoalDebouncer.calculate(
-            Math.abs(angle - inputs.positionRad) < HoodConstants.kAngleTolerance);
+    atGoal = atGoalDebouncer.calculate(
+        Math.abs(angle - inputs.positionRad) < HoodConstants.kAngleTolerance);
     targetAngleRad = angle;
   }
 

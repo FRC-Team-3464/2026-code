@@ -12,7 +12,6 @@ public interface TurretIO {
     public double velocityRadPerSec = 0.0;
     public double appliedVolts = 0.0;
     public double currentDrawAmps = 0.0;
-    public boolean limitTriggered = false;
   }
 
   public static enum TurretIOOutputMode {
