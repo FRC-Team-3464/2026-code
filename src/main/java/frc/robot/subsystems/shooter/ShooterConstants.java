@@ -21,9 +21,6 @@ public final class ShooterConstants {
     public static final double kMaxTurretAngleRad = Units.degreesToRadians(120);
     public static final double kAngleTolerance = Units.degreesToRadians(0.5);
 
-    public static final double kLeftMotorId = 12;
-    public static final double kRightMotorId = 13;
-
     // +X = Forward, +Y = Left
     public static final Transform3d kRobotToTurret =
         new Transform3d(Inches.of(3.749), Inches.of(8.186), Inches.of(13.401), Rotation3d.kZero);
@@ -31,10 +28,7 @@ public final class ShooterConstants {
 
   public static final class HoodConstants {
     public static final double kTurretToHoodInches = 1.878;
-    public static final double kGearRatio = 19.2;
-
-    public static final double kLeftHoodID = -1;
-    public static final double kRightHoodID = -1;
+    public static final double kGearRatio = 16 / 1;
 
     public static final double kAngleTolerance = Units.degreesToRadians(5);
 
@@ -51,6 +45,7 @@ public final class ShooterConstants {
                             Inches.of(7.268715), Inches.of(0), Inches.of(0), new Rotation3d())));
 
     public static final double kMinAngleRad = Units.degreesToRadians(0);
+    // TODO: Tune
     public static final double kMaxAngleRad = 5.9;
   }
 

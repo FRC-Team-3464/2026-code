@@ -24,7 +24,7 @@ public class Intake extends SubsystemBase {
    *
    * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
-  public Command deploy() {
+  public Command deployOpenLoop() {
     return Commands.runEnd(
         () -> io.setPivotSpeed(IntakeConstants.kPivotMotorSpeed),
         () -> io.setPivotSpeed(0.0),
@@ -36,11 +36,19 @@ public class Intake extends SubsystemBase {
    *
    * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
-  public Command retract() {
+  public Command retractOpenLoop() {
     return Commands.runEnd(
         () -> io.setPivotSpeed(-IntakeConstants.kPivotMotorSpeed),
         () -> io.setPivotSpeed(0.0),
         this);
+  }
+
+  public Command deployPosition() {
+    return Commands.run(() -> io.setPivotPosition(IntakeConstants.kExtensionPositionRotations), this);
+  }
+
+  public Command retractPosition() {
+    return Commands.run(() -> io.setPivotPosition(0), this);
   }
 
   /**

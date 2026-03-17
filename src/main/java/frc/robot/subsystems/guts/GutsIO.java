@@ -17,11 +17,10 @@ public interface GutsIO {
   @AutoLog
   public static class GutsIOInputs {
     public double velocityRadPerSec = 0.0;
-    public double positionRad = 0.0;
     public double appliedVolts = 0.0;
     public double currentDrawAmps = 0.0;
   }
 
   /** Sets the gut motor to a specific speed ranging from -1.0 to 1.0 */
-  default void setGutMotorSpeed(double speed) {}
+  default void setOpenLoop(double speed) {}
 }

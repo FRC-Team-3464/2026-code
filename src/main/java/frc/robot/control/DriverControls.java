@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.guts.Guts;
+import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.Direction;
@@ -13,29 +14,26 @@ public class DriverControls implements Configurable {
   private final DriverController driver;
   private final DriverController operator;
   private final Drive drive;
-  private final Shooter leftShooter;
-  private final Shooter rightShooter;
-  private final Guts leftGuts;
-  private final Guts rightGuts;
+  private final Shooter shooter;
+  private final Guts guts;
   private final Intake intake;
+  private final Indexer indexer;
 
   public DriverControls(
       DriverController driver,
       DriverController operator,
       Drive drive,
-      Shooter leftShooter,
-      Shooter rightShooter,
-      Guts leftGuts,
-      Guts rightGuts,
-      Intake intake) {
+      Shooter shooter,
+      Guts guts,
+      Intake intake,
+      Indexer indexer) {
     this.driver = driver;
     this.operator = operator;
     this.drive = drive;
-    this.leftShooter = leftShooter;
-    this.rightShooter = rightShooter;
-    this.leftGuts = leftGuts;
-    this.rightGuts = rightGuts;
+    this.shooter = shooter;
+    this.guts = guts;
     this.intake = intake;
+    this.indexer = indexer;
   }
 
   @Override
@@ -81,25 +79,22 @@ public class DriverControls implements Configurable {
     operator
         .rightBumper()
         .whileTrue(
-            rightShooter
-                .setFlywheelVelocity(8500)
-                .alongWith(leftShooter.setFlywheelVelocity(-8500)));
+            shooter
+                .setFlywheelVelocity(8500));
 
     operator
         .rightTrigger()
-        .whileTrue(leftGuts.runGutForward().alongWith(rightGuts.runGutForward()));
+        .whileTrue(guts.runGutForward());
 
     operator
         .dPadUp()
         .whileTrue(
             new StartEndCommand(
                 () -> {
-                  leftShooter.setHoodOpenLoop(0.05);
-                  rightShooter.setHoodOpenLoop(0.05);
+                  shooter.setHoodOpenLoop(0.05);
                 },
                 () -> {
-                  leftShooter.setHoodOpenLoop(0);
-                  rightShooter.setHoodOpenLoop(0);
+                  shooter.setHoodOpenLoop(0);
                 }));
 
     operator
@@ -107,26 +102,22 @@ public class DriverControls implements Configurable {
         .whileTrue(
             new StartEndCommand(
                 () -> {
-                  leftShooter.setHoodOpenLoop(-0.05);
-                  rightShooter.setHoodOpenLoop(-0.05);
+                  shooter.setHoodOpenLoop(-0.05);
                 },
                 () -> {
-                  leftShooter.setHoodOpenLoop(0);
-                  rightShooter.setHoodOpenLoop(0);
+                  shooter.setHoodOpenLoop(0);
                 }));
 
     operator.leftTrigger().whileTrue(intake.outtake());
     operator.aCross().whileTrue(intake.outtake());
-    operator.xSquare().whileTrue(intake.deploy());
-    operator.yTriangle().whileTrue(intake.retract());
+    operator.xSquare().whileTrue(intake.deployOpenLoop());
+    operator.yTriangle().whileTrue(intake.retractOpenLoop());
     operator
         .bCircle()
         .whileTrue(
-            rightShooter
+            shooter
                 .setFlywheelVelocity(2000)
                 .alongWith(
-                    leftShooter.setFlywheelVelocity(-2000),
-                    rightGuts.runGutForward(),
-                    leftGuts.runGutForward()));
+                    guts.runGutForward()));
   }
 }

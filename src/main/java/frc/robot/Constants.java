@@ -86,6 +86,7 @@ public final class Constants {
     public static final int kIndexer = 16;
 
     public static final int kIntakeDrive = 17;
-    public static final int kIntakePivot = 18;
+    public static final int kLeftIntakePivot = 18;
+    public static final int kRightIntakePivot = 19;
   }
 }

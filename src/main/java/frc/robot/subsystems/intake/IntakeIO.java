@@ -16,20 +16,23 @@ public interface IntakeIO {
 
   @AutoLog
   public static class IntakeIOInputs {
-    public double pivotVelocityRadPerSec = 0.0;
-    public double wheelVelocityRadPerSec = 0.0;
+    public boolean leftPivotConnected = false;
+    public double leftPivotVelocityRadPerSec = 0.0;
+    public double leftPivotAppliedVolts = 0.0;
+    public double leftPivotCurrentDrawAmps = 0.0;
 
-    public double pivotPositionRad = 0.0;
-    public double wheelPositionRad = 0.0;
+    public boolean rightPivotConnected = false;
+    public double rightPivotVelocityRadPerSec = 0.0;
+    public double rightPivotAppliedVolts = 0.0;
+    public double rightPivotCurrentDrawAmps = 0.0;
 
-    public double pivotAppliedVolts = 0.0;
-    public double wheelAppliedVolts = 0.0;
-
-    public double pivotCurrentDrawAmps = 0.0;
-    public double wheelCurrentDrawAmps = 0.0;
+    public boolean driveConnected = false;
+    public double driveVelocityRadPerSec = 0.0;
+    public double driveAppliedVolts = 0.0;
+    public double driveCurrentDrawAmps = 0.0;
   }
 
-  default void setPivotPosition(double positionRad) {}
+  default void setPivotPosition(double positionRotations) {}
 
   /**
    * method to set the speed of the pivot

@@ -6,6 +6,7 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
@@ -30,7 +31,10 @@ public class TurretIOSparkMax implements TurretIO {
   private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   public TurretIOSparkMax() {
-    motor = new SparkMax(DeviceIDs.kTurretAzimuth, MotorType.kBrushless);
+    motor =
+        new SparkMax(
+            DeviceIDs.kTurretAzimuth,
+            MotorType.kBrushless);
     encoder = motor.getAbsoluteEncoder();
     motorController = motor.getClosedLoopController();
 
@@ -38,10 +42,17 @@ public class TurretIOSparkMax implements TurretIO {
 
     config.idleMode(IdleMode.kCoast);
 
+    config
+        .encoder
+        .positionConversionFactor(
+            2 * Math.PI / TurretConstants.kGearRatio) // No absolute encoder...
+        .velocityConversionFactor(2 * Math.PI / TurretConstants.kGearRatio / 60.0);
+
     config.closedLoop.positionWrappingEnabled(true).feedbackSensor(FeedbackSensor.kPrimaryEncoder);
 
     config.softLimit.reverseSoftLimitEnabled(false).forwardSoftLimitEnabled(false);
 
+    // TODO: Tune
     config.closedLoop.feedForward.kS(0.025 * 12);
     config.closedLoop.p(0.1);
     config.closedLoop.d(0.01);
@@ -54,6 +65,7 @@ public class TurretIOSparkMax implements TurretIO {
         () ->
             motor.configure(
                 config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    tryUntilOk(motor, 5, () -> motor.getEncoder().setPosition(encoder.getPosition()));
   }
 
   @Override

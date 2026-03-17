@@ -9,7 +9,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
@@ -20,12 +19,10 @@ public class IndexerIOTalonFX implements IndexerIO {
   private final TalonFX toungeMotor = new TalonFX(DeviceIDs.kIndexer);
 
   private final StatusSignal<AngularVelocity> throatVelocity;
-  private final StatusSignal<AngularAcceleration> throatAcceleration;
   private final StatusSignal<Voltage> throatVoltage;
   private final StatusSignal<Current> throatCurrent;
 
   private final StatusSignal<AngularVelocity> toungeVelocity;
-  private final StatusSignal<AngularAcceleration> toungeAcceleration;
   private final StatusSignal<Voltage> toungeVoltage;
   private final StatusSignal<Current> toungeCurrent;
 
@@ -34,12 +31,10 @@ public class IndexerIOTalonFX implements IndexerIO {
     TalonFXConfiguration toungeMotorConfig = new TalonFXConfiguration();
 
     throatVelocity = throatMotor.getVelocity();
-    throatAcceleration = throatMotor.getAcceleration();
     throatVoltage = throatMotor.getMotorVoltage();
     throatCurrent = throatMotor.getSupplyCurrent();
 
     toungeVelocity = toungeMotor.getVelocity();
-    toungeAcceleration = toungeMotor.getAcceleration();
     toungeVoltage = toungeMotor.getMotorVoltage();
     toungeCurrent = toungeMotor.getSupplyCurrent();
 
@@ -47,33 +42,22 @@ public class IndexerIOTalonFX implements IndexerIO {
     tryUntilOk(5, () -> toungeMotor.getConfigurator().apply(toungeMotorConfig));
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50,
-        throatVelocity,
-        throatAcceleration,
-        throatVoltage,
-        throatCurrent,
-        toungeVelocity,
-        toungeAcceleration,
-        toungeCurrent);
+        50, throatVelocity, throatVoltage, throatCurrent, toungeVelocity, toungeCurrent);
     ParentDevice.optimizeBusUtilizationForAll(throatMotor, toungeMotor);
   }
 
   @Override
   public void updateInputs(IndexerIOInputs inputs) {
     inputs.throatConnected =
-        BaseStatusSignal.refreshAll(
-                throatVelocity, throatAcceleration, throatVoltage, throatCurrent)
-            .isOK();
+        BaseStatusSignal.refreshAll(throatVelocity, throatVoltage, throatCurrent).isOK();
     inputs.throatVelocityRadPerSec = throatVelocity.getValue().in(RadiansPerSecond);
-    inputs.throatAppliedVolts = throatAcceleration.getValueAsDouble();
+    inputs.throatAppliedVolts = throatVoltage.getValueAsDouble();
     inputs.throatCurrentDrawAmps = throatCurrent.getValueAsDouble();
 
     inputs.toungeConnected =
-        BaseStatusSignal.refreshAll(
-                toungeVelocity, toungeAcceleration, toungeVoltage, toungeCurrent)
-            .isOK();
+        BaseStatusSignal.refreshAll(toungeVelocity, toungeVoltage, toungeCurrent).isOK();
     inputs.toungeVelocityRadPerSec = toungeVelocity.getValue().in(RadiansPerSecond);
-    inputs.toungeAppliedVolts = toungeAcceleration.getValueAsDouble();
+    inputs.toungeAppliedVolts = toungeVoltage.getValueAsDouble();
     inputs.toungeCurrentDrawAmps = toungeCurrent.getValueAsDouble();
   }
 
