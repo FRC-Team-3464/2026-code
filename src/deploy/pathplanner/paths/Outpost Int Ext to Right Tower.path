@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 0.7633475783475787,
+        "y": 0.6369800569800577
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.6562592684805915,
+        "y": 2.5144924068122636
+      },
+      "isLocked": false,
+      "linkedName": "Outpost Intake Extended"
+    },
+    {
+      "anchor": {
+        "x": 1.6419230769230766,
+        "y": 2.4458119658119664
+      },
+      "prevControl": {
+        "x": 0.793772765376131,
+        "y": 0.7709484446254355
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Right Tower"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 22.963773059854557
+  },
+  "reversed": false,
+  "folder": "Right Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}
