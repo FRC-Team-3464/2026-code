@@ -3,11 +3,7 @@ package frc.robot.subsystems.leds;
 public final class LedConstants {
   public static final int kPort = 1;
 
-  public static final int kFullLength = 14;
-  public static final int kLeftTurretBottomLength = 7;
-  public static final int kRightTurretBottomLength = 7;
-  public static final int kLeftTurretTopLength = 17;
-  public static final int kRightTurretTopLength = 15;
+  public static final int kFullLength = 5;
 
   public static final double kStartupBreathDuration = 1.0;
   public static final double kStrobeSlowDuration = 0.2;

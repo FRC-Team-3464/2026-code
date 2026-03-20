@@ -22,32 +22,7 @@ public class Leds extends SubsystemBase {
   public record Section(int start, int end) {}
 
   public enum LedSection {
-    ALL(new Section(0, LedConstants.kFullLength - 1)),
-    ALL_LEFT(
-        new Section(
-            0, LedConstants.kLeftTurretBottomLength + LedConstants.kLeftTurretTopLength - 1)),
-    ALL_RIGHT(
-        new Section(
-            LedConstants.kLeftTurretBottomLength + LedConstants.kLeftTurretTopLength,
-            LedConstants.kFullLength)),
-    BOTTOM_LEFT_TURRET(new Section(0, LedConstants.kLeftTurretBottomLength - 1)),
-    TOP_LEFT_TURRET(
-        new Section(
-            LedConstants.kLeftTurretBottomLength,
-            LedConstants.kLeftTurretBottomLength + LedConstants.kLeftTurretTopLength - 1)),
-    TOP_RIGHT_TURRET(
-        new Section(
-            LedConstants.kLeftTurretBottomLength + LedConstants.kLeftTurretTopLength,
-            LedConstants.kLeftTurretBottomLength
-                + LedConstants.kLeftTurretTopLength
-                + LedConstants.kRightTurretTopLength
-                - 1)),
-    BOTTOM_RIGHT_TURRET(
-        new Section(
-            LedConstants.kLeftTurretBottomLength
-                + LedConstants.kLeftTurretTopLength
-                + LedConstants.kRightTurretTopLength,
-            LedConstants.kFullLength));
+    ALL(new Section(0, LedConstants.kFullLength - 1));
 
     private final Section section;
 

@@ -58,14 +58,14 @@ public final class DriveConstants {
 
   // TODO: Update for robot
   // PathPlanner config constants
-  public static final double kRobotMassKG = 74.088;
+  public static final double kRobotMassKG = 72.088;
   public static final double kRobotMOI = 6.883;
   /** Coefficient of friction */
   public static final double kWheelCOF = 1.2;
 
   public static final RobotConfig kPathplannerConfig =
       new RobotConfig(
-          kRobotMOI,
+          kRobotMassKG,
           kRobotMOI,
           new ModuleConfig(
               TunerConstants.FrontLeft.WheelRadius,

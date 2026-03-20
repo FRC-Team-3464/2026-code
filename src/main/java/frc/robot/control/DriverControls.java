@@ -133,8 +133,8 @@ public class DriverControls implements Configurable {
     // () -> shooter.setFlywheelOpenLoop(0),
     // shooter));
 
-    driver.aCross().whileTrue(indexer.index());
-    driver.bCircle().whileTrue(indexer.indexReverse());
+    driver.bCircle().whileTrue(indexer.index());
+    driver.aCross().whileTrue(indexer.indexReverse());
 
     // driver
     // .aCross()

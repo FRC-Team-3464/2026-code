@@ -27,8 +27,8 @@ public class Indexer extends SubsystemBase {
   public Command index() {
     return Commands.startEnd(
         () -> {
-          io.setThroatOpenLoop(IndexerConstants.kThroatMotorSpeed);
-          io.setToungeOpenLoop(-IndexerConstants.kThroatMotorSpeed);
+          io.setThroatOpenLoop(-IndexerConstants.kThroatMotorSpeed);
+          io.setToungeOpenLoop(IndexerConstants.kThroatMotorSpeed);
         },
         () -> {
           io.stop();
@@ -39,8 +39,8 @@ public class Indexer extends SubsystemBase {
   public Command indexReverse() {
     return Commands.startEnd(
         () -> {
-          io.setThroatOpenLoop(-IndexerConstants.kThroatMotorSpeed);
-          io.setToungeOpenLoop(IndexerConstants.kThroatMotorSpeed);
+          io.setThroatOpenLoop(IndexerConstants.kThroatMotorSpeed);
+          io.setToungeOpenLoop(-IndexerConstants.kThroatMotorSpeed);
         },
         () -> {
           io.stop();

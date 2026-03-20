@@ -11,9 +11,11 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants.Mode;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.RobotState.VisionMeasurement;
 import frc.robot.control.Configurable;
@@ -43,10 +45,16 @@ import frc.robot.subsystems.vision.CameraIOLimelight;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import frc.robot.util.GeomUtil;
+
+import static edu.wpi.first.units.Units.Seconds;
+
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 public class RobotContainer {
   private final DriverController driver = new DriverController.XboxDriverController(0);
@@ -61,6 +69,8 @@ public class RobotContainer {
   private static Field2d field2d = new Field2d();
   private static Field2d targetField2d = new Field2d();
 
+  private SendableChooser<Command> autoChooser = new SendableChooser<>();
+
   public RobotContainer() {
 
     Supplier<Rotation2d> robotRotationSupplier = () -> RobotState.getInstance().getRotation();
@@ -70,43 +80,40 @@ public class RobotContainer {
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
     switch (Constants.kCurrentMode) {
       case REAL -> {
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(TunerConstants.FrontLeft),
+            new ModuleIOTalonFX(TunerConstants.FrontRight),
+            new ModuleIOTalonFX(TunerConstants.BackLeft),
+            new ModuleIOTalonFX(TunerConstants.BackRight));
         indexer = new Indexer(new IndexerIOTalonFX());
         intake = new Intake(new IntakeIOTalonFX());
-        shooter =
-            new Shooter(new TurretIOSparkMax() {}, new HoodIOSparkMax(), new FlywheelIOTalonFX());
-        vision =
-            new Vision(
-                new VisionConsumer() {
-                  public void accept(
-                      Pose2d visionRobotPoseMeters,
-                      double timestampSeconds,
-                      edu.wpi.first.math.Matrix<N3, N1> visionMeasurementStdDevs) {
+        shooter = new Shooter(new TurretIOSparkMax() {
+        }, new HoodIOSparkMax(), new FlywheelIOTalonFX());
+        vision = new Vision(
+            new VisionConsumer() {
+              public void accept(
+                  Pose2d visionRobotPoseMeters,
+                  double timestampSeconds,
+                  edu.wpi.first.math.Matrix<N3, N1> visionMeasurementStdDevs) {
 
-                    RobotState.getInstance()
-                        .addVisionMeasurement(
-                            new VisionMeasurement(
-                                timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
-                  }
-                  ;
-                },
-                new CameraIOLimelight("limelight-front", robotRotationSupplier),
-                new CameraIOLimelight("limelight-one", robotRotationSupplier));
+                RobotState.getInstance()
+                    .addVisionMeasurement(
+                        new VisionMeasurement(
+                            timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
+              };
+            },
+            new CameraIOLimelight("limelight-front", robotRotationSupplier),
+            new CameraIOLimelight("limelight-one", robotRotationSupplier));
       }
       case SIM -> {
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(TunerConstants.FrontLeft),
+            new ModuleIOSim(TunerConstants.FrontRight),
+            new ModuleIOSim(TunerConstants.BackLeft),
+            new ModuleIOSim(TunerConstants.BackRight));
         indexer = new Indexer(new IndexerIOSim());
         intake = new Intake(new IntakeIOSim());
         shooter = new Shooter(new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
@@ -114,12 +121,20 @@ public class RobotContainer {
     }
 
     configureBindings();
+
+    if (Constants.kCurrentMode == Mode.REAL) {
+      configurePathPlanner();
+
+      autoChooser = AutoBuilder.buildAutoChooser();
+
+      SmartDashboard.putData(autoChooser);
+    }
   }
 
   private void configureBindings() {
     List.<Configurable>of(
-            new DefaultControls(driver, operator, drive, indexer, intake, shooter),
-            new DriverControls(driver, operator, drive, shooter, intake, indexer))
+        new DefaultControls(driver, operator, drive, indexer, intake, shooter),
+        new DriverControls(driver, operator, drive, shooter, intake, indexer))
         .forEach(Configurable::configure);
   }
 
@@ -129,10 +144,10 @@ public class RobotContainer {
             new OdometryObservation(
                 Timer.getTimestamp(),
                 new SwerveModulePosition[] {
-                  new SwerveModulePosition(),
-                  new SwerveModulePosition(),
-                  new SwerveModulePosition(),
-                  new SwerveModulePosition()
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition()
                 },
                 drive.getRawGyroRotation()));
 
@@ -141,13 +156,17 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
+    if (Constants.kCurrentMode == Mode.REAL) {
+      return autoChooser.getSelected();
+    }
     return Commands.print("No autonomous command configured");
   }
 
   public void configurePathPlanner() {
-    NamedCommands.registerCommand("Shoot at Hub/Pass", shooter.shootAtTargetNoRotation(() -> RobotState.getInstance().getTurretTarget()));
+    NamedCommands.registerCommand("Shoot", shooter.shootAtTargetNoRotation(() -> RobotState.getInstance().getTurretTarget()));
     NamedCommands.registerCommand("Index", indexer.index());
-    NamedCommands.registerCommand("Intake Deploy", intake.deployOpenLoop());
-    NamedCommands.registerCommand("Intake Retract", intake.retractOpenLoop());
+    NamedCommands.registerCommand("Intake", intake.intake());
+    NamedCommands.registerCommand("DeployIntake", intake.deployOpenLoop().withTimeout(Seconds.of(2)));
+    NamedCommands.registerCommand("RetractIntake", intake.retractOpenLoop().withTimeout(Seconds.of(2)));
    }
 }
