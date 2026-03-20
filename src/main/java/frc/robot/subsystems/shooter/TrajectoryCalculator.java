@@ -23,15 +23,11 @@ public class TrajectoryCalculator {
   private static final double MAX_SHOOTING_DISTANCE = 5.0;
 
   static {
-    shooterTable.put(1.5, new TrajectoryParams(2800.0, 0, 0.38));
-    shooterTable.put(2.0, new TrajectoryParams(3100.0, 0.0349, 0.45));
-    shooterTable.put(2.5, new TrajectoryParams(3250.0, 0.0698, 0.52));
-    shooterTable.put(3.0, new TrajectoryParams(3650.0, 0.104, 0.60));
-    shooterTable.put(3.5, new TrajectoryParams(3900.0, 0.1396, 0.68));
-    shooterTable.put(4.0, new TrajectoryParams(4100.0, 0.174, 0.76));
-    shooterTable.put(4.5, new TrajectoryParams(4350.0, 0.209, 0.85));
-    shooterTable.put(5.0, new TrajectoryParams(4550.0, 0.244, 0.94));
-    shooterTable.put(5.5, new TrajectoryParams(4550.0, 0.279, 1.05));
+    shooterTable.put(2.36, new TrajectoryParams(2000.0, 0, 0.45));
+    shooterTable.put(2.6, new TrajectoryParams(2250.0, -0.5, 0.52));
+    shooterTable.put(3.0, new TrajectoryParams(2500.0, -1.0, 0.60));
+    shooterTable.put(3.5, new TrajectoryParams(2600.0, -3.0, 0.68));
+    shooterTable.put(4.0, new TrajectoryParams(3000.0, -3.9, 0.76));
   }
 
   // ========== PUBLIC API ==========
@@ -50,7 +46,7 @@ public class TrajectoryCalculator {
   }
 
   public static double calculateHoodAngle(Translation2d targetLocation, Pose2d robotPose) {
-    return 20 * shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).hoodAngle;
+    return shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).hoodAngle;
   }
 
   // ========== PRIVATE IMPLEMENTATION ==========

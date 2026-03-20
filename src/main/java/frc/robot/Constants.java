@@ -81,9 +81,11 @@ public final class Constants {
     public static final int kTurretHood = 13;
     public static final int kTurretAzimuth = 14;
 
-    public static final int kGuts = 15;
+    // Unused
+    public static final int kGuts = -1;
 
-    public static final int kIndexer = 16;
+    public static final int kIndexerTounge = 15;
+    public static final int kIndexerThroat = 16;
 
     public static final int kIntakeDrive = 17;
     public static final int kLeftIntakePivot = 18;

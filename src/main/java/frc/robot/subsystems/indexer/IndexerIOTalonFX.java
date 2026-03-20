@@ -1,10 +1,12 @@
 package frc.robot.subsystems.indexer;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -15,8 +17,8 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.DeviceIDs;
 
 public class IndexerIOTalonFX implements IndexerIO {
-  private final TalonFX throatMotor = new TalonFX(DeviceIDs.kIndexer);
-  private final TalonFX toungeMotor = new TalonFX(DeviceIDs.kIndexer);
+  private final TalonFX throatMotor = new TalonFX(DeviceIDs.kIndexerThroat);
+  private final TalonFX toungeMotor = new TalonFX(DeviceIDs.kIndexerTounge);
 
   private final StatusSignal<AngularVelocity> throatVelocity;
   private final StatusSignal<Voltage> throatVoltage;
@@ -27,7 +29,9 @@ public class IndexerIOTalonFX implements IndexerIO {
   private final StatusSignal<Current> toungeCurrent;
 
   public IndexerIOTalonFX() {
-    TalonFXConfiguration throatMotorConfig = new TalonFXConfiguration();
+    TalonFXConfiguration throatMotorConfig =
+        new TalonFXConfiguration()
+            .withCurrentLimits(new CurrentLimitsConfigs().withSupplyCurrentLimit(Amps.of(30)));
     TalonFXConfiguration toungeMotorConfig = new TalonFXConfiguration();
 
     throatVelocity = throatMotor.getVelocity();

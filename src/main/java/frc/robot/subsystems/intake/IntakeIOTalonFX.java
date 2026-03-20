@@ -4,10 +4,12 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -16,7 +18,7 @@ import frc.robot.Constants.DeviceIDs;
 
 public class IntakeIOTalonFX implements IntakeIO {
   private TalonFX leftPivotMotor = new TalonFX(DeviceIDs.kLeftIntakePivot);
-  private TalonFX rightPivotMotor = new TalonFX(DeviceIDs.kLeftIntakePivot);
+  private TalonFX rightPivotMotor = new TalonFX(DeviceIDs.kRightIntakePivot);
   private TalonFX driveMotor = new TalonFX(DeviceIDs.kIntakeDrive);
 
   private Follower rightPivotFollower =
@@ -42,16 +44,19 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   public IntakeIOTalonFX() {
     leftPivotConfig = new TalonFXConfiguration().withSlot0(IntakeConstants.kPivotGains);
-    rightPivotConfig = new TalonFXConfiguration().withSlot0(IntakeConstants.kPivotGains);
+    rightPivotConfig =
+        new TalonFXConfiguration()
+            .withSlot0(IntakeConstants.kPivotGains)
+            .withMotorOutput(
+                new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
+    driveMotorConfig = new TalonFXConfiguration();
 
     leftPivotMotor.setPosition(0);
     rightPivotMotor.setPosition(0);
 
     leftPivotMotor.getConfigurator().apply(leftPivotConfig);
     rightPivotMotor.getConfigurator().apply(rightPivotConfig);
-    driveMotor.getConfigurator().apply(driveMotorConfig);
-
-    rightPivotMotor.setControl(rightPivotFollower);
+    // driveMotor.getConfigurator().apply(driveMotorConfig);
 
     leftPivotVelocity = leftPivotMotor.getVelocity();
     leftPivotVoltage = leftPivotMotor.getMotorVoltage();
@@ -103,12 +108,13 @@ public class IntakeIOTalonFX implements IntakeIO {
   @Override
   public void setPivotPosition(double positionRotations) {
     leftPivotMotor.setControl(positionRequest.withPosition(positionRotations));
+    rightPivotMotor.setControl(positionRequest.withPosition(positionRotations));
   }
 
   @Override
   public void setPivotSpeed(double speed) {
     leftPivotMotor.set(speed);
-    rightPivotMotor.setControl(rightPivotFollower);
+    rightPivotMotor.set(speed * -0.95);
   }
 
   @Override

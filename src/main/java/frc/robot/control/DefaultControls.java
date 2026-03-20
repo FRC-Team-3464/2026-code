@@ -1,10 +1,17 @@
 package frc.robot.control;
 
+import java.util.function.Supplier;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.TrajectoryCalculator;
 
 public class DefaultControls implements Configurable {
 
@@ -31,14 +38,20 @@ public class DefaultControls implements Configurable {
     this.shooter = shooter;
   }
 
-  /** Configure all default commands for the subsystems (e.g. includes joystick driving). */
+  /**
+   * Configure all default commands for the subsystems (e.g. includes joystick
+   * driving).
+   */
   @Override
   public void configure() {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
+    Supplier<Translation2d> targetPoseSupplier = () -> RobotState.getInstance().getTurretTarget();
     // Avoid the trench
-    shooter.setHoodDefaultCommand(shooter.hoodDown());
+    shooter.setHoodDefaultCommand(shooter.trackTargetHood(targetPoseSupplier));
+    shooter.setTurretDefaultCommand(
+        shooter.trackTargetTurret(targetPoseSupplier));
   }
 }

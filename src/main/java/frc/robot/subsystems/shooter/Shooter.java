@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -39,9 +40,12 @@ public class Shooter extends SubsystemBase {
     flywheel.periodic();
   }
 
+  public boolean readyToShoot() {
+    return turret.atGoal() && hood.atGoal() && flywheel.atGoal();
+  }
+
   /**
-   * Apply a pre-calculated shooter command to this shooter. This does not require
-   * the shooter
+   * Apply a pre-calculated shooter command to this shooter. This does not require the shooter
    * subsystem - use when combining with other shooters.
    *
    * @param cmd The shot parameters to apply.
@@ -89,7 +93,11 @@ public class Shooter extends SubsystemBase {
     return hood.down();
   }
 
-  public Command trackTarget(Supplier<Translation2d> targetSupplier) {
+  public Command trackTargetHood(Supplier<Translation2d> targetSupplier) {
+    return hood.trackTarget(targetSupplier);
+  }
+
+  public Command trackTargetTurret(Supplier<Translation2d> targetSupplier) {
     return turret.trackTarget(targetSupplier);
   }
 

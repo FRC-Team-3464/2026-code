@@ -31,12 +31,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     motorConfig =
         new TalonFXConfiguration()
             .withSlot0(FlywheelConstants.kGains)
-            /**
-             * TODO: Update gains Peiwei, Ben: see the FlywheelConstants.kGains above... thats where
-             * the values are You also might have to check if the inverted values are correct,
-             * positive should spin the right way for shooting (line above that has the
-             * withInverted() method)
-             */
+            // .withCurrentLimits(
+            //     new CurrentLimitsConfigs()
+            //         .withSupplyCurrentLimit(Amps.of(50))
+            //         .withStatorCurrentLimit(Amps.of(50)))
             .withMotorOutput(FlywheelConstants.kOutputConfigs);
     tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig, 0.25));
 

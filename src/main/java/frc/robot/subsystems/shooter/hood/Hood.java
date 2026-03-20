@@ -23,6 +23,7 @@ public class Hood extends SubsystemBase {
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
   private double targetAngleRad = 0.0;
+  private boolean closedLoop = false;
 
   private boolean atGoal = false;
   private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
@@ -39,7 +40,9 @@ public class Hood extends SubsystemBase {
 
     RobotVisualizer.getInstance().setTurretHoodAngle(inputs.positionRad);
 
-    io.setAngle(targetAngleRad);
+    if (closedLoop) {
+      io.setAngle(targetAngleRad);
+    }
   }
 
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
@@ -65,12 +68,15 @@ public class Hood extends SubsystemBase {
    * @param angle The target angle (in radians).
    */
   public void setAngle(double angle) {
-    atGoal = atGoalDebouncer.calculate(
-        Math.abs(angle - inputs.positionRad) < HoodConstants.kAngleTolerance);
+    closedLoop = true;
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(angle - inputs.positionRad) < HoodConstants.kAngleTolerance);
     targetAngleRad = angle;
   }
 
   public void setOpenLoop(double output) {
+    closedLoop = false;
     io.setOpenLoop(output);
   }
 

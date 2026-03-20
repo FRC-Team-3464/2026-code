@@ -6,13 +6,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
@@ -28,7 +21,7 @@ import frc.robot.Constants.DeviceIDs;
 public class GutsIOTalonFX implements GutsIO {
 
   private final TalonFX motor = new TalonFX(DeviceIDs.kGuts);
-  
+
   private final StatusSignal<AngularVelocity> velocitySignal;
   private final StatusSignal<Voltage> voltageSignal;
   private final StatusSignal<Current> currentSignal;
@@ -39,7 +32,7 @@ public class GutsIOTalonFX implements GutsIO {
     velocitySignal = motor.getVelocity();
     voltageSignal = motor.getMotorVoltage();
     currentSignal = motor.getSupplyCurrent();
-    
+
     tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig));
 
     BaseStatusSignal.setUpdateFrequencyForAll(50, velocitySignal, voltageSignal, currentSignal);
@@ -47,11 +40,8 @@ public class GutsIOTalonFX implements GutsIO {
   }
 
   @Override
-  public void setOpenLoop(double speed) {
-  }
+  public void setOpenLoop(double speed) {}
 
   @Override
-  public void updateInputs(GutsIOInputs inputs) {
-
-  }
+  public void updateInputs(GutsIOInputs inputs) {}
 }

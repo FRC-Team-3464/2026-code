@@ -44,7 +44,8 @@ public class Intake extends SubsystemBase {
   }
 
   public Command deployPosition() {
-    return Commands.run(() -> io.setPivotPosition(IntakeConstants.kExtensionPositionRotations), this);
+    return Commands.run(
+        () -> io.setPivotPosition(IntakeConstants.kExtensionPositionRotations), this);
   }
 
   public Command retractPosition() {

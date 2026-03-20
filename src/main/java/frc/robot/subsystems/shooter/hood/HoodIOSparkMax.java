@@ -7,6 +7,7 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -40,8 +41,11 @@ public class HoodIOSparkMax implements HoodIO {
         .positionConversionFactor(2 * Math.PI / HoodConstants.kGearRatio) // No absolute encoder...
         .velocityConversionFactor(2 * Math.PI / HoodConstants.kGearRatio / 60.0);
 
+    // TODO: Tune
     config.closedLoop.feedForward.kS(0.015 * 12);
-    config.closedLoop.p(0.1);
+    config.closedLoop.p(0.5);
+
+    config.closedLoop.allowedClosedLoopError(HoodConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
 
     tryUntilOk(
         motor,

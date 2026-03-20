@@ -12,7 +12,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotContainer;
 import frc.robot.RobotState;
 import frc.robot.RobotVisualizer;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
@@ -62,9 +61,9 @@ public class Turret extends FullSubsystem {
         () -> {
           Translation2d target = targetSupplier.get();
           Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-          RobotContainer.field2d.setRobotPose(robotPose);
 
-          Translation2d turretOffset = Translation2d.kZero;
+          Translation2d turretOffset =
+              TurretConstants.kRobotToTurret.getTranslation().toTranslation2d();
 
           // Turret position in field coordinates
           Translation2d turretFieldPos =
@@ -111,7 +110,12 @@ public class Turret extends FullSubsystem {
 
   public void setOpenLoop(double output) {
     outputs.mode = TurretIOOutputMode.OPEN_LOOP;
-    outputs.openLoopOutput = MathUtil.clamp(output, -1.0, 1.0);
+    if (inputs.positionRad > TurretConstants.kMaxTurretAngleRad
+        || inputs.positionRad < TurretConstants.kMinTurretAngleRad) {
+      outputs.openLoopOutput = 0.0;
+    } else {
+      outputs.openLoopOutput = MathUtil.clamp(output, -1.0, 1.0);
+    }
   }
 
   public void stop() {

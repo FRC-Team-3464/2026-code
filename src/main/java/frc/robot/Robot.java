@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.CachedSupplier;
@@ -70,6 +72,8 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     robotContainer = new RobotContainer();
+    RobotState.getInstance().resetRotation(Rotation2d.kZero);
+    RobotState.getInstance().setPose(Pose2d.kZero);
   }
 
   /** This function is called periodically during all modes. */

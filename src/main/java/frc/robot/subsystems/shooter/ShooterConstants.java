@@ -16,21 +16,22 @@ public final class ShooterConstants {
   public static final double kLatencySeconds = 0.05;
 
   public static final class TurretConstants {
-    public static final double kGearRatio = 200 / 19; // Motor / Turret
-    public static final double kMinTurretAngleRad = Units.degreesToRadians(-120);
-    public static final double kMaxTurretAngleRad = Units.degreesToRadians(120);
+    public static final double kGearRatio = 200.0 / 20.0; // Motor / Turret
+    public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
+    public static final double kMaxTurretAngleRad = Units.degreesToRadians(210);
     public static final double kAngleTolerance = Units.degreesToRadians(0.5);
 
+    //
     // +X = Forward, +Y = Left
     public static final Transform3d kRobotToTurret =
-        new Transform3d(Inches.of(3.749), Inches.of(8.186), Inches.of(13.401), Rotation3d.kZero);
+        new Transform3d(Inches.of(7.5), Inches.of(-4), Inches.of(14.5), Rotation3d.kZero);
   }
 
   public static final class HoodConstants {
     public static final double kTurretToHoodInches = 1.878;
     public static final double kGearRatio = 16 / 1;
 
-    public static final double kAngleTolerance = Units.degreesToRadians(5);
+    public static final double kAngleTolerance = Units.degreesToRadians(1);
 
     public static final Transform3d kRobotToHood =
         new Transform3d(
@@ -46,7 +47,7 @@ public final class ShooterConstants {
 
     public static final double kMinAngleRad = Units.degreesToRadians(0);
     // TODO: Tune
-    public static final double kMaxAngleRad = 5.9;
+    public static final double kMaxAngleRad = 3.9;
   }
 
   public static final class FlywheelConstants {
@@ -55,11 +56,11 @@ public final class ShooterConstants {
 
     public static final Slot0Configs kGains =
         new Slot0Configs()
-            .withKP(0.75)
-            .withKI(0)
-            .withKD(0.0)
-            .withKS(0.0225 * 12)
-            .withKV(0.0945)
+            .withKP(0.1)
+            .withKI(0.1)
+            .withKD(0.0025)
+            .withKS(0.17 * 12)
+            .withKV(0.042)
             .withKA(0);
     public static final MotorOutputConfigs kOutputConfigs =
         new MotorOutputConfigs()

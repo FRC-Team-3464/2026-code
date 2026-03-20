@@ -1,7 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,8 +26,6 @@ public class RobotState {
   private SwerveDrivePoseEstimator poseEstimator;
 
   private ChassisSpeeds robotVelocity = new ChassisSpeeds();
-
-  private Rotation2d gyroOffset = new Rotation2d();
 
   private RobotState() {
     poseEstimator =
@@ -96,11 +92,11 @@ public class RobotState {
    * @param pose The pose to reset the pose estimator to.
    */
   public void setPose(Pose2d pose) {
-    poseEstimator.resetPosition(getRotation(), null, pose);
+    poseEstimator.resetPose(pose);
   }
 
   public void resetRotation(Rotation2d rotation) {
-    gyroOffset = poseEstimator.getEstimatedPosition().getRotation().minus(rotation);
+    poseEstimator.resetRotation(rotation);
   }
 
   /**
@@ -132,7 +128,7 @@ public class RobotState {
 
   /** Get the rotation of the estimated pose. */
   public Rotation2d getRotation() {
-    return poseEstimator.getEstimatedPosition().getRotation().minus(gyroOffset);
+    return poseEstimator.getEstimatedPosition().getRotation();
   }
 
   public ChassisSpeeds getFieldVelocity() {
@@ -141,14 +137,15 @@ public class RobotState {
 
   public Translation2d getTurretTarget() {
     Pose2d estimatedPose = getEstimatedPose();
-    if (estimatedPose.getX()
-        < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
-      if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center)) {
-        return AllianceFlipUtil.apply(new Translation2d(Meters.of(2), Meters.of(1)));
-      }
-      return AllianceFlipUtil.apply(
-          new Translation2d(Meters.of(2), Meters.of(FieldConstants.fieldWidth - 1)));
-    }
+    // if (estimatedPose.getX()
+    //     < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
+    //   if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center))
+    // {
+    //     return AllianceFlipUtil.apply(new Translation2d(Meters.of(2), Meters.of(1)));
+    //   }
+    //   return AllianceFlipUtil.apply(
+    //       new Translation2d(Meters.of(2), Meters.of(FieldConstants.fieldWidth - 1)));
+    // }
     return AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
   }
 

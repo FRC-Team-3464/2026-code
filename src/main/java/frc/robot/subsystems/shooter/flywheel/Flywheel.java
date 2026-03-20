@@ -77,4 +77,8 @@ public class Flywheel extends SubsystemBase {
   public double getVelocity() {
     return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
   }
+
+  public boolean atGoal() {
+    return atGoal;
+  }
 }
