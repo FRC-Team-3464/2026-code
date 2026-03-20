@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.356380952380952,
+        "y": 6.604833333333334
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 8.50754761904762,
+        "y": 5.233535714285715
+      },
+      "isLocked": false,
+      "linkedName": "BPTL26"
+    },
+    {
+      "anchor": {
+        "x": 8.356380952380952,
+        "y": 1.4111785714285725
+      },
+      "prevControl": {
+        "x": 8.518345238095238,
+        "y": 2.0050476190476196
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "BPBR26"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 5.2,
+    "rotation": 80.0
+  },
+  "reversed": false,
+  "folder": "Misc.",
+  "idealStartingState": {
+    "velocity": 5.2,
+    "rotation": 70.0
+  },
+  "useDefaultConstraints": true
+}

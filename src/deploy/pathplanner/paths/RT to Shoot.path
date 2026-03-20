@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.62702380952381,
+        "y": 0.6445476190476187
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.082964285714287,
+        "y": 0.5905595238095239
+      },
+      "isLocked": false,
+      "linkedName": "RT26"
+    },
+    {
+      "anchor": {
+        "x": 2.439285714285715,
+        "y": 4.026361904761904
+      },
+      "prevControl": {
+        "x": 2.538967242139329,
+        "y": 3.797094390698596
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "SUTO26"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5468879668049745,
+      "rotationDegrees": 32.66665927985974
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "RT Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

@@ -1,0 +1,63 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 1.367988095238095
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.603290598290597,
+        "y": 0.8953846153846157
+      },
+      "isLocked": false,
+      "linkedName": "Rotated BPBR"
+    },
+    {
+      "anchor": {
+        "x": 3.2491071428625617,
+        "y": 0.7417261904740291
+      },
+      "prevControl": {
+        "x": 5.870189676327198,
+        "y": 0.5271545527961041
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "RTCorner3"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.75,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 0.9,
+      "rotationDegrees": 14.999999999999998
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 68.19859051479783
+  },
+  "reversed": false,
+  "folder": "Return to Alliance",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -80.0
+  },
+  "useDefaultConstraints": true
+}

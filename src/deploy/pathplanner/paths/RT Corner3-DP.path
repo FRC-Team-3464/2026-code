@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.4218690476190483,
+        "y": 0.63375
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.6717362513552696,
+        "y": 0.6418974227238853
+      },
+      "isLocked": false,
+      "linkedName": "RTCORNER3"
+    },
+    {
+      "anchor": {
+        "x": 0.9816071428571436,
+        "y": 5.902988095238095
+      },
+      "prevControl": {
+        "x": 1.4243095238095247,
+        "y": 6.064952380952381
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "DP26"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "RT Paths",
+  "idealStartingState": {
+    "velocity": 5.2,
+    "rotation": 150.0
+  },
+  "useDefaultConstraints": true
+}

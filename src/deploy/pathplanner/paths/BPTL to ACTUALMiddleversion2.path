@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 6.734404761908865
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 8.647916666666667,
+        "y": 5.4710833333333335
+      },
+      "isLocked": false,
+      "linkedName": "Rotated BPTL"
+    },
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 4.035
+      },
+      "prevControl": {
+        "x": 8.572333333333333,
+        "y": 4.758440476190476
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "ACTUALMiddleBPversion2"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 1.0,
+    "rotation": 77.829
+  },
+  "reversed": false,
+  "folder": "Misc.",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 80.0
+  },
+  "useDefaultConstraints": true
+}

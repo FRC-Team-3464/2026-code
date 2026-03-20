@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.9701071428571435,
+        "y": 3.3115595238095237
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.877107142857143,
+        "y": 3.6354880952380952
+      },
+      "isLocked": false,
+      "linkedName": "RT 8 Point"
+    },
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 4.035
+      },
+      "prevControl": {
+        "x": 7.2766190476190475,
+        "y": 3.7974523809523815
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "ACTUALMiddleBPversion2"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 1.0,
+    "rotation": 77.829
+  },
+  "reversed": false,
+  "folder": "RT Paths",
+  "idealStartingState": {
+    "velocity": 1.0,
+    "rotation": -119.99999999999999
+  },
+  "useDefaultConstraints": true
+}

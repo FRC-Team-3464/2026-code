@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 6.734404761908865
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.8380952381004505,
+        "y": 7.155511904760722
+      },
+      "isLocked": false,
+      "linkedName": "Rotated BPTL"
+    },
+    {
+      "anchor": {
+        "x": 3.0655476190476194,
+        "y": 7.069130952380952
+      },
+      "prevControl": {
+        "x": 4.2247465424169555,
+        "y": 7.859472032875178
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LTCorner3"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7078891257995739,
+      "rotationDegrees": 0.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 4.5,
+    "rotation": -71.565051177078
+  },
+  "reversed": false,
+  "folder": "Return to Alliance",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 80.0
+  },
+  "useDefaultConstraints": true
+}
