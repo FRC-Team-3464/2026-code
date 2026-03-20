@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.shooter;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -64,12 +63,17 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command shootAtTargetRotation(Supplier<Translation2d> targetSupplier) {
-    return Commands.run(
+    return Commands.runEnd(
         () -> {
           ShooterCommand cmd = TrajectoryCalculator.calculate(targetSupplier.get());
           flywheel.setVelocity(cmd.wheelRPM());
           hood.setAngle(cmd.hoodAngle());
           turret.setPosition(cmd.turretAngle());
+        },
+        () -> {
+          flywheel.setOpenLoop(0);
+          hood.setOpenLoop(0);
+          turret.setOpenLoop(0);
         },
         this,
         turret,
@@ -78,14 +82,30 @@ public class Shooter extends SubsystemBase {
   }
 
   public Command shootAtTargetNoRotation(Supplier<Translation2d> targetSupplier) {
-    return Commands.run(
+    return Commands.runEnd(
         () -> {
           ShooterCommand cmd = TrajectoryCalculator.calculate(targetSupplier.get());
           flywheel.setVelocity(cmd.wheelRPM());
           hood.setAngle(cmd.hoodAngle());
         },
+        () -> {
+          flywheel.setOpenLoop(0);
+          hood.setOpenLoop(0);
+        },
         this,
         hood,
+        flywheel);
+  }
+
+  public Command trackTargetFlywheel(Supplier<Translation2d> targetSupplier) {
+    return Commands.runEnd(
+        () -> {
+          ShooterCommand cmd = TrajectoryCalculator.calculate(targetSupplier.get());
+          flywheel.setVelocity(cmd.wheelRPM());
+        },
+        () -> {
+          flywheel.setOpenLoop(0);
+        },
         flywheel);
   }
 
@@ -135,5 +155,13 @@ public class Shooter extends SubsystemBase {
 
   public void setFlywheelDefaultCommand(Command defaultCommand) {
     flywheel.setDefaultCommand(defaultCommand);
+  }
+
+  public Hood getHood() {
+    return hood;
+  }
+
+  public boolean flywheelAtGoal() {
+    return flywheel.atGoal();
   }
 }

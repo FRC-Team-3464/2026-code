@@ -44,11 +44,11 @@ public class Leds extends SubsystemBase {
   @Override
   public void periodic() {
     if (RobotState.isAutonomous()) {
-      solid(LedSection.ALL, Color.kOrange);
+      rainbow(LedSection.ALL, LedConstants.kRainbowCycleLength, LedConstants.kRainbowDuration);
     } else if (RobotState.isDisabled()) {
-      breath(LedSection.ALL, Color.kRed, Color.kBlack, 3);
+      solidRGB(LedSection.ALL, 0, 255, 0);
     } else {
-      solid(LedSection.ALL, Color.kAqua);
+      solidRGB(LedSection.ALL, 100, 100, 100);
     }
     // solid(LedSection.TOP_LEFT_TURRET, Color.kLimeGreen);
     // solid(LedSection.BOTTOM_LEFT_TURRET, Color.kYellow);
@@ -60,6 +60,13 @@ public class Leds extends SubsystemBase {
     Section s = section.getSection();
     for (int i = s.start(); i < s.end(); i++) {
       buffer.setLED(i, color);
+    }
+  }
+
+  public void solidRGB(LedSection section, int r, int g, int b) {
+    Section s = section.getSection();
+    for (int i = s.start(); i < s.end(); i++) {
+      buffer.setRGB(i, r, g, b);
     }
   }
 

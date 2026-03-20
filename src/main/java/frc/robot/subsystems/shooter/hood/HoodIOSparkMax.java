@@ -43,7 +43,7 @@ public class HoodIOSparkMax implements HoodIO {
 
     // TODO: Tune
     config.closedLoop.feedForward.kS(0.015 * 12);
-    config.closedLoop.p(0.5);
+    config.closedLoop.p(1);
 
     config.closedLoop.allowedClosedLoopError(HoodConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
 
@@ -53,7 +53,7 @@ public class HoodIOSparkMax implements HoodIO {
         () ->
             motor.configure(
                 config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-    tryUntilOk(motor, 5, () -> encoder.setPosition(0));
+    encoder.setPosition(0);
   }
 
   @Override

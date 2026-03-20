@@ -4,6 +4,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -15,7 +18,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Constants.Mode;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.RobotState.VisionMeasurement;
 import frc.robot.control.Configurable;
@@ -34,6 +36,7 @@ import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
@@ -45,16 +48,8 @@ import frc.robot.subsystems.vision.CameraIOLimelight;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import frc.robot.util.GeomUtil;
-
-import static edu.wpi.first.units.Units.Seconds;
-
 import java.util.List;
 import java.util.function.Supplier;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathPlannerPath;
 
 public class RobotContainer {
   private final DriverController driver = new DriverController.XboxDriverController(0);
@@ -64,6 +59,7 @@ public class RobotContainer {
   private Indexer indexer;
   private Intake intake;
   private Shooter shooter;
+  private Leds leds;
   private Vision vision;
 
   private static Field2d field2d = new Field2d();
@@ -80,40 +76,44 @@ public class RobotContainer {
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
     switch (Constants.kCurrentMode) {
       case REAL -> {
-        drive = new Drive(
-            new GyroIOPigeon2(),
-            new ModuleIOTalonFX(TunerConstants.FrontLeft),
-            new ModuleIOTalonFX(TunerConstants.FrontRight),
-            new ModuleIOTalonFX(TunerConstants.BackLeft),
-            new ModuleIOTalonFX(TunerConstants.BackRight));
+        drive =
+            new Drive(
+                new GyroIOPigeon2(),
+                new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                new ModuleIOTalonFX(TunerConstants.FrontRight),
+                new ModuleIOTalonFX(TunerConstants.BackLeft),
+                new ModuleIOTalonFX(TunerConstants.BackRight));
         indexer = new Indexer(new IndexerIOTalonFX());
         intake = new Intake(new IntakeIOTalonFX());
-        shooter = new Shooter(new TurretIOSparkMax() {
-        }, new HoodIOSparkMax(), new FlywheelIOTalonFX());
-        vision = new Vision(
-            new VisionConsumer() {
-              public void accept(
-                  Pose2d visionRobotPoseMeters,
-                  double timestampSeconds,
-                  edu.wpi.first.math.Matrix<N3, N1> visionMeasurementStdDevs) {
+        leds = Leds.getInstance();
+        shooter =
+            new Shooter(new TurretIOSparkMax() {}, new HoodIOSparkMax(), new FlywheelIOTalonFX());
+        vision =
+            new Vision(
+                new VisionConsumer() {
+                  public void accept(
+                      Pose2d visionRobotPoseMeters,
+                      double timestampSeconds,
+                      edu.wpi.first.math.Matrix<N3, N1> visionMeasurementStdDevs) {
 
-                RobotState.getInstance()
-                    .addVisionMeasurement(
-                        new VisionMeasurement(
-                            timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
-              };
-            },
-            new CameraIOLimelight("limelight-front", robotRotationSupplier),
-            new CameraIOLimelight("limelight-one", robotRotationSupplier));
+                    RobotState.getInstance()
+                        .addVisionMeasurement(
+                            new VisionMeasurement(
+                                timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
+                  }
+                  ;
+                },
+                new CameraIOLimelight("limelight-front", robotRotationSupplier),
+                new CameraIOLimelight("limelight-one", robotRotationSupplier));
       }
       case SIM -> {
-        drive = new Drive(
-            new GyroIO() {
-            },
-            new ModuleIOSim(TunerConstants.FrontLeft),
-            new ModuleIOSim(TunerConstants.FrontRight),
-            new ModuleIOSim(TunerConstants.BackLeft),
-            new ModuleIOSim(TunerConstants.BackRight));
+        drive =
+            new Drive(
+                new GyroIO() {},
+                new ModuleIOSim(TunerConstants.FrontLeft),
+                new ModuleIOSim(TunerConstants.FrontRight),
+                new ModuleIOSim(TunerConstants.BackLeft),
+                new ModuleIOSim(TunerConstants.BackRight));
         indexer = new Indexer(new IndexerIOSim());
         intake = new Intake(new IntakeIOSim());
         shooter = new Shooter(new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
@@ -122,19 +122,19 @@ public class RobotContainer {
 
     configureBindings();
 
-    if (Constants.kCurrentMode == Mode.REAL) {
-      configurePathPlanner();
+    // if (Constants.kCurrentMode == Mode.REAL) {
+    // configurePathPlanner();
 
-      autoChooser = AutoBuilder.buildAutoChooser();
+    // // autoChooser = AutoBuilder.buildAutoChooser();
 
-      SmartDashboard.putData(autoChooser);
-    }
+    // // SmartDashboard.putData(autoChooser);
+    // }
   }
 
   private void configureBindings() {
     List.<Configurable>of(
-        new DefaultControls(driver, operator, drive, indexer, intake, shooter),
-        new DriverControls(driver, operator, drive, shooter, intake, indexer))
+            new DefaultControls(driver, operator, drive, indexer, intake, shooter),
+            new DriverControls(driver, operator, drive, shooter, intake, indexer))
         .forEach(Configurable::configure);
   }
 
@@ -144,10 +144,10 @@ public class RobotContainer {
             new OdometryObservation(
                 Timer.getTimestamp(),
                 new SwerveModulePosition[] {
-                    new SwerveModulePosition(),
-                    new SwerveModulePosition(),
-                    new SwerveModulePosition(),
-                    new SwerveModulePosition()
+                  new SwerveModulePosition(),
+                  new SwerveModulePosition(),
+                  new SwerveModulePosition(),
+                  new SwerveModulePosition()
                 },
                 drive.getRawGyroRotation()));
 
@@ -156,17 +156,40 @@ public class RobotContainer {
   }
 
   public Command getAutonomousCommand() {
-    if (Constants.kCurrentMode == Mode.REAL) {
-      return autoChooser.getSelected();
-    }
-    return Commands.print("No autonomous command configured");
+    return Commands.parallel(
+        shooter.trackTargetFlywheel(() -> RobotState.getInstance().getTurretTarget()),
+        shooter.trackTargetHood(() -> RobotState.getInstance().getTurretTarget()),
+        Commands.sequence(Commands.waitUntil(shooter::flywheelAtGoal), indexer.index()));
   }
 
   public void configurePathPlanner() {
-    NamedCommands.registerCommand("Shoot", shooter.shootAtTargetNoRotation(() -> RobotState.getInstance().getTurretTarget()));
+    // RobotConfig config;
+    // try {
+    // config = RobotConfig.fromGUISettings();
+
+    // AutoBuilder.configure(
+    // () -> RobotState.getInstance().getEstimatedPose(),
+    // (Pose2d pose) -> RobotState.getInstance().setPose(pose),
+    // () -> RobotState.getInstance().getRobotVelocity(),
+    // (speeds, feedforwards) -> drive.runVelocity(speeds),
+    // new PPHolonomicDriveController(new PIDConstants(5.0, 0, 0), new
+    // PIDConstants(5.0, 0,
+    // 0)),
+    // config,
+    // AllianceFlipUtil::shouldFlip,
+    // drive);
+
+    // } catch (Exception e) {
+    // e.printStackTrace();
+    // }
+
+    NamedCommands.registerCommand(
+        "Shoot", shooter.shootAtTargetNoRotation(() -> RobotState.getInstance().getTurretTarget()));
     NamedCommands.registerCommand("Index", indexer.index());
     NamedCommands.registerCommand("Intake", intake.intake());
-    NamedCommands.registerCommand("DeployIntake", intake.deployOpenLoop().withTimeout(Seconds.of(2)));
-    NamedCommands.registerCommand("RetractIntake", intake.retractOpenLoop().withTimeout(Seconds.of(2)));
-   }
+    NamedCommands.registerCommand(
+        "DeployIntake", intake.deployOpenLoop().withTimeout(Seconds.of(2)));
+    NamedCommands.registerCommand(
+        "RetractIntake", intake.retractOpenLoop().withTimeout(Seconds.of(2)));
+  }
 }

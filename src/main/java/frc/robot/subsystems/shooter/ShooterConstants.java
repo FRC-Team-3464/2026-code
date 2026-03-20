@@ -45,9 +45,9 @@ public final class ShooterConstants {
                         new Transform3d(
                             Inches.of(7.268715), Inches.of(0), Inches.of(0), new Rotation3d())));
 
-    public static final double kMinAngleRad = Units.degreesToRadians(0);
+    public static final double kMaxAngleRad = Units.degreesToRadians(0);
     // TODO: Tune
-    public static final double kMaxAngleRad = 3.9;
+    public static final double kMinAngleRad = -3.9;
   }
 
   public static final class FlywheelConstants {

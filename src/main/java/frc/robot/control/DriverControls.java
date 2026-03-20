@@ -36,7 +36,8 @@ public class DriverControls implements Configurable {
 
   @Override
   public void configure() {
-    configureSingleController();
+    configureDriverControls();
+    configureOperatorControls();
   }
 
   private void configureDriverControls() {
@@ -77,7 +78,13 @@ public class DriverControls implements Configurable {
   private void configureOperatorControls() {
     operator.leftBumper().and(operator.leftTrigger().negate()).whileTrue(intake.intake());
 
-    operator.rightBumper().whileTrue(shooter.setFlywheelVelocity(8500));
+    operator
+        .rightBumper()
+        .whileTrue(
+            shooter
+                .trackTargetFlywheel(() -> RobotState.getInstance().getTurretTarget())
+                .alongWith(
+                    shooter.trackTargetHood(() -> RobotState.getInstance().getTurretTarget())));
 
     operator.rightTrigger().whileTrue(indexer.index());
 
@@ -103,11 +110,9 @@ public class DriverControls implements Configurable {
                   shooter.setHoodOpenLoop(0);
                 }));
 
-    operator.leftTrigger().whileTrue(intake.outtake());
     operator.aCross().whileTrue(intake.outtake());
     operator.xSquare().whileTrue(intake.deployOpenLoop());
     operator.yTriangle().whileTrue(intake.retractOpenLoop());
-    operator.bCircle().whileTrue(shooter.setFlywheelVelocity(2000).alongWith(indexer.index()));
 
     // operator.aCross().whileTrue(shooter.shootAtTargetNoRotation(() ->
     // RobotState.getInstance().getTurretTarget()));
@@ -116,7 +121,13 @@ public class DriverControls implements Configurable {
 
   private void configureSingleController() {
 
-    driver.rightBumper().whileTrue(shooter.setFlywheelVelocity(3000));
+    driver
+        .rightBumper()
+        .whileTrue(
+            shooter
+                .trackTargetFlywheel(() -> RobotState.getInstance().getTurretTarget())
+                .alongWith(
+                    shooter.trackTargetHood(() -> RobotState.getInstance().getTurretTarget())));
     // // RB -> Shoot
     // driver
     // .rightBumper()
@@ -155,6 +166,5 @@ public class DriverControls implements Configurable {
 
     driver.leftTrigger().whileTrue(intake.outtake());
     driver.rightTrigger().whileTrue(intake.intake());
-    
   }
 }

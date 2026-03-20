@@ -52,7 +52,7 @@ public class TurretIOSparkMax implements TurretIO {
 
     // TODO: Tune
     config.closedLoop.feedForward.kS(0.025 * 12);
-    config.closedLoop.p(0.1);
+    config.closedLoop.p(0.15);
     config.closedLoop.d(0.01);
     config.closedLoop.allowedClosedLoopError(
         TurretConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
