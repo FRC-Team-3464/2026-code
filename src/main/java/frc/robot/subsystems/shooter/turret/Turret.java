@@ -134,4 +134,8 @@ public class Turret extends FullSubsystem {
   public boolean atGoal() {
     return atGoal;
   }
+
+  public void zero() {
+    io.zero();
+  }
 }

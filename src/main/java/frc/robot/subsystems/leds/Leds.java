@@ -48,7 +48,7 @@ public class Leds extends SubsystemBase {
     } else if (RobotState.isDisabled()) {
       solidRGB(LedSection.ALL, 0, 255, 0);
     } else {
-      solidRGB(LedSection.ALL, 100, 100, 100);
+      stripes(LedSection.ALL, List.<Color>of(Color.kRed, Color.kWhite, Color.kBlue), 5, 1);
     }
     // solid(LedSection.TOP_LEFT_TURRET, Color.kLimeGreen);
     // solid(LedSection.BOTTOM_LEFT_TURRET, Color.kYellow);

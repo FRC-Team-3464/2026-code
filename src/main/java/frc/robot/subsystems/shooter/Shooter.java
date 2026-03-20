@@ -62,6 +62,13 @@ public class Shooter extends SubsystemBase {
     hood.setAngle(cmd.hoodAngle());
   }
 
+  public Command trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
+      Supplier<Translation2d> targetSupplier) {
+    // e
+    return trackTargetTurret(targetSupplier)
+        .alongWith(trackTargetHood(targetSupplier), trackTargetFlywheel(targetSupplier));
+  }
+
   public Command shootAtTargetRotation(Supplier<Translation2d> targetSupplier) {
     return Commands.runEnd(
         () -> {
@@ -159,6 +166,14 @@ public class Shooter extends SubsystemBase {
 
   public Hood getHood() {
     return hood;
+  }
+
+  public Flywheel getFlywheel() {
+    return flywheel;
+  }
+
+  public Turret getTurret() {
+    return turret;
   }
 
   public boolean flywheelAtGoal() {

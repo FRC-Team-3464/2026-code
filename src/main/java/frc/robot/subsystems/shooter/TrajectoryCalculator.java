@@ -43,11 +43,11 @@ public class TrajectoryCalculator {
   }
 
   public static double calculateRPM(Translation2d targetLocation, Pose2d robotPose) {
-    return shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).wheelRPM;
+    return 0.6 * shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).wheelRPM;
   }
 
   public static double calculateHoodAngle(Translation2d targetLocation, Pose2d robotPose) {
-    return shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).hoodAngle;
+    return 0.5 * shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).hoodAngle;
   }
 
   // ========== PRIVATE IMPLEMENTATION ==========

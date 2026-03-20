@@ -42,9 +42,12 @@ public class DefaultControls implements Configurable {
         DriveCommands.joystickDrive(
             drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
 
-    Supplier<Translation2d> targetPoseSupplier = () -> RobotState.getInstance().getTurretTarget();
+    Supplier<Translation2d> targetPoseSupplier = () -> RobotState.getInstance().getShooterTarget();
     // Avoid the trench
-    shooter.setTurretDefaultCommand(shooter.trackTargetTurret(targetPoseSupplier));
+    shooter
+        .getTurret()
+        .setDefaultCommand(
+            new RunCommand(() -> shooter.getTurret().setOpenLoop(0), shooter.getTurret()));
 
     shooter
         .getHood()

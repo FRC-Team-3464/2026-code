@@ -96,4 +96,9 @@ public class TurretIOSparkMax implements TurretIO {
       }
     }
   }
+
+  @Override
+  public void zero() {
+    encoder.setPosition(0);
+  }
 }

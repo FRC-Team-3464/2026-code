@@ -29,4 +29,6 @@ public interface TurretIO {
   default void updateInputs(TurretIOInputs inputs) {}
 
   default void applyOutputs(TurretIOOutputs outputs) {}
+
+  default void zero() {}
 }

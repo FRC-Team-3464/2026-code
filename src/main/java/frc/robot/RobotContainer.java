@@ -151,14 +151,14 @@ public class RobotContainer {
                 },
                 drive.getRawGyroRotation()));
 
-    targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getTurretTarget()));
+    targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getShooterTarget()));
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
   }
 
   public Command getAutonomousCommand() {
     return Commands.parallel(
-        shooter.trackTargetFlywheel(() -> RobotState.getInstance().getTurretTarget()),
-        shooter.trackTargetHood(() -> RobotState.getInstance().getTurretTarget()),
+        shooter.trackTargetFlywheel(() -> RobotState.getInstance().getShooterTarget()),
+        shooter.trackTargetHood(() -> RobotState.getInstance().getShooterTarget()),
         Commands.sequence(Commands.waitUntil(shooter::flywheelAtGoal), indexer.index()));
   }
 
@@ -184,7 +184,8 @@ public class RobotContainer {
     // }
 
     NamedCommands.registerCommand(
-        "Shoot", shooter.shootAtTargetNoRotation(() -> RobotState.getInstance().getTurretTarget()));
+        "Shoot",
+        shooter.shootAtTargetNoRotation(() -> RobotState.getInstance().getShooterTarget()));
     NamedCommands.registerCommand("Index", indexer.index());
     NamedCommands.registerCommand("Intake", intake.intake());
     NamedCommands.registerCommand(

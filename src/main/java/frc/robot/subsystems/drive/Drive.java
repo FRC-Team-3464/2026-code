@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -218,8 +219,8 @@ public class Drive extends SubsystemBase {
   }
 
   /** Zeros the gyro yaw. */
-  public void zeroYaw() {
-    setYaw(Rotation2d.kZero);
+  public Command zeroYaw() {
+    return Commands.runOnce(() -> this.setYaw(Rotation2d.kZero), this);
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */

@@ -135,8 +135,8 @@ public class RobotState {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
-  public Translation2d getTurretTarget() {
-    Pose2d estimatedPose = getEstimatedPose();
+  public Translation2d getShooterTarget() {
+    // Pose2d estimatedPose = getEstimatedPose();
     // if (estimatedPose.getX()
     //     < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
     //   if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center))

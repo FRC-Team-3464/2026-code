@@ -45,7 +45,7 @@ public class DriverControls implements Configurable {
         .xSquare()
         .onTrue(
             Commands.runOnce(
-                () -> RobotState.getInstance().resetRotation(Rotation2d.kZero), drive));
+                () -> RobotState.getInstance().resetRotation(Rotation2d.kZero)).alongWith(drive.zeroYaw()));
     driver.bCircle().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     driver.dPadUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
@@ -81,10 +81,8 @@ public class DriverControls implements Configurable {
     operator
         .rightBumper()
         .whileTrue(
-            shooter
-                .trackTargetFlywheel(() -> RobotState.getInstance().getTurretTarget())
-                .alongWith(
-                    shooter.trackTargetHood(() -> RobotState.getInstance().getTurretTarget())));
+            shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
+                () -> RobotState.getInstance().getShooterTarget()));
 
     operator.rightTrigger().whileTrue(indexer.index());
 
@@ -114,6 +112,25 @@ public class DriverControls implements Configurable {
     operator.xSquare().whileTrue(intake.deployOpenLoop());
     operator.yTriangle().whileTrue(intake.retractOpenLoop());
 
+    operator
+        .dPadLeft()
+        .whileTrue(
+            Commands.runEnd(
+                () -> shooter.getTurret().setOpenLoop(-0.05),
+                () -> shooter.getTurret().setOpenLoop(0),
+                shooter.getTurret()));
+    operator
+        .dPadRight()
+        .whileTrue(
+            Commands.runEnd(
+                () -> shooter.getTurret().setOpenLoop(0.05),
+                () -> shooter.getTurret().setOpenLoop(0),
+                shooter.getTurret()));
+
+    operator
+        .bCircle()
+        .onTrue(Commands.runOnce(() -> shooter.getTurret().zero(), shooter.getTurret()));
+
     // operator.aCross().whileTrue(shooter.shootAtTargetNoRotation(() ->
     // RobotState.getInstance().getTurretTarget()));
     // operator.aCross().and(shooter::readyToShoot).whileTrue(indexer.index());
@@ -124,10 +141,8 @@ public class DriverControls implements Configurable {
     driver
         .rightBumper()
         .whileTrue(
-            shooter
-                .trackTargetFlywheel(() -> RobotState.getInstance().getTurretTarget())
-                .alongWith(
-                    shooter.trackTargetHood(() -> RobotState.getInstance().getTurretTarget())));
+            shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
+                () -> RobotState.getInstance().getShooterTarget()));
     // // RB -> Shoot
     // driver
     // .rightBumper()
@@ -166,5 +181,24 @@ public class DriverControls implements Configurable {
 
     driver.leftTrigger().whileTrue(intake.outtake());
     driver.rightTrigger().whileTrue(intake.intake());
+
+    driver
+        .dPadLeft()
+        .whileTrue(
+            Commands.runEnd(
+                () -> shooter.getTurret().setOpenLoop(-0.05),
+                () -> shooter.getTurret().setOpenLoop(0),
+                shooter.getTurret()));
+    driver
+        .dPadRight()
+        .whileTrue(
+            Commands.runEnd(
+                () -> shooter.getTurret().setOpenLoop(0.05),
+                () -> shooter.getTurret().setOpenLoop(0),
+                shooter.getTurret()));
+
+    driver
+        .yTriangle()
+        .onTrue(Commands.runOnce(() -> shooter.getTurret().zero(), shooter.getTurret()));
   }
 }
