@@ -1,0 +1,59 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 8.356380952380952,
+        "y": 6.604833333333334
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.924476190476192,
+        "y": 7.036738095238095
+      },
+      "isLocked": false,
+      "linkedName": "BPTL26"
+    },
+    {
+      "anchor": {
+        "x": 3.6162261904761905,
+        "y": 7.382261904761905
+      },
+      "prevControl": {
+        "x": 6.0024999999999995,
+        "y": 7.79257142857143
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LT26"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8038379530916856,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Return to Alliance",
+  "idealStartingState": {
+    "velocity": 5.2,
+    "rotation": 70.0
+  },
+  "useDefaultConstraints": true
+}

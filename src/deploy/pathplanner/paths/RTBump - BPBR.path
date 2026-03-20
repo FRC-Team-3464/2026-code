@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.605428571428572,
+        "y": 2.7932738095238094
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.8425993959417326,
+        "y": 2.714216868021196
+      },
+      "isLocked": false,
+      "linkedName": "RTBump"
+    },
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 1.367988095238095
+      },
+      "prevControl": {
+        "x": 6.866309523806398,
+        "y": 1.4327738095281166
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Rotated BPBR"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 5.2,
+    "rotation": -80.0
+  },
+  "reversed": false,
+  "folder": "RT Paths",
+  "idealStartingState": {
+    "velocity": 3.0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

@@ -1,0 +1,69 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "RTBump to RTCorner 3"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "shoot"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "RT Corner 3 ro RT 8 Point"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "RT 8 Point to ACTUALMiddleBallPit2"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "ACTUALMiddleBallPit2 to BPBR"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "BPBR to RTCorner3"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "ChudBot Autos",
+  "choreoAuto": false
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.62702380952381,
+        "y": 0.6445476190476187
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.825559523804199,
+        "y": 0.3962023809520122
+      },
+      "isLocked": false,
+      "linkedName": "RT26"
+    },
+    {
+      "anchor": {
+        "x": 8.291595238095239,
+        "y": 1.367988095238095
+      },
+      "prevControl": {
+        "x": 7.794904761904762,
+        "y": 0.6445476190476187
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Rotated BPBR"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 5.2,
+    "rotation": -80.0
+  },
+  "reversed": false,
+  "folder": "RT Paths",
+  "idealStartingState": {
+    "velocity": 5.0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.6162261904761905,
+        "y": 7.382261904761905
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.814761904761906,
+        "y": 7.706190476190477
+      },
+      "isLocked": false,
+      "linkedName": "LT26"
+    },
+    {
+      "anchor": {
+        "x": 8.108035714285714,
+        "y": 4.942
+      },
+      "prevControl": {
+        "x": 8.108035714285714,
+        "y": 7.587416666666666
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "MidBPTL"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 105.00000000000001
+  },
+  "reversed": false,
+  "folder": "Misc.",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

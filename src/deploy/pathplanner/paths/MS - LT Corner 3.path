@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.62702380952381,
+        "y": 4.027441666673263
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.1003809523809531,
+        "y": 4.769238095238096
+      },
+      "isLocked": false,
+      "linkedName": "MS26"
+    },
+    {
+      "anchor": {
+        "x": 3.0655476190476194,
+        "y": 7.069130952380952
+      },
+      "prevControl": {
+        "x": 2.2773214285714296,
+        "y": 6.971952380952381
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LTCorner3"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 5.2,
+    "rotation": -71.565051177078
+  },
+  "reversed": false,
+  "folder": "Misc.",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}
