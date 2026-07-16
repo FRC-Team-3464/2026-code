@@ -53,7 +53,7 @@
   "folder": "Return to Alliance",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -80.0
+    "rotation": 80.0
   },
   "useDefaultConstraints": true
 }

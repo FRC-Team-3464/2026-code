@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.6918095238087307,
-        "y": 5.190345238091416
+        "x": 3.6162261904761905,
+        "y": 5.222738095238095
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8429160275044505,
-        "y": 5.417563226481484
+        "x": 2.7673326941719103,
+        "y": 5.449956083628163
       },
       "isLocked": false,
       "linkedName": "LTBump26"
@@ -48,7 +48,7 @@
   "folder": "Misc.",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -0.0
   },
   "useDefaultConstraints": true
 }

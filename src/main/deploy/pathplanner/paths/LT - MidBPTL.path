@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.6162261904761905,
-        "y": 7.382261904761905
+        "x": 4.814761904761906,
+        "y": 7.706190476190477
       },
       "isLocked": false,
       "linkedName": "LT26"
     },
     {
       "anchor": {
-        "x": 8.010857142857143,
-        "y": 5.6438452380952375
+        "x": 8.108035714285714,
+        "y": 4.942
       },
       "prevControl": {
-        "x": 6.801523809530263,
-        "y": 7.727785714280396
+        "x": 8.108035714285714,
+        "y": 7.587416666666666
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "Misc.",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 7.640406761026765
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

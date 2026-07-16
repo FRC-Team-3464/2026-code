@@ -53,7 +53,7 @@
   "folder": "LT Paths",
   "idealStartingState": {
     "velocity": 5.0,
-    "rotation": 7.640406761026765
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 8.50754761904762,
-        "y": 1.8646785714285705
+        "y": 1.8646785714285707
       },
       "isLocked": false,
       "linkedName": "Rotated BPBR"
@@ -41,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": -62.681100489851225
   },
   "reversed": false,

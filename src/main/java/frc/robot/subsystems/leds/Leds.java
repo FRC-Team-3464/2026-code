@@ -1,0 +1,132 @@
+package frc.robot.subsystems.leds;
+
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.List;
+
+public class Leds extends SubsystemBase {
+
+  private static final Leds instance = new Leds();
+
+  public static Leds getInstance() {
+    return instance;
+  }
+
+  private final AddressableLED leds = new AddressableLED(LedConstants.kPort);
+  private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(LedConstants.kFullLength);
+
+  public record Section(int start, int end) {}
+
+  public enum LedSection {
+    ALL(new Section(0, LedConstants.kFullLength - 1));
+
+    private final Section section;
+
+    private LedSection(Section section) {
+      this.section = section;
+    }
+
+    public Section getSection() {
+      return section;
+    }
+  }
+
+  private Leds() {
+    leds.setLength(buffer.getLength());
+    leds.setData(buffer);
+    leds.start();
+  }
+
+  @Override
+  public void periodic() {
+    if (RobotState.isAutonomous()) {
+      rainbow(LedSection.ALL, LedConstants.kRainbowCycleLength, LedConstants.kRainbowDuration);
+    } else if (RobotState.isDisabled()) {
+      solidRGB(LedSection.ALL, 0, 255, 0);
+    } else {
+      stripes(LedSection.ALL, List.<Color>of(Color.kRed, Color.kWhite, Color.kBlue), 5, 1);
+    }
+    // solid(LedSection.TOP_LEFT_TURRET, Color.kLimeGreen);
+    // solid(LedSection.BOTTOM_LEFT_TURRET, Color.kYellow);
+    // solid(LedSection.BOTTOM_RIGHT_TURRET, Color.kSkyBlue);
+    leds.setData(buffer);
+  }
+
+  public void solid(LedSection section, Color color) {
+    Section s = section.getSection();
+    for (int i = s.start(); i < s.end(); i++) {
+      buffer.setLED(i, color);
+    }
+  }
+
+  public void solidRGB(LedSection section, int r, int g, int b) {
+    Section s = section.getSection();
+    for (int i = s.start(); i < s.end(); i++) {
+      buffer.setRGB(i, r, g, b);
+    }
+  }
+
+  public void strobe(LedSection section, Color c1, Color c2, double duration) {
+    boolean useFirst = ((Timer.getTimestamp() % duration) / duration) > 0.5;
+    solid(section, useFirst ? c1 : c2);
+  }
+
+  public void breath(LedSection section, Color c1, Color c2, double duration) {
+    double x = ((Timer.getTimestamp() % duration) / duration) * 2.0 * Math.PI;
+    double ratio = (Math.sin(x) + 1.0) / 2.0;
+
+    Color mixed =
+        new Color(
+            c1.red * (1 - ratio) + c2.red * ratio,
+            c1.green * (1 - ratio) + c2.green * ratio,
+            c1.blue * (1 - ratio) + c2.blue * ratio);
+
+    solid(section, mixed);
+  }
+
+  public void rainbow(LedSection section, double cycleLength, double duration) {
+    Section s = section.getSection();
+    double baseHue = (1 - ((Timer.getTimestamp() / duration) % 1.0)) * 180.0;
+    double huePerLed = 180.0 / cycleLength;
+
+    for (int i = s.start(); i < s.end(); i++) {
+      int hue = (int) ((baseHue + huePerLed * (i - s.start())) % 180);
+      buffer.setHSV(i, hue, 255, 255);
+    }
+  }
+
+  public void wave(LedSection section, Color c1, Color c2, double cycleLength, double duration) {
+    Section s = section.getSection();
+    double x = (1 - ((Timer.getTimestamp() % duration) / duration)) * 2.0 * Math.PI;
+    double xDiff = (2.0 * Math.PI) / cycleLength;
+
+    for (int i = s.start(); i < s.end(); i++) {
+      double ratio = (Math.pow(Math.sin(x), LedConstants.kWaveExponent) + 1.0) / 2.0;
+
+      Color mixed =
+          new Color(
+              c1.red * (1 - ratio) + c2.red * ratio,
+              c1.green * (1 - ratio) + c2.green * ratio,
+              c1.blue * (1 - ratio) + c2.blue * ratio);
+
+      buffer.setLED(i, mixed);
+      x += xDiff;
+    }
+  }
+
+  public void stripes(LedSection section, List<Color> colors, int stripeLength, double duration) {
+    Section s = section.getSection();
+    int offset =
+        (int) ((Timer.getTimestamp() % duration) / duration * stripeLength * colors.size());
+
+    for (int i = s.start(); i < s.end(); i++) {
+      int index =
+          (int) (Math.floor((double) (i - offset) / stripeLength) + colors.size()) % colors.size();
+      buffer.setLED(i, colors.get(index));
+    }
+  }
+}

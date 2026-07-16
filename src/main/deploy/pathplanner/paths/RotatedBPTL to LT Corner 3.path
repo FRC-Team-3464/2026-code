@@ -48,7 +48,7 @@
   "folder": "Misc.",
   "idealStartingState": {
     "velocity": 5.2,
-    "rotation": -80.0
+    "rotation": 80.0
   },
   "useDefaultConstraints": true
 }

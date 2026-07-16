@@ -20,7 +20,7 @@
         "y": 0.6445476190433237
       },
       "prevControl": {
-        "x": 1.1835145259329862,
+        "x": 1.1835145259329864,
         "y": 1.537530143908434
       },
       "nextControl": null,
@@ -48,7 +48,7 @@
   "folder": "MS Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

@@ -47,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 5.0,
-    "rotation": 7.640406761026765
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "Return to Alliance",
   "idealStartingState": {
     "velocity": 5.2,
-    "rotation": -80.0
+    "rotation": 80.0
   },
   "useDefaultConstraints": true
 }

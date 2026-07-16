@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 3.6918095238087307,
-        "y": 5.190345238091416
+        "x": 3.6162261904761905,
+        "y": 5.222738095238095
       },
       "prevControl": {
-        "x": 3.0007619047619056,
-        "y": 5.1579523809523815
+        "x": 2.9251785714293654,
+        "y": 5.190345238099061
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 2.6,
-    "rotation": 0.0
+    "rotation": -0.0
   },
   "reversed": false,
   "folder": "MS Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

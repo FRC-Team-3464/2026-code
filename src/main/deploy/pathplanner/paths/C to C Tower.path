@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.67039886039886,
+        "y": 4.073760683760685
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.7227499543102285,
+        "y": 3.75515588251785
+      },
+      "isLocked": false,
+      "linkedName": "Center Hub Start"
+    },
+    {
+      "anchor": {
+        "x": 1.7452849002849002,
+        "y": 3.7636752136752136
+      },
+      "prevControl": {
+        "x": 3.4722305952404113,
+        "y": 4.027101887287217
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Middle Tower"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

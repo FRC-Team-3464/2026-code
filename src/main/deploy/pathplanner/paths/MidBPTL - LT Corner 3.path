@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.010857142857143,
-        "y": 5.6438452380952375
+        "x": 8.108035714285714,
+        "y": 4.942
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.125452380952381,
-        "y": 6.853178571428571
+        "x": 7.892083333333334,
+        "y": 6.637226190476191
       },
       "isLocked": false,
       "linkedName": "MidBPTL"
@@ -31,7 +31,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.712863070539417,
-      "rotationDegrees": -117.35718410235975
+      "rotationDegrees": -111.29596569181103
     }
   ],
   "constraintZones": [],

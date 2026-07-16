@@ -7,9 +7,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.CachedSupplier;
+import frc.robot.util.FullSubsystem;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -47,7 +50,7 @@ public class Robot extends LoggedRobot {
     switch (Constants.kCurrentMode) {
       case REAL:
         // Running on a real robot, log to a USB stick ("/U/logs")
-        Logger.addDataReceiver(new WPILOGWriter());
+        // Logger.addDataReceiver(new WPILOGWriter());
         Logger.addDataReceiver(new NT4Publisher());
         break;
 
@@ -69,14 +72,19 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     robotContainer = new RobotContainer();
+    RobotState.getInstance().resetRotation(Rotation2d.kZero);
+    RobotState.getInstance().setPose(Pose2d.kZero);
   }
 
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
-    CachedSupplier.invalidateAll();
     robotContainer.robotPeriodic();
     CommandScheduler.getInstance().run();
+    FullSubsystem.runAllPeriodicAfterScheduler();
+    CachedSupplier.invalidateAll();
+
+    RobotVisualizer.getInstance().log("Mechanism3d/Robot");
   }
 
   /** This function is called once when the robot is disabled. */
@@ -93,7 +101,7 @@ public class Robot extends LoggedRobot {
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     if (autonomousCommand != null) {
-      autonomousCommand.schedule();
+      CommandScheduler.getInstance().schedule(autonomousCommand);
     }
   }
 

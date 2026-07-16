@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 3.6702142857111344,
-        "y": 2.804071428574048
+        "x": 3.605428571428572,
+        "y": 2.7932738095238094
       },
       "prevControl": {
-        "x": 2.957571428571429,
-        "y": 2.8040714285714285
+        "x": 2.8927857142888667,
+        "y": 2.79327380952119
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "MS Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
