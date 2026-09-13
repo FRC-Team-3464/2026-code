@@ -21,6 +21,9 @@ public interface GutsIO {
     public double currentDrawAmps = 0.0;
   }
 
-  /** Sets the gut motor to a specific speed ranging from -1.0 to 1.0 */
+  /**
+   * Sets the gut motor to a specific speed ranging from -1.0 to 1.0.
+   * -1.0 represents 100% maximum reverse speed, while 1.0 represents 100% forward speed.
+   */
   default void setOpenLoop(double speed) {}
 }

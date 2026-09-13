@@ -12,16 +12,17 @@ import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.DeviceIDs;
 
 /**
- * This class contains all of the physical objects: one motor and its corresponding encoder. It also
+ * This class contains all the physical objects: one motor and its corresponding encoder. It also
  * implements the default methods specified in the IO interface to set the speed of the physical
  * motor and update the input values using the encoders.
  *
  * @author Ryan Hefferon
  */
 public class GutsIOTalonFX implements GutsIO {
-
+  // Use the CAN device in the constants file
   private final TalonFX motor = new TalonFX(DeviceIDs.kGuts);
 
+  // StatusSignals are used to help read motor stats
   private final StatusSignal<AngularVelocity> velocitySignal;
   private final StatusSignal<Voltage> voltageSignal;
   private final StatusSignal<Current> currentSignal;
@@ -35,6 +36,7 @@ public class GutsIOTalonFX implements GutsIO {
 
     tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfig));
 
+    // Update StatusSignals 50 times per second (every 20ms)
     BaseStatusSignal.setUpdateFrequencyForAll(50, velocitySignal, voltageSignal, currentSignal);
     motor.optimizeBusUtilization();
   }

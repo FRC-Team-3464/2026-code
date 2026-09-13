@@ -22,11 +22,11 @@ public class GutsIOSim implements GutsIO {
 
   @Override
   public void updateInputs(GutsIOInputs inputs) {
-
+    // Limit the amount of volts applied to each motor
     appliedVolts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
 
     sim.setInputVoltage(appliedVolts);
-    sim.update(0.02);
+    sim.update(0.02); // i.e., pretend that 20ms have passed
 
     inputs.velocityRadPerSec = sim.getAngularVelocityRPM();
   }

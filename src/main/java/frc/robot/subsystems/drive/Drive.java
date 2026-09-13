@@ -33,19 +33,24 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * Represents the subsystem controlling the drivetrain/swerve base.
+ * Most of this code is taken directly from the AdvantageKit swerve template and then further modified to fit our code architecture.
+ */
 public class Drive extends SubsystemBase {
   static final Lock odometryLock = new ReentrantLock();
-  private final GyroIO gyroIO;
+  private final GyroIO gyroIO; // Gyro
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
-  private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-  private final SysIdRoutine sysId;
+  private final Module[] modules = new Module[4]; // FL, FR, BL, BR in that specific order
+  private final SysIdRoutine sysId; // We didn't use this
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
+  // Kinematics object helps translate general robot movement to individual swerve module movement and vice versa
   private final SwerveDriveKinematics kinematics = DriveConstants.kSwerveKinematics;
 
-  private Rotation2d rawGyroRotation;
-  private SwerveModulePosition[] lastModulePositions = // For delta tracking
+  private Rotation2d rawGyroRotation; // Stores the drivetrain's current heading (may not be completely accurate)
+  private SwerveModulePosition[] lastModulePositions = // For delta (change in position) tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
         new SwerveModulePosition(),
@@ -59,6 +64,7 @@ public class Drive extends SubsystemBase {
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
+    // Initialize the IO implementations based on passed parameters
     this.gyroIO = gyroIO;
     modules[0] = new Module(flModuleIO, 0, TunerConstants.FrontLeft);
     modules[1] = new Module(frModuleIO, 1, TunerConstants.FrontRight);
@@ -72,7 +78,7 @@ public class Drive extends SubsystemBase {
     PhoenixOdometryThread.getInstance().start();
     rawGyroRotation = Rotation2d.kZero;
 
-    // Configure SysId
+    // Configure SysId (helps us figure out which feedforward values to use for the motors)
     sysId =
         new SysIdRoutine(
             new SysIdRoutine.Config(
@@ -83,19 +89,23 @@ public class Drive extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 
+    // Tells the robot that this current direction is zero
+    // Requires us to face the robot perfectly forward on startup and then move once the robot code is ready
     zeroYaw();
   }
 
   @Override
   public void periodic() {
     odometryLock.lock(); // Prevents odometry updates while reading data
-    gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("Drive/Gyro", gyroInputs);
-    rawGyroRotation = gyroInputs.yawPosition;
+    gyroIO.updateInputs(gyroInputs); // Get new measurements from the gyro
+    Logger.processInputs("Drive/Gyro", gyroInputs); // Log gyro values
+    rawGyroRotation = gyroInputs.yawPosition; // Sets the local heading to the measured gyro rotation
+
+    // Runs the periodic() function for each module (they aren't subsystems so we have to do this manually)
     for (var module : modules) {
       module.periodic();
     }
-    odometryLock.unlock();
+    odometryLock.unlock(); // Odometry can update now
 
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
@@ -145,6 +155,7 @@ public class Drive extends SubsystemBase {
       //     .addOdometryObservation(
       //         new OdometryObservation(sampleTimestamps[i], modulePositions, rawGyroRotation));
 
+      // Log the measured module positions (angle and distance)
       Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
     }
 
@@ -161,7 +172,7 @@ public class Drive extends SubsystemBase {
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts);
+    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts); // Makes sure none of the target states are faster than what is physically possible
 
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);

@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ModuleIO {
+  // Holds every statistic that we might need to know about a module at a given time frame
   @AutoLog
   public static class ModuleIOInputs {
     public boolean driveConnected = false;
