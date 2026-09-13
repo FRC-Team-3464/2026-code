@@ -14,9 +14,15 @@ import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * The RobotState class is the single source of truth for robot data.
+ * Any subsystem that needs to access data outside itself will read from here.
+ */
 public class RobotState {
+  // Makes one single RobotState object that holds all data (cannot be modified directly, must use helper methods)
   private static RobotState instance = new RobotState();
 
+  /** Returns the single RobotState instance. */
   public static RobotState getInstance() {
     if (instance == null) instance = new RobotState();
     return instance;
@@ -25,9 +31,11 @@ public class RobotState {
   /** Pose Estimator */
   private SwerveDrivePoseEstimator poseEstimator;
 
+  // Holds the robot's velocity, which is mainly used for shoot-on-the-move
   private ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
   private RobotState() {
+    // Initializes the pose estimator with a default pose
     poseEstimator =
         new SwerveDrivePoseEstimator(
             DriveConstants.kSwerveKinematics,
@@ -50,13 +58,15 @@ public class RobotState {
   public void addOdometryObservation(OdometryObservation observation) {
 
     // if (observation.gyroAngle().isEmpty()) {
-    // // Don't update pose wihtout gyro
+    // // Don't update pose without gyro
     // return;
     // }
 
+    // Sends an updated drivetrain pose to the PoseEstimator object
     poseEstimator.updateWithTime(
         observation.timestamp(), observation.gyroAngle(), observation.modulePositions());
 
+    //  Log updated estimated poses with AdvantageKit
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
     Logger.recordOutput(
         "RobotState/EstimatedRotation",
@@ -69,8 +79,10 @@ public class RobotState {
    * @param measurement A {@link VisionMeasurement} object representing the vision pose estimate.
    */
   public void addVisionMeasurement(VisionMeasurement measurement) {
+    // Sends a vision-only measurement to the PoseEstimator object
     poseEstimator.addVisionMeasurement(measurement.visionPose(), measurement.timestamp());
 
+    // Log updated estimated poses with AdvantageKit
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
   }
 
@@ -131,12 +143,22 @@ public class RobotState {
     return poseEstimator.getEstimatedPosition().getRotation();
   }
 
+  /** Get the current robot velocity relative to the field. */
   public ChassisSpeeds getFieldVelocity() {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
+  /**
+   * Get the target for the shooter to aim for.
+   * This accounts for alliance color and whether we're in a position to pass or shoot.
+   *
+   * @return A Translation2d object representing the aiming target.
+   */
   public Translation2d getShooterTarget() {
+    // Get the estimated pose to do the calculations
     // Pose2d estimatedPose = getEstimatedPose();
+
+    // If we're outside the alliance zone, aim for passing to the closest corner, not for shooting at the hub
     // if (estimatedPose.getX()
     //     < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
     //   if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center))
@@ -146,9 +168,12 @@ public class RobotState {
     //   return AllianceFlipUtil.apply(
     //       new Translation2d(Meters.of(2), Meters.of(FieldConstants.fieldWidth - 1)));
     // }
+
+    // If we're inside our alliance zone, simply aim at the hub
     return AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
   }
 
+  // Helper records (objects that just store data) to standardize sharing data between classes
   public record OdometryObservation(
       double timestamp, SwerveModulePosition[] modulePositions, Rotation2d gyroAngle) {}
 

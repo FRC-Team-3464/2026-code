@@ -27,12 +27,13 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  * project.
  */
 public class Robot extends LoggedRobot {
+  /** This autonomousCommand will run during auto and is initialized when a method is called from the RobotContainer class  */
   private Command autonomousCommand;
 
   private final RobotContainer robotContainer;
 
   public Robot() {
-    // Record metadata
+    // Record metadata -- this is used for AdvantageKit
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
@@ -71,6 +72,7 @@ public class Robot extends LoggedRobot {
     // Start AdvantageKit logger
     Logger.start();
 
+    // Calls the RobotContainer constructor, which initializes all the subsystems
     robotContainer = new RobotContainer();
     RobotState.getInstance().resetRotation(Rotation2d.kZero);
     RobotState.getInstance().setPose(Pose2d.kZero);
@@ -79,8 +81,10 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
+    // Cals all periodic functions
     robotContainer.robotPeriodic();
     CommandScheduler.getInstance().run();
+    // Subsystems with IO implementations
     FullSubsystem.runAllPeriodicAfterScheduler();
     CachedSupplier.invalidateAll();
 
@@ -98,9 +102,10 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    // Initializes the autonomous command with the command specified in RobotContainer
     autonomousCommand = robotContainer.getAutonomousCommand();
 
-    if (autonomousCommand != null) {
+    if (autonomousCommand != null) { // Only schedule a command if one exists
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
   }
