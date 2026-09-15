@@ -27,18 +27,26 @@ public class Indexer extends SubsystemBase {
   }
 
   public Command index() {
+    // Make a command which has two lambda expressions
+    // The first expression will run immediately when the command starts
+    // The second expression will run immediately when the command ends
+    // We don't need a run command because we only need to set speeds once
     return Commands.startEnd(
         () -> {
+          // Set the throat and tongue motor to their respective speeds
           io.setThroatOpenLoop(-IndexerConstants.kGutsMotorSpeed);
           io.setTongueOpenLoop(IndexerConstants.kGutsMotorSpeed);
         },
         () -> {
+          // Stop the motor
           io.stop();
         },
-        this);
+        this); // Subsystem requirements
   }
 
   public Command indexReverse() {
+    // See above documentation for an explanation of this method
+    // It's exactly the same thing, just running in the other direction
     return Commands.startEnd(
         () -> {
           io.setThroatOpenLoop(IndexerConstants.kGutsMotorSpeed);
@@ -50,14 +58,17 @@ public class Indexer extends SubsystemBase {
         this);
   }
 
+  /** Sets the throat motor to a specified speed. */
   public void setThroatOpenLoop(double output) {
     io.setThroatOpenLoop(output);
   }
 
-  public void setToungeOpenLoop(double output) {
+  /** Sets the tongue motor to a specified speed. */
+  public void setTongueOpenLoop(double output) {
     io.setTongueOpenLoop(output);
   }
 
+  /** Stops all indexer motors. */
   public void stop() {
     io.stop();
   }

@@ -33,6 +33,10 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
 
+/**
+ * This class holds all constant values for the drive subsystem. Place a specific "magic" value in
+ * here. Don't put random values in the code that we might need to change later.
+ */
 public final class DriveConstants {
   public static final SwerveDriveKinematics kSwerveKinematics =
       new SwerveDriveKinematics(Drive.getModuleTranslations());

@@ -1,5 +1,9 @@
 package frc.robot.subsystems.leds;
 
+/**
+ * This class holds all constant values for the leds subsystem. Place a specific "magic" value in
+ * here. Don't put random values in the code that we might need to change later.
+ */
 public final class LedConstants {
   public static final int kPort = 0;
 

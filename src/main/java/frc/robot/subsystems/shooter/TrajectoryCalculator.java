@@ -14,6 +14,10 @@ import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 import frc.robot.util.GeomUtil;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * The TrajectoryCalculator class is a utility class. It contains an interpolating table which maps
+ * distance from hub to shooter RPM, angle, and time of flight.
+ */
 public class TrajectoryCalculator {
 
   private static final InterpolatingTreeMap<Double, TrajectoryParams> shooterTable =
@@ -58,6 +62,7 @@ public class TrajectoryCalculator {
     ChassisSpeeds robotRelativeVel = RobotState.getInstance().getRobotVelocity();
     ChassisSpeeds fieldVel = RobotState.getInstance().getFieldVelocity();
 
+    // Update the estimated pose, accounting for delay in reading measurements
     Pose2d compensatedRobotPose =
         robotPose.exp(
             new Twist2d(

@@ -2,6 +2,10 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
 
+/**
+ * This class holds all constant values for the intake subsystem. Place a specific "magic" value in
+ * here. Don't put random values in the code that we might need to change later.
+ */
 public final class IntakeConstants {
   public static final double kPivotMotorSpeed = 0.1;
   public static final double kRollerMotorSpeed = 0.8;
