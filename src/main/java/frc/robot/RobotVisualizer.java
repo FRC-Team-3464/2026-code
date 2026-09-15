@@ -11,13 +11,13 @@ import frc.robot.util.GeomUtil;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * The RobotVisualizer class helps record mechanism positions with AdvantageKit.
- * We can attach CAD models of each component to the posted positions to see what our robot actually looked like.
- * <br>
+ * The RobotVisualizer class helps record mechanism positions with AdvantageKit. We can attach CAD
+ * models of each component to the posted positions to see what our robot actually looked like. <br>
  * None of the methods in this class actually change robot behavior. They just help record it.
  */
 public class RobotVisualizer {
-  // Makes one single RobotVisualizer object that holds all data (cannot be modified directly, must use helper methods)
+  // Makes one single RobotVisualizer object that holds all data (cannot be modified directly, must
+  // use helper methods)
   private static RobotVisualizer instance;
 
   /** */

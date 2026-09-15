@@ -58,11 +58,11 @@ public class IndexerIOTalonFX implements IndexerIO {
     inputs.throatAppliedVolts = throatVoltage.getValueAsDouble();
     inputs.throatCurrentDrawAmps = throatCurrent.getValueAsDouble();
 
-    inputs.toungeConnected =
+    inputs.tongueConnected =
         BaseStatusSignal.refreshAll(toungeVelocity, toungeVoltage, toungeCurrent).isOK();
-    inputs.toungeVelocityRadPerSec = toungeVelocity.getValue().in(RadiansPerSecond);
-    inputs.toungeAppliedVolts = toungeVoltage.getValueAsDouble();
-    inputs.toungeCurrentDrawAmps = toungeCurrent.getValueAsDouble();
+    inputs.tongueVelocityRadPerSec = toungeVelocity.getValue().in(RadiansPerSecond);
+    inputs.tongueAppliedVolts = toungeVoltage.getValueAsDouble();
+    inputs.tongueCurrentDrawAmps = toungeCurrent.getValueAsDouble();
   }
 
   @Override
@@ -71,7 +71,7 @@ public class IndexerIOTalonFX implements IndexerIO {
   }
 
   @Override
-  public void setToungeOpenLoop(double output) {
+  public void setTongueOpenLoop(double output) {
     toungeMotor.set(MathUtil.clamp(output, -1.0, 1.0));
   }
 

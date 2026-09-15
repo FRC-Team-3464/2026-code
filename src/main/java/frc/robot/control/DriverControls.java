@@ -44,8 +44,8 @@ public class DriverControls implements Configurable {
     driver
         .xSquare()
         .onTrue(
-            Commands.runOnce(
-                () -> RobotState.getInstance().resetRotation(Rotation2d.kZero)).alongWith(drive.zeroYaw()));
+            Commands.runOnce(() -> RobotState.getInstance().resetRotation(Rotation2d.kZero))
+                .alongWith(drive.zeroYaw()));
     driver.bCircle().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     driver.dPadUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));

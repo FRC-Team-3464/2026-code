@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
+/** The Indexer subsystem controls the feeding of the fuel from the hopper to the shooter. */
 public class Indexer extends SubsystemBase {
   private final IndexerIO io;
   private final IndexerIOInputsAutoLogged inputs = new IndexerIOInputsAutoLogged();
@@ -20,6 +21,7 @@ public class Indexer extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Update the stats for the subsystem
     io.updateInputs(inputs);
     Logger.processInputs("Indexer", inputs);
   }
@@ -28,7 +30,7 @@ public class Indexer extends SubsystemBase {
     return Commands.startEnd(
         () -> {
           io.setThroatOpenLoop(-IndexerConstants.kGutsMotorSpeed);
-          io.setToungeOpenLoop(IndexerConstants.kGutsMotorSpeed);
+          io.setTongueOpenLoop(IndexerConstants.kGutsMotorSpeed);
         },
         () -> {
           io.stop();
@@ -40,7 +42,7 @@ public class Indexer extends SubsystemBase {
     return Commands.startEnd(
         () -> {
           io.setThroatOpenLoop(IndexerConstants.kGutsMotorSpeed);
-          io.setToungeOpenLoop(-IndexerConstants.kGutsMotorSpeed);
+          io.setTongueOpenLoop(-IndexerConstants.kGutsMotorSpeed);
         },
         () -> {
           io.stop();
@@ -53,7 +55,7 @@ public class Indexer extends SubsystemBase {
   }
 
   public void setToungeOpenLoop(double output) {
-    io.setToungeOpenLoop(output);
+    io.setTongueOpenLoop(output);
   }
 
   public void stop() {

@@ -36,7 +36,6 @@ public class CachedSupplier<T> implements Supplier<T> {
    * Constructs a new {@code CachedSupplier}.
    *
    * @param supplier the computation to cache
-   * @param manager the CacheManager to manage invalidation
    */
   public CachedSupplier(Supplier<T> supplier) {
     this.supplier = supplier;
@@ -79,7 +78,7 @@ public class CachedSupplier<T> implements Supplier<T> {
     value = null;
   }
 
-  /** Invalidates all instances of {@code CachedSupplier}. Usually */
+  /** Invalidates all instances of {@code CachedSupplier}. */
   public static synchronized void invalidateAll() {
     for (CachedSupplier<?> obj : instances) {
       obj.invalidate();

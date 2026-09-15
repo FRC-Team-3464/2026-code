@@ -82,6 +82,7 @@ public class Intake extends SubsystemBase {
         () -> io.setWheelSpeed(0.0),
         this);
   }
+
   // potential sequences for commands in future
 
   // public Command extendArmSequence() {

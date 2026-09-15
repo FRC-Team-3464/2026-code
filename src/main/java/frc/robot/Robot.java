@@ -27,7 +27,10 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
  * project.
  */
 public class Robot extends LoggedRobot {
-  /** This autonomousCommand will run during auto and is initialized when a method is called from the RobotContainer class  */
+  /**
+   * This autonomousCommand will run during auto and is initialized when a method is called from the
+   * RobotContainer class
+   */
   private Command autonomousCommand;
 
   private final RobotContainer robotContainer;

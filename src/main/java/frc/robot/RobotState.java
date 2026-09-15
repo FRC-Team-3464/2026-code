@@ -15,11 +15,12 @@ import frc.robot.util.FieldConstants;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * The RobotState class is the single source of truth for robot data.
- * Any subsystem that needs to access data outside itself will read from here.
+ * The RobotState class is the single source of truth for robot data. Any subsystem that needs to
+ * access data outside itself will read from here.
  */
 public class RobotState {
-  // Makes one single RobotState object that holds all data (cannot be modified directly, must use helper methods)
+  // Makes one single RobotState object that holds all data (cannot be modified directly, must use
+  // helper methods)
   private static RobotState instance = new RobotState();
 
   /** Returns the single RobotState instance. */
@@ -149,8 +150,8 @@ public class RobotState {
   }
 
   /**
-   * Get the target for the shooter to aim for.
-   * This accounts for alliance color and whether we're in a position to pass or shoot.
+   * Get the target for the shooter to aim for. This accounts for alliance color and whether we're
+   * in a position to pass or shoot.
    *
    * @return A Translation2d object representing the aiming target.
    */
@@ -158,7 +159,8 @@ public class RobotState {
     // Get the estimated pose to do the calculations
     // Pose2d estimatedPose = getEstimatedPose();
 
-    // If we're outside the alliance zone, aim for passing to the closest corner, not for shooting at the hub
+    // If we're outside the alliance zone, aim for passing to the closest corner, not for shooting
+    // at the hub
     // if (estimatedPose.getX()
     //     < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
     //   if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center))

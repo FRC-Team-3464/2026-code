@@ -11,6 +11,10 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 
+/**
+ * Utility class that provides methods to automatically flip coordinates, rotations, poses,
+ * translations, etc. depending on alliance.
+ */
 public class AllianceFlipUtil {
   public static double applyX(double x) {
     return shouldFlip() ? FieldConstants.fieldLength - x : x;

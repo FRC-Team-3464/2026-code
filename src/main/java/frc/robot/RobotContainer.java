@@ -84,7 +84,8 @@ public class RobotContainer {
     SmartDashboard.putData("TargetField", targetField2d);
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
 
-    // Changes the way that the subsystems are initialized based on if we're running the real robot or a simulation
+    // Changes the way that the subsystems are initialized based on if we're running the real robot
+    // or a simulation
     // If real -> use the real hardware io implementations, if sim -> use the sim io implementations
     switch (Constants.kCurrentMode) {
       case REAL -> {
@@ -103,7 +104,8 @@ public class RobotContainer {
         vision =
             new Vision(
                 new VisionConsumer() {
-                  // We have to create an implementation of the accept function to tell the Vision subsystem what to do with its measurements
+                  // We have to create an implementation of the accept function to tell the Vision
+                  // subsystem what to do with its measurements
                   public void accept(
                       Pose2d visionRobotPoseMeters,
                       double timestampSeconds,
@@ -157,7 +159,8 @@ public class RobotContainer {
 
   /** This is called every 20ms. */
   public void robotPeriodic() {
-    // Gets the current measured robot heading (rotation) from the drive subsystem and sends it to the RobotState class
+    // Gets the current measured robot heading (rotation) from the drive subsystem and sends it to
+    // the RobotState class
     RobotState.getInstance()
         .addOdometryObservation(
             new OdometryObservation(
@@ -180,7 +183,9 @@ public class RobotContainer {
     return Commands.parallel(
         shooter.trackTargetFlywheel(() -> RobotState.getInstance().getShooterTarget()),
         shooter.trackTargetHood(() -> RobotState.getInstance().getShooterTarget()),
-        Commands.sequence(Commands.waitUntil(shooter::flywheelAtGoal), indexer.index())); // Don't start shooting until we're done aiming
+        Commands.sequence(
+            Commands.waitUntil(shooter::flywheelAtGoal),
+            indexer.index())); // Don't start shooting until we're done aiming
   }
 
   public void configurePathPlanner() {

@@ -34,8 +34,9 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Represents the subsystem controlling the drivetrain/swerve base.
- * Most of this code is taken directly from the AdvantageKit swerve template and then further modified to fit our code architecture.
+ * Represents the subsystem controlling the drivetrain/swerve base. Most of this code is taken
+ * directly from the AdvantageKit swerve template and then further modified to fit our code
+ * architecture.
  */
 public class Drive extends SubsystemBase {
   static final Lock odometryLock = new ReentrantLock();
@@ -46,10 +47,12 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-  // Kinematics object helps translate general robot movement to individual swerve module movement and vice versa
+  // Kinematics object helps translate general robot movement to individual swerve module movement
+  // and vice versa
   private final SwerveDriveKinematics kinematics = DriveConstants.kSwerveKinematics;
 
-  private Rotation2d rawGyroRotation; // Stores the drivetrain's current heading (may not be completely accurate)
+  private Rotation2d
+      rawGyroRotation; // Stores the drivetrain's current heading (may not be completely accurate)
   private SwerveModulePosition[] lastModulePositions = // For delta (change in position) tracking
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -90,7 +93,8 @@ public class Drive extends SubsystemBase {
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 
     // Tells the robot that this current direction is zero
-    // Requires us to face the robot perfectly forward on startup and then move once the robot code is ready
+    // Requires us to face the robot perfectly forward on startup and then move once the robot code
+    // is ready
     zeroYaw();
   }
 
@@ -99,9 +103,11 @@ public class Drive extends SubsystemBase {
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs); // Get new measurements from the gyro
     Logger.processInputs("Drive/Gyro", gyroInputs); // Log gyro values
-    rawGyroRotation = gyroInputs.yawPosition; // Sets the local heading to the measured gyro rotation
+    rawGyroRotation =
+        gyroInputs.yawPosition; // Sets the local heading to the measured gyro rotation
 
-    // Runs the periodic() function for each module (they aren't subsystems so we have to do this manually)
+    // Runs the periodic() function for each module (they aren't subsystems so we have to do this
+    // manually)
     for (var module : modules) {
       module.periodic();
     }
@@ -172,7 +178,11 @@ public class Drive extends SubsystemBase {
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, TunerConstants.kSpeedAt12Volts); // Makes sure none of the target states are faster than what is physically possible
+    SwerveDriveKinematics.desaturateWheelSpeeds(
+        setpointStates,
+        TunerConstants
+            .kSpeedAt12Volts); // Makes sure none of the target states are faster than what is
+    // physically possible
 
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);

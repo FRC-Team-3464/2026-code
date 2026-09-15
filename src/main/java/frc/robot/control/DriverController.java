@@ -54,6 +54,7 @@ public interface DriverController {
 
   void rumble(RumbleType rumbleType, double intensity);
 
+  /** Xbox Controller implementation of DriverController */
   class XboxDriverController implements DriverController {
     private final CommandXboxController controller;
 
@@ -167,6 +168,7 @@ public interface DriverController {
     }
   }
 
+  /** PS5 Controller implementation of DriverController */
   class PS5DriverController implements DriverController {
     private final CommandPS5Controller controller;
 
