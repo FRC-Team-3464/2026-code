@@ -16,7 +16,9 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.DeviceIDs;
 
+/** Hardware implementation of the IntakeIO interface. */
 public class IntakeIOTalonFX implements IntakeIO {
+  // Kraken motors are represented by TalonFX motor controller class
   private TalonFX leftPivotMotor = new TalonFX(DeviceIDs.kLeftIntakePivot);
   private TalonFX rightPivotMotor = new TalonFX(DeviceIDs.kRightIntakePivot);
   private TalonFX driveMotor = new TalonFX(DeviceIDs.kIntakeDrive);
@@ -24,10 +26,12 @@ public class IntakeIOTalonFX implements IntakeIO {
   private Follower rightPivotFollower =
       new Follower(DeviceIDs.kLeftIntakePivot, MotorAlignmentValue.Opposed);
 
+  // Configurations for the Kraken motors.
   private TalonFXConfiguration leftPivotConfig;
   private TalonFXConfiguration rightPivotConfig;
   private TalonFXConfiguration driveMotorConfig;
 
+  // StatusSignals which obtain statistics from each motor
   private final StatusSignal<AngularVelocity> leftPivotVelocity;
   private final StatusSignal<Voltage> leftPivotVoltage;
   private final StatusSignal<Current> leftPivotCurrent;
@@ -40,10 +44,16 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Voltage> driveVoltage;
   private final StatusSignal<Current> driveCurrent;
 
+  // Request that tells
   private final PositionVoltage positionRequest = new PositionVoltage(0).withSlot(0);
 
   public IntakeIOTalonFX() {
+    // Configure the left pivot motor to use the specified PID + FF gains
     leftPivotConfig = new TalonFXConfiguration().withSlot0(IntakeConstants.kPivotGains);
+    // Configure the right pivot motor to use the specified PID + FF gains and to reverse its
+    // direction
+    // Reversing direction makes it so that positive for left is the same direction as positive for
+    // right
     rightPivotConfig =
         new TalonFXConfiguration()
             .withSlot0(IntakeConstants.kPivotGains)
@@ -51,9 +61,11 @@ public class IntakeIOTalonFX implements IntakeIO {
                 new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
     driveMotorConfig = new TalonFXConfiguration();
 
+    // Tells the motor on startup that is at position 0
     leftPivotMotor.setPosition(0);
     rightPivotMotor.setPosition(0);
 
+    // Apply configurations
     leftPivotMotor.getConfigurator().apply(leftPivotConfig);
     rightPivotMotor.getConfigurator().apply(rightPivotConfig);
     // driveMotor.getConfigurator().apply(driveMotorConfig);
@@ -70,6 +82,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     driveVoltage = driveMotor.getMotorVoltage();
     driveCurrent = driveMotor.getSupplyCurrent();
 
+    // Configure all StatusSignals to update every 20ms
     BaseStatusSignal.setUpdateFrequencyForAll(
         50,
         leftPivotVelocity,
@@ -85,6 +98,7 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
+    // If every Status signal comes back OK, then it's connected
     inputs.leftPivotConnected =
         BaseStatusSignal.refreshAll(leftPivotVelocity, leftPivotVoltage, leftPivotCurrent).isOK();
     inputs.leftPivotVelocityRadPerSec = leftPivotVelocity.getValue().in(RadiansPerSecond);
@@ -107,16 +121,23 @@ public class IntakeIOTalonFX implements IntakeIO {
 
   @Override
   public void setPivotPosition(double positionRotations) {
+    // Use closed-loop/PID + FF control by applying the position request to the motors
     leftPivotMotor.setControl(positionRequest.withPosition(positionRotations));
     rightPivotMotor.setControl(positionRequest.withPosition(positionRotations));
   }
 
   @Override
   public void setPivotSpeed(double speed) {
+    // The motors have slightly different gear ratios so run them at slightly different speeds
     leftPivotMotor.set(speed);
     rightPivotMotor.set(speed * -0.95);
   }
 
+  /**
+   * Set the drive (intake wheel) motor to open-loop control
+   *
+   * @param speed determines the speed of the wheel on a scale of -1 to 1
+   */
   @Override
   public void setWheelSpeed(double speed) {
     driveMotor.set(speed);

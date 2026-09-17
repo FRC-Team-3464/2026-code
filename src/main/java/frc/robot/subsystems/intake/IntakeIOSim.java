@@ -1,7 +1,8 @@
 package frc.robot.subsystems.intake;
 
+/** Simulation implementation of the IntakeIO interface. */
 public class IntakeIOSim implements IntakeIO {
-
+  // // Make motor simulation objects
   // private final DCMotor pivotGearbox = DCMotor.getNEO(1);
   // private final DCMotor wheelGearbox = DCMotor.getKrakenX60(1);
   // private final DCMotorSim pivotSim;
@@ -14,6 +15,7 @@ public class IntakeIOSim implements IntakeIO {
   // private double wheelAppliedVolts = 0.0;
 
   // public IntakeIOSim() {
+  //   // Make simulation objects that will represent the motor systems
   //   pivotSim =
   //       new DCMotorSim(
   //           LinearSystemId.createDCMotorSystem(
@@ -29,7 +31,7 @@ public class IntakeIOSim implements IntakeIO {
 
   // @Override
   // public void updateInputs(IntakeIOInputs inputs) {
-
+  //   // Make sure that we don't send more than 12 volts to the motors
   //   pivotAppliedVolts = MathUtil.clamp(pivotAppliedVolts, -12.0, 12.0);
   //   wheelAppliedVolts = MathUtil.clamp(wheelAppliedVolts, -12.0, 12.0);
 
@@ -39,6 +41,7 @@ public class IntakeIOSim implements IntakeIO {
   //   wheelSim.setInputVoltage(wheelAppliedVolts);
   //   wheelSim.update(0.02);
 
+  //   // Update IO input values
   //   inputs.pivotPositionRad = Units.rotationsToRadians(pivotSim.getAngularPositionRotations());
   //   inputs.pivotVelocityRadPerSec = Units.rotationsToRadians(pivotSim.getAngularVelocityRPM());
 
@@ -48,6 +51,8 @@ public class IntakeIOSim implements IntakeIO {
 
   // @Override
   // public void setPivotSpeed(double speed) {
+  //   // If the maximum is 12 volts, and the value of speed is <=1, then multiply by 12 to get the
+  // percentage of max voltage
   //   pivotAppliedVolts = 12 * speed;
   // }
 

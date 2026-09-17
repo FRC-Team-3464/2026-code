@@ -32,6 +32,11 @@ public interface IntakeIO {
     public double driveCurrentDrawAmps = 0.0;
   }
 
+  /**
+   * Moves the pivot motors to the specified position using closed-loop control.
+   *
+   * @param positionRotations The position for the pivot motors to move toward.
+   */
   default void setPivotPosition(double positionRotations) {}
 
   /**

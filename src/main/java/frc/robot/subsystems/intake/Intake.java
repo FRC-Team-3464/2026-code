@@ -25,6 +25,9 @@ public class Intake extends SubsystemBase {
    * @return runs the pivot at a speed on every iteration until end when it stops the running
    */
   public Command deployOpenLoop() {
+    // Run-end command:
+    // Continuously runs the first lambda while the command is active (every 20ms)
+    // Then runs the second lambda when the command ends
     return Commands.runEnd(
         () -> io.setPivotSpeed(IntakeConstants.kPivotMotorSpeed),
         () -> io.setPivotSpeed(0.0),
@@ -44,6 +47,8 @@ public class Intake extends SubsystemBase {
   }
 
   public Command deployPosition() {
+    // While the command is active, continuously tell the subsystem to move to the extension
+    // position
     return Commands.run(
         () -> io.setPivotPosition(IntakeConstants.kExtensionPositionRotations), this);
   }
