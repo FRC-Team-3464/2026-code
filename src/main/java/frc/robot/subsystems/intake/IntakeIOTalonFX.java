@@ -44,7 +44,7 @@ public class IntakeIOTalonFX implements IntakeIO {
   private final StatusSignal<Voltage> driveVoltage;
   private final StatusSignal<Current> driveCurrent;
 
-  // Request that tells
+  // Request that tells the motor to move to the specified position using the PID gains in slot 0
   private final PositionVoltage positionRequest = new PositionVoltage(0).withSlot(0);
 
   public IntakeIOTalonFX() {
