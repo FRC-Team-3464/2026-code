@@ -23,5 +23,6 @@ public interface FlywheelIO {
   /** Run motor at the specified open loop value. */
   public default void setOpenLoop(double output) {}
 
+  /** Stop the flywheel motor. */
   default void stop() {}
 }

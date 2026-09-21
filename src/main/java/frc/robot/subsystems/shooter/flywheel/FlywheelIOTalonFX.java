@@ -16,14 +16,18 @@ import frc.robot.Constants.DeviceIDs;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
 public class FlywheelIOTalonFX implements FlywheelIO {
+  // Kraken motors are represented by TalonFX motor controller class
   private final TalonFX motor;
+  // Configurations for the Kraken motors.
   private final TalonFXConfiguration motorConfig;
 
+  // StatusSignals which obtain statistics from each motor
   private final StatusSignal<AngularVelocity> velocitySignal;
   private final StatusSignal<AngularAcceleration> accelerationSignal;
   private final StatusSignal<Voltage> voltageSignal;
   private final StatusSignal<Current> currentSignal;
 
+  // Request that tells the motor to run at the specified velocity using the PID gains in slot 0
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
   public FlywheelIOTalonFX() {
@@ -43,6 +47,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     voltageSignal = motor.getMotorVoltage();
     currentSignal = motor.getStatorCurrent();
 
+    // Configure all StatusSignals to update every 20ms
     BaseStatusSignal.setUpdateFrequencyForAll(
         50, velocitySignal, accelerationSignal, voltageSignal, currentSignal);
     motor.optimizeBusUtilization();
@@ -50,10 +55,13 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
+    // If every Status signal comes back OK, then it's connected
     inputs.connected =
         BaseStatusSignal.refreshAll(
                 velocitySignal, accelerationSignal, voltageSignal, currentSignal)
             .isOK();
+
+    // Update IO input values
     inputs.velocityRadPerSec = velocitySignal.getValue().in(RadiansPerSecond);
     inputs.appliedVolts = voltageSignal.getValueAsDouble();
     inputs.currentDrawAmps = currentSignal.getValueAsDouble();
@@ -61,6 +69,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocity) {
+    // Tell the motor to follow the velocity target
     motor.setControl(velocityRequest.withVelocity(velocity));
   }
 

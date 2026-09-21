@@ -15,12 +15,13 @@ import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Flywheel extends SubsystemBase {
-
+  // IO representation + inputs for the flywheel
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
+  // Boolean representing if the flywheel is at its target RPM
   private boolean atGoal = false;
-  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
+  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kRising);
   private double goalRPM = 0.0;
 
   /** Creates a new Flywheel. */
@@ -30,10 +31,20 @@ public class Flywheel extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Typical IO input cycle
     io.updateInputs(inputs);
     Logger.processInputs("Shooter/Flywheel", inputs);
+
+    // Uses the debouncer to determine if the flywheel has been at the goal RPM for enough time
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(Units.rotationsPerMinuteToRadiansPerSecond(goalRPM) - inputs.velocityRadPerSec)
+                < FlywheelConstants.kSpeedTolerance);
+
+    // Log the flywheel target separately
     Logger.recordOutput("Shooter/Flywheel/AtGoal", atGoal);
 
+    // Used for PID + FF tuning
     SmartDashboard.putNumber("Flywheel Velo", getVelocity());
     SmartDashboard.putNumber("Flywheel Setpoint", goalRPM);
   }
@@ -41,32 +52,32 @@ public class Flywheel extends SubsystemBase {
   public Command runVelocity(double velocityRPM) {
     return Commands.startEnd(
         () -> {
+          // At the start of the command, set the target velocity
           setVelocity(velocityRPM);
         },
         () -> {
+          // Stop the flywheel when the command ends
           stop();
         },
-        this);
+        this); // Reference to the flywheel subsystem instance
   }
 
   public void setVelocity(double velocityRPM) {
+    // Save the goal RPM so we can calculate it later
     goalRPM = velocityRPM;
-    atGoal =
-        atGoalDebouncer.calculate(
-            Math.abs(
-                    Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM)
-                        - inputs.velocityRadPerSec)
-                < FlywheelConstants.kSpeedTolerance);
     // Rotations per minute -> rotations per second
     io.setVelocity(velocityRPM / 60.0);
   }
 
+  /** Runs the flywheel motor at the specified open loop value. */
   public void setOpenLoop(double output) {
     io.setOpenLoop(output);
   }
 
+  /** Stops the flywheel motor. */
   public void stop() {
     io.stop();
+    goalRPM = 0.0;
   }
 
   /**
@@ -78,6 +89,7 @@ public class Flywheel extends SubsystemBase {
     return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
   }
 
+  /** Returns true if the flywheel is at its target RPM. */
   public boolean atGoal() {
     return atGoal;
   }

@@ -9,9 +9,11 @@ import frc.robot.Constants;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
 public class FlywheelIOSim implements FlywheelIO {
+  // DCMotor object representing a KrakenX44 (what's used for the flywheel)
   private final DCMotor gearbox = DCMotor.getKrakenX44(1);
   private final DCMotorSim sim;
 
+  // PID gains for the simulation
   private final PIDController pid = new PIDController(1, 0, 0, Constants.kLoopPeriodSeconds);
 
   private double appliedVolts = 0.0;
@@ -25,12 +27,15 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
+    // Calculate the amount of power to apply using the PID controller
     double currentOutput = pid.calculate(sim.getAngularVelocityRPM());
+    // Make sure that we don't send more than 12 volts to the motors
     appliedVolts = MathUtil.clamp(currentOutput, -12.0, 12.0);
 
     sim.setInputVoltage(appliedVolts);
     sim.update(0.02);
 
+    // Update IO input values
     inputs.connected = true;
     inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
     inputs.appliedVolts = appliedVolts;
@@ -44,6 +49,8 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void setOpenLoop(double output) {
+    // If the maximum is 12 volts, and the absolute value of speed is <=1, then multiply by 12 to
+    // get the percentage of max voltage
     appliedVolts = 12.0 * output;
   }
 
