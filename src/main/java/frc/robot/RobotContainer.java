@@ -9,7 +9,6 @@ import static edu.wpi.first.units.Units.Seconds;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
@@ -164,14 +163,7 @@ public class RobotContainer {
     RobotState.getInstance()
         .addOdometryObservation(
             new OdometryObservation(
-                Timer.getTimestamp(),
-                new SwerveModulePosition[] {
-                  new SwerveModulePosition(),
-                  new SwerveModulePosition(),
-                  new SwerveModulePosition(),
-                  new SwerveModulePosition()
-                },
-                drive.getRawGyroRotation()));
+                Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation()));
 
     // Update the SmartDashboard visualizations
     targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getShooterTarget()));
