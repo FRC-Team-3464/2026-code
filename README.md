@@ -3,6 +3,10 @@ This repository contains all the robot code used by Team 3464 "Sim-City" during 
 <br> <br>
 The code has been extensively documented to be used as reference in training and for future seasons.
 
+To check formatting, run `./gradlew spotlessCheck`. Run `./gradlew spotlessApply` when you want to format files, then review and stage the resulting changes yourself. CI runs `spotlessCheck` and `build`.
+
+The optional `git-hooks/pre-commit` checks staged changes for whitespace errors without changing or staging files. To use it locally, first check whether you already have a custom hook path with `git config --local --get core.hooksPath`. If you do not, run `git config --local core.hooksPath git-hooks`. This Git setting affects only your local checkout.
+
 ## Structure
 
 ### Root Repository Structure
