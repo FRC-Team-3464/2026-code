@@ -3,6 +3,12 @@ This repository contains all the robot code used by Team 3464 "Sim-City" during 
 <br> <br>
 The code has been extensively documented to be used as reference in training and for future seasons.
 
+For a detailed explanation of the architecture, robotics concepts, subsystems, controls, and current implementation limitations, read the [Technical Guide](TECHNICAL_GUIDE.md).
+
+For mentor recommendations and team expectations before reusing this code, including Java naming, analysis tools, detailed acceptance procedures, and a phased delivery plan, read the [2027 Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md).
+
+For a separate assessment of how the design follows WPILib and AdvantageKit guidance, and which changes are team design choices, read the [Architecture Review](ARCHITECTURE_REVIEW.md).
+
 ## Structure
 
 ### Root Repository Structure
