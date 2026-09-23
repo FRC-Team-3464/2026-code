@@ -180,41 +180,36 @@ task(eventDeploy) {
 createVersionFile.dependsOn(eventDeploy)
 
 // Spotless formatting
-project.compileJava.dependsOn(spotlessApply)
 spotless {
     java {
-        target fileTree(".") {
-            include "**/*.java"
-            exclude "**/build/**", "**/build-*/**"
-        }
+        // Targets only code files, avoiding root directory scans
+        target "src/**/*.java"
+
+        // Explicitly exclude the auto-generated version file from linting
+        targetExclude "**/BuildConstants.java"
+
         toggleOffOn()
-        googleJavaFormat("1.22.0")
+
+        // Pin the team's formatter version for consistent results across machines
+        googleJavaFormat("1.21.0")
+
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
     }
     groovyGradle {
-        target fileTree(".") {
-            include "**/*.gradle"
-            exclude "**/build/**", "**/build-*/**"
-        }
+        target "*.gradle", "gradle/**/*.gradle"
         greclipse()
         indentWithSpaces(4)
         trimTrailingWhitespace()
         endWithNewline()
     }
     json {
-        target fileTree(".") {
-            include "**/*.json"
-            exclude "**/build/**", "**/build-*/**"
-        }
+        target "src/**/*.json", "vendordeps/**/*.json"
         gson().indentWithSpaces(2)
     }
     format "misc", {
-        target fileTree(".") {
-            include "**/*.md", "**/.gitignore"
-            exclude "**/build/**", "**/build-*/**"
-        }
+        target "*.md", "docs/**/*.md", ".gitignore"
         trimTrailingWhitespace()
         indentWithSpaces(2)
         endWithNewline()
