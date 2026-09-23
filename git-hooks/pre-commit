@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Inspect the staged snapshot only. Formatting is an explicit developer action,
+# and CI runs Spotless against the committed files.
+if ! git diff --cached --check; then
+    echo "Staged changes contain whitespace errors. Fix and restage them." >&2
+    exit 1
+fi
