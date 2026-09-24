@@ -1,12 +1,14 @@
 # Architecture review: preparing the robot software for 2027
 
-Review date: September 23, 2026.
+Original review: September 23, 2026. Revalidated: September 24, 2026.
+
+**Source baseline:** `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51). Descriptions of current behavior refer to that revision; proposed changes are labelled as recommendations.
 
 **Assessment:** the project uses a suitable architectural foundation for an FRC robot: WPILib commands and subsystems, constructor-supplied IO implementations, WPILib geometry and estimation, and AdvantageKit logging. Keep that foundation. Several implementation details undermine its intended behavior, so the current code should receive the high-priority corrections before reuse.
 
 For a mentor deciding how much redesign to require, the recommendation is **focused repair and simplification**. A replacement framework would add substantial teaching and migration work without directly resolving the observed problems.
 
-This assessment compares the local source with primary WPILib and AdvantageKit documentation. It is a source review, with no new build, simulator run, replay, or hardware trial. The project pins GradleRIO `2026.2.1` and AdvantageKit `26.0.1`; online documentation can describe newer releases. Check exact APIs against the selected dependencies during implementation. Nothing here certifies compatibility with a future 2027 release.
+This assessment compares the source with primary WPILib and AdvantageKit documentation, the installed WPILib `2026.2.1` sources, and the AdvantageKit `v26.0.1` templates. No simulator run, replay, or hardware trial was performed for this review. Documentation checks do not establish robot behavior. Online documentation can describe newer releases; check exact APIs against the selected dependencies during implementation. Nothing here certifies compatibility with a future 2027 release.
 
 The [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) contain the detailed changes, acceptance procedures, and delivery plan. The [Technical Guide](TECHNICAL_GUIDE.md) explains the current code for readers learning robotics.
 
@@ -23,6 +25,18 @@ There are three different sources of guidance:
 WPILib presents a standard command-based structure while explicitly allowing other arrangements. Its template is a reference, not a requirement to reproduce every class name or helper. AdvantageKit is a separate FRC library with additional architectural guidance. A recommendation below should not be presented as an FRC competition rule or an endorsement by either project. [WPILib project structure](https://docs.wpilib.org/en/stable/docs/software/commandbased/structuring-command-based-project.html), [AdvantageKit overview](https://docs.advantagekit.org/).
 
 The general robotics assessment uses concrete properties: predictable timing, clear hardware ownership, consistent units and coordinate frames, usable feedback, deliberate fault behavior, and observable results. It is an engineering assessment of this program, not a comparison against a universal robotics certification standard.
+
+### Recognize the upstream starting point
+
+Several choices discussed in the recommendations come directly from AdvantageKit's matching release. They should be evaluated with that context:
+
+| Upstream example in `v26.0.1` | What it means for this review |
+| --- | --- |
+| Formatting during compilation, recursive file targets with build-directory exclusions, and automatic commits on `event` branches | These are template workflow choices. This branch now uses explicit formatting and narrower targets; the event commit task remains. The changes reflect team workflow preferences, not an FRC compliance correction. [Template build configuration](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/template/build.gradle) |
+| Shared REV read-fault flag and bounded CTRE retries | The local helpers match the template. Existing sequential readers reset and consume the flag per refresh. More explicit status handling can improve diagnostics, but a cross-device fault has not been demonstrated. [Spark helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/spark_swerve/src/main/java/frc/robot/util/SparkUtil.java), [Phoenix helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/talonfx_swerve/src/main/java/frc/robot/util/PhoenixUtil.java) |
+| Limelight parsing assumptions and consumption of both MegaTag streams | The local adapter closely follows the template. Extra payload guards and a documented correlation policy are hardening proposals. Dropping the calculated uncertainty in `RobotState` is a separate, confirmed integration defect. [Limelight adapter](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/vision/src/main/java/frc/robot/subsystems/vision/VisionIOLimelight.java) |
+
+An upstream example is a useful starting point, not proof of suitability for every robot. Conversely, choosing a different implementation does not establish that the template or the students' use of it was wrong. Each proposed change needs a concrete benefit and a check that demonstrates it.
 
 ## Assessment by architectural area
 
@@ -47,13 +61,13 @@ The general robotics assessment uses concrete properties: predictable timing, cl
 
 ### A small Robot class and explicit construction
 
-[Robot.java](src/main/java/frc/robot/Robot.java) starts logging, creates the container, runs the scheduler, schedules autonomous, and cancels autonomous on entry to teleop. [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java) selects hardware implementations and installs bindings. This largely follows the responsibilities in the WPILib template. Keep mechanism-specific behavior outside `Robot`. [WPILib project structure](https://docs.wpilib.org/en/stable/docs/software/commandbased/structuring-command-based-project.html).
+[Robot.java](../src/main/java/frc/robot/Robot.java) starts logging, creates the container, runs the scheduler, schedules autonomous, and cancels autonomous on entry to teleop. [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java) selects hardware implementations and installs bindings. This largely follows the responsibilities in the WPILib template. Keep mechanism-specific behavior outside `Robot`. [WPILib project structure](https://docs.wpilib.org/en/stable/docs/software/commandbased/structuring-command-based-project.html).
 
 The control classes are a reasonable way to keep construction readable. Passing subsystem objects into their constructors makes dependencies visible. This is **dependency injection**: giving an object the collaborators it needs. No additional dependency-injection library is needed.
 
 ### IO interfaces and replaceable implementations
 
-[Flywheel.java](src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java) takes a `FlywheelIO`, updates an input object, logs it, and uses that snapshot. Real and simulated adapters implement the interface. This matches AdvantageKit's recommended separation between control logic and hardware access. Its input payloads intentionally use public mutable fields and generated logging support. [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
+[Flywheel.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java) takes a `FlywheelIO`, updates an input object, logs it, and uses that snapshot. Real and simulated adapters implement the interface. This matches AdvantageKit's recommended separation between control logic and hardware access. Its input payloads intentionally use public mutable fields and generated logging support. [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
 
 In design-pattern terms, a real IO implementation acts as an **adapter** between the team's API and the motor vendor's API. Selecting a real or simulated implementation supplies interchangeable behavior through the same interface. The practical benefit is that students can change a device adapter without rewriting controller bindings or shot logic.
 
@@ -75,9 +89,9 @@ Using WPILib geometry, swerve kinematics, and a swerve pose estimator is appropr
 
 WPILib runs registered subsystem `periodic()` callbacks before polling triggers and executing scheduled commands. `SubsystemBase` registers itself. [Scheduler sequence](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html), [subsystem registration](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
-[Shooter.java](src/main/java/frc/robot/subsystems/shooter/Shooter.java) also calls `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()`. Those children already participate in the scheduler. Their input and simulation update paths therefore execute twice per main loop. Remove the additional calls. The plain `Module` helper objects in `Drive` have a different ownership model and still need their owner's explicit updates.
+[Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) also calls `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()`. Those children already participate in the scheduler. Their input and simulation update paths therefore execute twice per main loop. Remove the additional calls. The plain `Module` helper objects in `Drive` have a different ownership model and still need their owner's explicit updates.
 
-A related issue appears in [DriverControls.java](src/main/java/frc/robot/control/DriverControls.java): the manual hood `StartEndCommand` objects declare no hood requirement, while the default command also controls the hood. The scheduler arbitrates declared resources; it cannot infer ownership by inspecting a lambda. Read-only access to a measurement does not by itself require taking control of the mechanism. [WPILib subsystem resource management](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
+A related issue appears in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java): the manual hood `StartEndCommand` objects declare no hood requirement, while the default command also controls the hood. The scheduler arbitrates declared resources; it cannot infer ownership by inspecting a lambda. Read-only access to a measurement does not by itself require taking control of the mechanism. [WPILib subsystem resource management](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
 **Mentor recommendation:** keep the hood, turret, and flywheel as separately owned subsystems and make the shooter coordinator compose their commands. Each action must reserve the resources it actually controls. Do not assume that requiring the coordinator automatically reserves its children. Verify release, interruption, mode changes, and deliberate hold/stop behavior through H1 and H4.
 
@@ -95,17 +109,23 @@ Robot.robotPeriodic()
   FullSubsystem applies staged outputs
 ```
 
-The cached values describe an earlier observation than the timestamp attached to them. Meanwhile, the higher-frequency update path in [Drive.java](src/main/java/frc/robot/subsystems/drive/Drive.java) is commented out. Moving the container call after the scheduler would still leave commands consuming an older estimate.
+The cached values describe an earlier observation than the timestamp attached to them. Meanwhile, the higher-frequency update path in [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) is commented out. Moving the container call after the scheduler would still leave commands consuming an older estimate.
 
 **Mentor recommendation:** give drive measurement refresh and odometry submission one owner. Preserve measurement timestamps, update measured chassis velocity, and expose the resulting state before dependent commands run. Do not rely on incidental registration order between unrelated subsystems. If vision/drive ordering needs coordination, define how timestamped observations are queued and incorporated.
 
-[RobotState.java](src/main/java/frc/robot/RobotState.java) also ignores the `stdDevs` field of its vision measurement record. The estimator API has an overload that accepts these per-observation standard deviations, which express measurement uncertainty. Pass the already-calculated information through and verify its effect. [WPILib PoseEstimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html).
+[RobotState.java](../src/main/java/frc/robot/RobotState.java) also ignores the `stdDevs` field of its vision measurement record. The estimator API has an overload that accepts these per-observation standard deviations, which express measurement uncertainty. Pass the already-calculated information through and verify its effect. [WPILib PoseEstimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html).
 
 H2, H3, and H7 provide the detailed checks. Source changes alone cannot establish physical localization accuracy.
 
 ### Custom output staging is a choice that needs a clear contract
 
-[FullSubsystem.java](src/main/java/frc/robot/util/FullSubsystem.java) adds a callback after the scheduler. The turret uses it to apply outputs that commands have selected. Other mechanisms write through their IO methods directly.
+[FullSubsystem.java](../src/main/java/frc/robot/util/FullSubsystem.java) adds a callback after the scheduler. The current shooter mechanisms use three different timings:
+
+| Mechanism request | When it reaches IO |
+| --- | --- |
+| Flywheel velocity | `Flywheel.setVelocity()` calls IO immediately |
+| Hood angle | `Hood.setAngle()` stores a goal; `Hood.periodic()` sends it to IO. A goal selected during command execution reaches IO on the next periodic update. Hood open-loop requests call IO directly. |
+| Turret angle/output | Setters stage an output request; the post-scheduler callback applies it |
 
 The extra stage is a project extension. Its existence is not itself a WPILib violation. It can make the sequence “read inputs, choose goals, apply outputs” explicit, provided registration, disabled behavior, and cancellation all have clear owners. The current mixture raises the amount a student must remember when tracing a command.
 
@@ -113,7 +133,7 @@ The extra stage is a project extension. Its existence is not itself a WPILib vio
 
 ### Simulation and replay must preserve the control contract
 
-[FlywheelIOSim.java](src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java) gives its PID controller an RPS target and RPM feedback. It also recomputes PID output every update even after an open-loop or stop request. These differences invalidate behavior comparisons with the real adapter.
+[FlywheelIOSim.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java) gives its PID controller an RPS target and RPM feedback. It also recomputes PID output every update even after an open-loop or stop request. These differences invalidate behavior comparisons with the real adapter.
 
 WPILib simulation models advance from applied inputs to simulated sensor readings. An IO-based project can place that work inside its simulated adapter; moving everything into `simulationPeriodic()` is not required for this architecture. The essential review questions here are units, time step, and behavior at the interface. [WPILib physics simulation](https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/physics-sim.html), [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
 
@@ -180,13 +200,17 @@ Keep these distinctions explicit when explaining the plan to students:
 | Rename `Drive` to `Drivetrain` | Optional clarity improvement; `Drive` is already a valid Java class name |
 | Prefer a plain shooter coordinator | Design recommendation for the current child-subsystem arrangement |
 | Use Spotless and Checkstyle | Team enforcement workflow; neither establishes robot correctness |
+| Add camera payload guards or change the REV fault helper | Hardening or maintainability work; template ancestry and actual call order matter |
+| Change automatic formatting, target patterns, or event commits | Team workflow tradeoffs; the matching AdvantageKit template contains the original patterns |
 | Add a large unit-test suite | Not required by this reuse plan; acceptance evidence is still required |
 
 The proposed casing follows Google Java conventions. WPILib's own examples demonstrate different naming choices, so standardizing team code should be explained as a consistency decision. Preserve dependency names and narrowly identified generated sources. [Google Java naming](https://google.github.io/styleguide/javaguide.html#s5-naming), [WPILib command examples](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-compositions.html).
 
+Import rules need the same distinction. WPILib recommends `import static edu.wpi.first.units.Units.*;` for its units library. A team may choose explicit imports, or allow this one scoped exception; a general wildcard ban is not a WPILib requirement. Decide this in the checked-in Checkstyle policy. [WPILib Java units](https://docs.wpilib.org/en/stable/docs/software/basic-programming/java-units.html).
+
 ## Recommended decision for the mentor
 
-Approve the current **architectural direction** as the starting point for preseason work. Require the H1–H8 corrections and acceptance evidence for retained capabilities, then complete the H9 reuse boundaries and H10 team tooling requirements through the delivery plan. Keep medium-priority ownership, IO, and logging work alongside the fixes that depend on them.
+Keep the current **architectural direction** as the starting point for preseason work. Begin with small fixes for duplicate shooter updates, missing manual hood requirements, discarded vision uncertainty, and flywheel simulation units/control modes. These repairs can proceed before broad renaming. The H1–H8 sections contain both confirmed defects and proposed operating policies; use their stated scope and acceptance checks to decide what each retained capability needs. Complete H9 reuse boundaries and the adopted H10 team tooling policy through the delivery plan. Keep IO diagnostics and logging work alongside the fixes that depend on them.
 
 When preparing the actual season application, compare carried code with the matching upstream templates and document deliberate differences. AdvantageKit publishes swerve and vision templates relevant to this project. Use the version appropriate to the selected season dependencies. [AdvantageKit templates](https://docs.advantagekit.org/getting-started/template-projects/).
 

@@ -4,7 +4,9 @@ This guide explains the software in this repository for someone with basic robot
 
 The repository identifies itself as **FRC Team 3464, Sim-City, for the 2026 REBUILT season**. FRC means FIRST Robotics Competition. The robot collects balls called *fuel* and launches them toward a field target called the *hub*.
 
-**Scope:** source and configuration review of the working folder on September 23, 2026. Descriptions of active behavior follow executable code, including where it differs from comments. Hardware dimensions and tuning values below are configured values, not independently measured specifications. No robot deployment, physical testing, or simulation run was performed for this document.
+**Scope:** originally reviewed September 23, 2026; revalidated September 24 against `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51), including the merged formatting/CI changes. Descriptions of active behavior follow executable code, including where it differs from comments. Hardware dimensions and tuning values below are configured values, not independently measured specifications. No robot deployment, physical testing, or simulation run was performed for this document.
+
+Use this guide to learn what the code currently does. The [Architecture Review](ARCHITECTURE_REVIEW.md) compares that design with WPILib and AdvantageKit guidance; the [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) distinguish repairs, hardening, and team choices for future work.
 
 ## Contents
 
@@ -60,7 +62,7 @@ The current operator workflow is to aim and spin the shooter with one control, t
 
 The current autonomous routine spins the flywheel, adjusts the hood, and begins feeding after a flywheel readiness check. It does **not** follow a driving path or automatically turn the turret. Numerous stored routes exist, but they are not selected by the current autonomous code.
 
-Source: [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java), [Shooter.java](src/main/java/frc/robot/subsystems/shooter/Shooter.java).
+Source: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java).
 
 ## 2. Robotics concepts used in the code
 
@@ -123,7 +125,10 @@ The scan found **75 Git-tracked Java files**, plus a generated `BuildConstants.j
 ```text
 2026-code/
 ├── README.md                    Short project introduction
-├── TECHNICAL_GUIDE.md            This guide
+├── docs/
+│   ├── TECHNICAL_GUIDE.md        This guide
+│   ├── ARCHITECTURE_REVIEW.md    Design assessment and upstream references
+│   └── REUSE_RECOMMENDATIONS_2027.md  Recommendations and acceptance plan
 ├── build.gradle                 Compile, format, simulate, and deploy setup
 ├── settings.gradle              Gradle repository configuration
 ├── gradlew / gradlew.bat         Gradle launchers
@@ -162,10 +167,11 @@ Versions below come from this checkout, not a claim about the latest available r
 | Studica | 2026.0.0 | Alternative navX gyro implementation |
 | JUnit Jupiter | 5.10.1 | Test framework dependency; no tests found |
 | Spotless | 6.25.0 | Formatting integration |
+| google-java-format | 1.21.0 | Pinned Java formatter used by Spotless |
 
 The `WPILibNewCommands.json` manifest's `1.0.0` value identifies that vendor manifest; it should not be read as the project's WPILib release.
 
-Sources: [build.gradle](build.gradle), [Gradle wrapper properties](gradle/wrapper/gradle-wrapper.properties), [vendor manifests](vendordeps), [WPILib preferences](.wpilib/wpilib_preferences.json).
+Sources: [build.gradle](../build.gradle), [Gradle wrapper properties](../gradle/wrapper/gradle-wrapper.properties), [vendor manifests](../vendordeps), [WPILib preferences](../.wpilib/wpilib_preferences.json).
 
 ## 4. Startup and the repeating control loop
 
@@ -205,7 +211,7 @@ Two project-specific details are easy to miss:
 - `RobotContainer.robotPeriodic()` runs **before** `Drive.periodic()` refreshes inputs. The estimator therefore consumes the previous refresh's wheel and gyro values, but supplies a current timestamp. The nominal age difference is roughly one main-loop period.
 - `Shooter.periodic()` manually calls `periodic()` on the hood, turret, and flywheel. Those children also inherit from registered subsystem classes, so the scheduler calls them too. They are updated twice per scheduler cycle. In their simulators, each update advances the model by 20 ms, which makes the timing inconsistency significant.
 
-`FullSubsystem` adds an output stage after command execution. Only the turret currently extends it. Other mechanisms do not all follow that same staged output pattern.
+`FullSubsystem` adds an output stage after command execution. Only the turret currently extends it. The flywheel writes its velocity request to IO inside its setter. The hood's angle setter stores a target, and `Hood.periodic()` sends that target to IO; a target chosen during command execution therefore takes effect on the next periodic update. Hood open-loop requests call IO immediately. Keep these different timings in mind when reading a command trace.
 
 ### Operating modes
 
@@ -217,9 +223,9 @@ Two project-specific details are easy to miss:
 | Test starts | Cancel all scheduled commands at that moment |
 | Simulation callbacks | Present but empty; most simulation happens through IO classes |
 
-Cancelling all commands in `testInit()` does not permanently prevent defaults or bindings from scheduling later. Also, default commands and bindings are not explicitly restricted to teleop here. The autonomous command does not claim the drivetrain, so the joystick-drive default can remain available during autonomous.
+Cancelling all commands in `testInit()` does not permanently prevent defaults or bindings from scheduling later. In the pinned WPILib `2026.2.1`, LiveWindow is disabled in test mode by default, and this project does not enable it; do not assume LiveWindow will disable the command scheduler. Also, default commands and bindings are not explicitly restricted to teleop here. The autonomous command does not claim the drivetrain, so the joystick-drive default can remain available during autonomous. See the [versioned robot lifecycle source](https://github.com/wpilibsuite/allwpilib/blob/v2026.2.1/wpilibj/src/main/java/edu/wpi/first/wpilibj/IterativeRobotBase.java).
 
-Sources: [Main.java](src/main/java/frc/robot/Main.java), [Robot.java](src/main/java/frc/robot/Robot.java), [FullSubsystem.java](src/main/java/frc/robot/util/FullSubsystem.java).
+Sources: [Main.java](../src/main/java/frc/robot/Main.java), [Robot.java](../src/main/java/frc/robot/Robot.java), [FullSubsystem.java](../src/main/java/frc/robot/util/FullSubsystem.java).
 
 ## 5. Commands, subsystems, and hardware interfaces
 
@@ -269,7 +275,7 @@ Logger.processInputs("Intake", inputs);
 
 Default methods on IO interfaces do nothing. This is convenient for absent hardware and replay, but it also means an incomplete implementation can compile successfully without controlling or simulating anything.
 
-Sources: [IntakeIO.java](src/main/java/frc/robot/subsystems/intake/IntakeIO.java), [Flywheel.java](src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java).
+Sources: [IntakeIO.java](../src/main/java/frc/robot/subsystems/intake/IntakeIO.java), [Flywheel.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java).
 
 ## 6. Hardware configuration
 
@@ -321,7 +327,7 @@ The constants also define controller port numbers, but `RobotContainer` currentl
 
 The hood bounds and table entries are the mechanism coordinates used by this program. Do not interpret them as independently verified fuel launch angles. Startup sets the hood and turret relative encoders to zero; there is no implemented absolute-sensor or limit-switch homing routine for them.
 
-Sources: [Constants.java](src/main/java/frc/robot/Constants.java), [DriveConstants.java](src/main/java/frc/robot/subsystems/drive/DriveConstants.java), [ShooterConstants.java](src/main/java/frc/robot/subsystems/shooter/ShooterConstants.java).
+Sources: [Constants.java](../src/main/java/frc/robot/Constants.java), [DriveConstants.java](../src/main/java/frc/robot/subsystems/drive/DriveConstants.java), [ShooterConstants.java](../src/main/java/frc/robot/subsystems/shooter/ShooterConstants.java).
 
 ## 7. Swerve drive
 
@@ -387,7 +393,7 @@ However, the calls that would feed these high-rate samples into `RobotState` are
 
 The disconnected-gyro alert says that kinematics provides a fallback, but the wheel-based heading fallback is commented out. In the current simulator, the empty gyro interface therefore leaves raw heading at zero even when wheel motion requests rotation.
 
-Sources: [DriveCommands.java](src/main/java/frc/robot/commands/DriveCommands.java), [Drive.java](src/main/java/frc/robot/subsystems/drive/Drive.java), [Module.java](src/main/java/frc/robot/subsystems/drive/Module.java), [ModuleIOTalonFX.java](src/main/java/frc/robot/subsystems/drive/ModuleIOTalonFX.java), [PhoenixOdometryThread.java](src/main/java/frc/robot/subsystems/drive/PhoenixOdometryThread.java).
+Sources: [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java), [ModuleIOTalonFX.java](../src/main/java/frc/robot/subsystems/drive/ModuleIOTalonFX.java), [PhoenixOdometryThread.java](../src/main/java/frc/robot/subsystems/drive/PhoenixOdometryThread.java).
 
 ## 8. Position estimation and vision
 
@@ -454,7 +460,7 @@ The Pigeon constructor calls `pigeon.setYaw(0)`. Later, `GyroIOPigeon2.setYaw(an
 
 Also, `Drive` calls `zeroYaw()` in its constructor but does not schedule the returned command. The real startup zero comes from the Pigeon constructor, not from executing that returned command.
 
-Sources: [RobotState.java](src/main/java/frc/robot/RobotState.java), [Vision.java](src/main/java/frc/robot/subsystems/vision/Vision.java), [CameraIOLimelight.java](src/main/java/frc/robot/subsystems/vision/CameraIOLimelight.java), [VisionConstants.java](src/main/java/frc/robot/subsystems/vision/VisionConstants.java), [GyroIOPigeon2.java](src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
+Sources: [RobotState.java](../src/main/java/frc/robot/RobotState.java), [Vision.java](../src/main/java/frc/robot/subsystems/vision/Vision.java), [CameraIOLimelight.java](../src/main/java/frc/robot/subsystems/vision/CameraIOLimelight.java), [VisionConstants.java](../src/main/java/frc/robot/subsystems/vision/VisionConstants.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
 
 ## 9. Intake and indexer
 
@@ -489,7 +495,7 @@ The active operator binding feeds whenever the right trigger is held. It does no
 
 `subsystems/guts/` contains another motor subsystem with real and simulation implementations. `RobotContainer` never constructs it, and its hardware ID is the unused placeholder `-1`. It is not an additional active stage in the current feeding system.
 
-Sources: [Intake.java](src/main/java/frc/robot/subsystems/intake/Intake.java), [IntakeIOTalonFX.java](src/main/java/frc/robot/subsystems/intake/IntakeIOTalonFX.java), [IntakeConstants.java](src/main/java/frc/robot/subsystems/intake/IntakeConstants.java), [Indexer.java](src/main/java/frc/robot/subsystems/indexer/Indexer.java).
+Sources: [Intake.java](../src/main/java/frc/robot/subsystems/intake/Intake.java), [IntakeIOTalonFX.java](../src/main/java/frc/robot/subsystems/intake/IntakeIOTalonFX.java), [IntakeConstants.java](../src/main/java/frc/robot/subsystems/intake/IntakeConstants.java), [Indexer.java](../src/main/java/frc/robot/subsystems/indexer/Indexer.java).
 
 ## 10. Shooter and aiming calculations
 
@@ -571,7 +577,7 @@ Turret tolerance is 0.5° and hood tolerance is 1°. Their falling-edge debounce
 
 When active tracking ends, the flywheel receives zero open-loop output. The hood's default command returns it toward zero, and the turret's default requests zero open-loop output. `setOpenLoop(0)` does not clear the stored flywheel goal RPM, so readiness telemetry can still refer to the previous target afterward.
 
-Sources: [Shooter.java](src/main/java/frc/robot/subsystems/shooter/Shooter.java), [TrajectoryCalculator.java](src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java), [Turret.java](src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [Hood.java](src/main/java/frc/robot/subsystems/shooter/hood/Hood.java), [Flywheel.java](src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java).
+Sources: [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java), [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java), [Turret.java](../src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [Hood.java](../src/main/java/frc/robot/subsystems/shooter/hood/Hood.java), [Flywheel.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java).
 
 ## 11. Driver and operator controls
 
@@ -605,7 +611,7 @@ The hood D-pad bindings create `StartEndCommand`s **without a hood subsystem req
 
 The single-controller mapping is defined in a private method but never called. The commented driver left-bumper auto-aim binding is also inactive. `ZoneControls.configure()` is empty and is not installed by the container.
 
-Sources: [DefaultControls.java](src/main/java/frc/robot/control/DefaultControls.java), [DriverControls.java](src/main/java/frc/robot/control/DriverControls.java), [DriverController.java](src/main/java/frc/robot/control/DriverController.java).
+Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java), [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [DriverController.java](../src/main/java/frc/robot/control/DriverController.java).
 
 ## 12. Autonomous behavior and PathPlanner assets
 
@@ -630,7 +636,7 @@ The readiness wait is a **one-time gate**. Once indexing begins, a subsequent RP
 
 PathPlanner `.path` files contain geometry and motion constraints. `.auto` files compose paths, waits, and named robot actions. `settings.json` contains the robot model and editor defaults; `navgrid.json` contains a pathfinding grid.
 
-For example, [URI Center.auto](src/main/deploy/pathplanner/autos/URI%20Center.auto) describes following `C to C Tower`, then running an eight-second shooting phase, starting indexing after one second. This is a stored plan, not the command returned by the current robot program.
+For example, [URI Center.auto](../src/main/deploy/pathplanner/autos/URI%20Center.auto) describes following `C to C Tower`, then running an eight-second shooting phase, starting indexing after one second. This is a stored plan, not the command returned by the current robot program.
 
 The reason those assets do not run is visible in `RobotContainer`:
 
@@ -646,7 +652,7 @@ All path names referenced by the scanned assets have corresponding `.path` files
 
 There are also inconsistent robot-model values: `DriveConstants` specifies mass `72.088 kg`, whereas PathPlanner settings specify `52.163 kg`. Those configurations must be reconciled before treating them as an authoritative model for path following.
 
-Sources: [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java), [PathPlanner settings](src/main/deploy/pathplanner/settings.json), [autonomous files](src/main/deploy/pathplanner/autos), [path files](src/main/deploy/pathplanner/paths).
+Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [PathPlanner settings](../src/main/deploy/pathplanner/settings.json), [autonomous files](../src/main/deploy/pathplanner/autos), [path files](../src/main/deploy/pathplanner/paths).
 
 ## 13. Simulation and replay
 
@@ -682,7 +688,7 @@ However, `RobotContainer` has no `REPLAY` construction branch. Choosing that mod
 
 The real-mode `WPILOGWriter` line is commented out. Both `REAL` and `SIM` add an `NT4Publisher` for live telemetry. Do not assume this application currently produces a USB `.wpilog` file for every run. External tooling might record network data separately, but that is outside the configuration reviewed here.
 
-Sources: [Constants.java](src/main/java/frc/robot/Constants.java), [Robot.java](src/main/java/frc/robot/Robot.java), [FlywheelIOSim.java](src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java), [ModuleIOSim.java](src/main/java/frc/robot/subsystems/drive/ModuleIOSim.java).
+Sources: [Constants.java](../src/main/java/frc/robot/Constants.java), [Robot.java](../src/main/java/frc/robot/Robot.java), [FlywheelIOSim.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java), [ModuleIOSim.java](../src/main/java/frc/robot/subsystems/drive/ModuleIOSim.java).
 
 ## 14. Telemetry, visualization, and utilities
 
@@ -733,7 +739,7 @@ The LED implementation checks autonomous mode first and displays a rainbow, then
 
 `GyroIONavX`, `ModuleIOTalonFXS`, and the PhotonVision camera implementations are alternative device adapters. Their presence does not mean the robot constructs those devices.
 
-Sources: [RobotVisualizer.java](src/main/java/frc/robot/RobotVisualizer.java), [Leds.java](src/main/java/frc/robot/subsystems/leds/Leds.java), [utilities directory](src/main/java/frc/robot/util).
+Sources: [RobotVisualizer.java](../src/main/java/frc/robot/RobotVisualizer.java), [Leds.java](../src/main/java/frc/robot/subsystems/leds/Leds.java), [utilities directory](../src/main/java/frc/robot/util).
 
 ## 15. Building and developing the project
 
@@ -757,11 +763,24 @@ On Windows, use `gradlew.bat` in place of `./gradlew`.
 
 The simulation GUI is **disabled by default** in `build.gradle`, while Driver Station simulation support is added. If a visual simulator interface is desired, enable the GUI extension through the WPILib simulation launch options or adjust that build setting. A running desktop process by itself does not prove all mechanisms are simulated correctly.
 
-These commands are documented from the repository configuration; they were not executed as part of preparing this guide.
+These command descriptions come from the repository configuration. Documentation validation is separate from the simulator and hardware acceptance procedures in the recommendations; it does not establish working robot behavior.
 
 ### Build side effects
 
-`compileJava` depends on `spotlessApply`, so a normal build can reformat source, Gradle, JSON, and Markdown files. Check `git diff` after building.
+At the reviewed revision, `compileJava` no longer depends on `spotlessApply`. Formatting is an explicit developer action. `spotlessCheck` reports differences without repairing them, and `build` includes Spotless checks through Gradle's verification lifecycle. Generated build outputs are still expected.
+
+The formatter's scope is explicit:
+
+| Format | Current targets |
+| --- | --- |
+| Java | `src/**/*.java`, excluding generated `BuildConstants.java` |
+| Gradle | `*.gradle`, `gradle/**/*.gradle` |
+| JSON | `src/**/*.json`, `vendordeps/**/*.json` |
+| Markdown and whitespace | `*.md`, `docs/**/*.md`, `.gitignore` |
+
+These targets keep root simulator state and build output outside formatting. Recursive targets with exclusions are also a valid strategy, used in the matching AdvantageKit template. The narrower selection is a team workflow choice. Markdown checks here normalize whitespace and final newlines; they do not verify technical claims or links.
+
+Spotless does not enforce Java naming conventions. Checkstyle is proposed in the recommendations but is not installed, so `checkstyleMain` is not currently an available task. The google-java-format `1.21.0` pin records the team's chosen formatter; Java 17 alone does not require downgrading from `1.22.0`, whose [build configuration includes a Java 17 profile](https://github.com/google/google-java-format/blob/v1.22.0/core/pom.xml).
 
 The build also generates `BuildConstants.java` with Git revision, branch, dirty status, and build date. AdvantageKit records those values so telemetry can be associated with a code revision. Auto-logged input classes are generated by annotation processing; missing generated classes in an editor can indicate that the Gradle project has not been built or imported correctly.
 
@@ -777,9 +796,19 @@ It targets team **3464**, packages application classes and dependencies into a r
 
 There is a notable Git side effect: the `eventDeploy` task checks whether the requested task names include “deploy.” On branches starting with `event`, it runs `git add -A` and creates a timestamped commit. This stages all working changes. On other branches, that automatic commit is skipped.
 
+That task follows the [AdvantageKit `v26.0.1` build template](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/template/build.gradle), which also includes compile-time formatting and recursive formatting targets. Event commits can help preserve the code used at an event; the team should decide deliberately whether staging every working change fits its deployment workflow.
+
 ### Continuous integration
 
-The GitHub workflow runs on pushes and pull requests and invokes `./gradlew build` in `wpilib/roborio-cross-ubuntu:2024-22.04`. The container tag is older than this project's 2026 dependency configuration. That is a compatibility point to check if CI fails, not proof that the workflow currently fails; workflow execution was not verified for this document.
+The GitHub workflow runs on pushes and pull requests in `wpilib/roborio-cross-ubuntu:2024-22.04`. It installs Temurin Java 17, sets up Gradle caching, runs `./gradlew spotlessCheck`, and then runs `./gradlew build`. A failed formatting step stops the job before the build. There is no `spotlessApply` step. Workflow configuration was reviewed; a successful GitHub-hosted run was not verified for this document.
+
+Check the container against the supported toolchain, rather than judging compatibility by its year alone. WPILib's current CI example uses the 2025 container for 2026 and explains why it remains suitable. That does not establish compatibility of this repository's 2024 image. [WPILib CI guidance](https://docs.wpilib.org/en/stable/docs/software/advanced-gradlerio/robot-code-ci.html).
+
+### Local pre-commit check
+
+The versioned [pre-commit hook](../git-hooks/pre-commit) runs `git diff --cached --check` on staged changes, then `./gradlew spotlessCheck` on files in the working tree. It exits with a failure if either check fails. It never formats or stages files; fix formatting explicitly, review the diff, and stage the intended changes again.
+
+Git does not activate that hook automatically after cloning. Follow the [README setup instructions](../README.md) to configure it in each checkout, preserving any existing custom hook configuration. The hook is local feedback; CI checks the committed snapshot even when a developer has not installed it. With partially staged files, the hook's working-tree check is not proof that the staged snapshot is formatted correctly.
 
 ### Where to make common changes
 
@@ -800,7 +829,7 @@ The GitHub workflow runs on pushes and pull requests and invokes `./gradlew buil
 
 For a new behavior, follow one complete chain: binding → command → subsystem → IO → measurement/logging. If a mechanism needs to run concurrently with another, examine its command requirements as well as its motor code.
 
-Sources: [build.gradle](build.gradle), [settings.gradle](settings.gradle), [CI workflow](.github/workflows/build.yml), [.gitignore](.gitignore).
+Sources: [build.gradle](../build.gradle), [settings.gradle](../settings.gradle), [CI workflow](../.github/workflows/build.yml), [.gitignore](../.gitignore).
 
 ## 16. Implementation issues to understand
 
@@ -835,13 +864,13 @@ These observations suggest useful future engineering tasks, but this documentati
 
 Read one working behavior end to end before studying every utility.
 
-1. **Startup and wiring:** [Robot.java](src/main/java/frc/robot/Robot.java) and [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java). Find the mode selection, subsystem constructors, and scheduler call.
-2. **A simple mechanism:** [Indexer.java](src/main/java/frc/robot/subsystems/indexer/Indexer.java), [IndexerIO.java](src/main/java/frc/robot/subsystems/indexer/IndexerIO.java), and [IndexerIOTalonFX.java](src/main/java/frc/robot/subsystems/indexer/IndexerIOTalonFX.java). Trace what starts and stops a motor.
-3. **User input:** [DriverControls.java](src/main/java/frc/robot/control/DriverControls.java). Find how a button schedules the command you just read.
-4. **Driving:** [DriveCommands.java](src/main/java/frc/robot/commands/DriveCommands.java), [Drive.java](src/main/java/frc/robot/subsystems/drive/Drive.java), and [Module.java](src/main/java/frc/robot/subsystems/drive/Module.java). Follow speed and angle conversions.
-5. **Location:** [RobotState.java](src/main/java/frc/robot/RobotState.java) and [Vision.java](src/main/java/frc/robot/subsystems/vision/Vision.java). Separate sensor measurements from the combined estimate.
-6. **Shooting:** [Shooter.java](src/main/java/frc/robot/subsystems/shooter/Shooter.java) and [TrajectoryCalculator.java](src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java). Compare the active call chains before changing table values.
-7. **Tooling:** [build.gradle](build.gradle). Understand generated files, formatting, logging modes, and deployment side effects.
+1. **Startup and wiring:** [Robot.java](../src/main/java/frc/robot/Robot.java) and [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java). Find the mode selection, subsystem constructors, and scheduler call.
+2. **A simple mechanism:** [Indexer.java](../src/main/java/frc/robot/subsystems/indexer/Indexer.java), [IndexerIO.java](../src/main/java/frc/robot/subsystems/indexer/IndexerIO.java), and [IndexerIOTalonFX.java](../src/main/java/frc/robot/subsystems/indexer/IndexerIOTalonFX.java). Trace what starts and stops a motor.
+3. **User input:** [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java). Find how a button schedules the command you just read.
+4. **Driving:** [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), and [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java). Follow speed and angle conversions.
+5. **Location:** [RobotState.java](../src/main/java/frc/robot/RobotState.java) and [Vision.java](../src/main/java/frc/robot/subsystems/vision/Vision.java). Separate sensor measurements from the combined estimate.
+6. **Shooting:** [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) and [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java). Compare the active call chains before changing table values.
+7. **Tooling:** [build.gradle](../build.gradle). Understand generated files, formatting, logging modes, and deployment side effects.
 
 A useful first tracing exercise is: “What happens when the operator holds the right bumper, then presses the right trigger?” You should be able to identify three tracking commands, a separate feed command, their subsystem requirements, the target source, and the motor output methods.
 

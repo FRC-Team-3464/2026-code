@@ -1,12 +1,14 @@
 # Mentor recommendations for the 2027 robot software
 
-Review date: September 23, 2026.
+Original review: September 23, 2026. Revalidated: September 24, 2026.
+
+**Source baseline:** `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51). This revision includes the formatting/CI work merged after the original review. Current behavior and remaining work below refer to this baseline.
 
 **Direction for preseason work:** keep the command-based structure, subsystem/IO separation, and structured logging. Correct the update timing, position estimation, and command ownership before carrying the affected code into the next robot. Adopt one Java naming standard and enforce it with **Spotless plus Checkstyle**.
 
 Our goal is software that the next group of students can understand, operate, and maintain. A student should be able to follow a button press through a command to the motor request, explain which measurements it uses, and show what happens when the command stops. These recommendations focus on making that explanation reliable.
 
-This is a preseason work proposal for mentor and student-lead adoption. The priorities, acceptance checks, and delivery plan describe the work expected before reuse. Each assigned task needs an owner, a reviewer, and a demonstration that its acceptance criteria have been met. Implementation and verification remain pending unless a separate record documents completion.
+This is a preseason work proposal for mentor and student-lead adoption. The priorities, acceptance checks, and delivery plan describe the work expected before reuse. Each assigned task needs an owner, a reviewer, and a demonstration that its acceptance criteria have been met. Completed build configuration is identified below; acceptance of the broader recommendations remains pending unless a separate record documents completion.
 
 A broad unit-test suite is not required for this plan. We will rely primarily on builds, automated style checks, recorded measurements, simulation, and controlled robot checks. A few small calculation checks are recommended where they would prevent difficult-to-diagnose mistakes.
 
@@ -17,6 +19,7 @@ The separate [Architecture Review](ARCHITECTURE_REVIEW.md) explains which parts 
 - [Expectations for the programming team](#expectations-for-the-programming-team)
 - [Scope and priority definitions](#scope-and-priority-definitions)
 - [Priority overview](#priority-overview)
+- [Work already present in the baseline](#work-already-present-in-the-baseline)
 - [How to run and record acceptance checks](#how-to-run-and-record-acceptance-checks)
 - [High-priority recommendations](#high-priority-recommendations)
 - [Medium-priority recommendations](#medium-priority-recommendations)
@@ -30,7 +33,7 @@ The separate [Architecture Review](ARCHITECTURE_REVIEW.md) explains which parts 
 
 The following working agreement is recommended for this effort. Assign the roles at the preseason kickoff; the document does not assume that anyone has already accepted an assignment or approved a change.
 
-- **The software mentor sets the release expectations with the student programming lead.** High-priority work must be completed for each retained capability. An optional feature may be deferred by recording its exclusion and keeping it unavailable in the release.
+- **The software mentor sets the release expectations with the student programming lead.** Confirmed high-priority defects must be resolved for retained capabilities. Agree on additional hardening and style requirements before assigning them; their priority is a team decision. An optional feature may be deferred by recording its exclusion and keeping it unavailable in the release.
 - **The student lead assigns manageable work and coordinates shared changes.** Every package has one accountable owner and a reviewer. Students should be able to explain their implementation and demonstrate the acceptance procedure.
 - **Technical alternatives are welcome when supported by evidence.** Bring the affected code, the reason for the alternative, and a way to compare results. The designated reviewer resolves routine implementation choices; the mentor resolves unresolved architecture, scope, and release decisions. Unanimous agreement is not a prerequisite for moving forward.
 - **The checked-in coding standard applies to everyone.** Decide the rules during setup, then use the same formatter and checker on every contribution. Exceptions need a specific reason and reviewer approval.
@@ -42,9 +45,9 @@ Review the priority overview together, then assign individual work packages. Eac
 
 The review covers the tracked Java source, build and editor configuration, controller bindings, device adapters, simulation/replay wiring, utilities, and PathPlanner assets. It follows actual call paths and distinguishes active code from inactive helpers. The earlier [Technical Guide](TECHNICAL_GUIDE.md) explains the architecture in more introductory detail.
 
-The inventory contains 75 tracked Java files, approximately 9,819 lines including comments and bundled helpers, 66 autonomous compositions, and 92 path files. Asset JSON parsing succeeded, and referenced path files exist. Running those routines on a robot still requires separate verification. This review is based on source inspection and the recorded asset checks; it includes no completed robot build, deployment, simulator run, physical measurement, or new analyzer run.
+The inventory contains 75 tracked Java files, approximately 9,819 lines including comments and bundled helpers, 66 autonomous compositions, and 92 path files. Asset JSON parsing succeeded, and referenced path files exist. Running those routines on a robot still requires separate verification. The findings are based on source inspection and asset checks, with framework behavior checked against WPILib `2026.2.1` sources and AdvantageKit `v26.0.1` templates. No simulator run, replay, deployment, or physical measurement establishes behavioral acceptance here. Later formatting/build work does not close those checks.
 
-**High:** required before accepting the affected feature into the reusable foundation or enabling it on the new robot. This includes predictable control behavior and an enforceable team coding standard. For optional features such as replay, explicitly disabling or excluding the unfinished feature is an acceptable resolution.
+**High:** address before accepting the affected feature into the reusable foundation or enabling it on the new robot. This covers confirmed control defects and proposed team release requirements. H10's coding standard is a team policy, not a robot correctness issue or WPILib requirement. For optional features such as replay, explicitly disabling or excluding the unfinished feature is an acceptable resolution.
 
 **Medium:** planned preseason work to improve readability, diagnostics, and maintainability. These items usually allow an initial controlled bring-up, but need an assigned owner or an explicit deferral before release.
 
@@ -52,36 +55,60 @@ The inventory contains 75 tracked Java files, approximately 9,819 lines includin
 
 Priority reflects the consequence of carrying an issue forward. A source-level problem does not establish that it caused a past match failure. Physical geometry, gain quality, actual wiring, and 2027 compatibility still require measurements and checks with the applicable season toolchain.
 
+Read priority together with the **basis** for a recommendation:
+
+- **Confirmed defect:** the call path or calculation demonstrates a mismatch, such as running a registered subsystem twice or mixing RPM and RPS. This does not claim an observed match failure.
+- **Hardening:** additional protection against invalid data, device faults, or operating conditions. State the scenario being protected against; do not imply it already occurred.
+- **Team choice:** a naming, design, feature-scope, or workflow decision. Explain the benefit and tradeoff. A different choice can still follow WPILib and FRC practice.
+
+Some sections contain more than one basis. Their acceptance procedures must follow the scope actually adopted. In particular, H7's uncertainty repair is high priority; extra camera guards and stream-selection changes can be separate hardening work. The [Architecture Review's upstream comparison](ARCHITECTURE_REVIEW.md#recognize-the-upstream-starting-point) identifies inherited template patterns so we do not mistake them for student mistakes.
+
 ## Priority overview
 
-| ID | Priority | Recommendation | Scope |
-| --- | --- | --- | --- |
-| H1 | High | Give each subsystem exactly one update per cycle | Robot loop and shooter |
-| H2 | High | Establish one timestamp-consistent odometry pipeline | Drive and shared state |
-| H3 | High | Define and verify heading/reset conventions | Gyro, driving, alliance handling |
-| H4 | High | Fix command ownership, mode gating, and termination behavior | Controls and autonomous |
-| H5 | High | Establish valid mechanism references and travel limits | Turret, hood, intake |
-| H6 | High | Make shooting use one solution and explicit readiness policy | Shooter and feeder |
-| H7 | High | Apply vision uncertainty and validate camera observations | Vision and estimator |
-| H8 | High | Make supported runtime modes complete and internally consistent | Real, sim, replay |
-| H9 | High | Separate reusable code from season/hardware assumptions | Configuration and migration |
-| H10 | High | Establish an enforceable Java standard and non-mutating CI checks | Build and style |
-| M1 | Medium | Rename team-owned APIs systematically | Whole maintained source tree |
-| M2 | Medium | Reduce global mutable state and hidden construction effects | Constants, state, utilities |
-| M3 | Medium | Make IO contracts explicit and failures observable | Hardware adapters |
-| M4 | Medium | Restore persistent logging and improve diagnostics | Logging and dashboards |
-| M5 | Medium | Integrate only supported autonomous assets | Autonomous tooling |
-| M6 | Medium | Simplify build, deployment, and IDE configuration | Developer workflow |
-| M7 | Medium | Remove unfinished and obsolete code from the reusable core | Legacy mechanisms and helpers |
-| M8 | Medium | Fix retained shared utility defects | Choosers, tuning, caching |
-| L1 | Low | Correct LED boundary and waveform behavior | LED utility |
-| L2 | Low | Make geometric utilities and direction names unambiguous | Zones and directions |
-| L3 | Low | Harden characterization commands before exposing them | Drive calibration helpers |
-| L4 | Low | Improve comments and optimize only measured bottlenecks | Documentation and loop efficiency |
+| ID | Priority | Recommendation | Scope | Basis |
+| --- | --- | --- | --- | --- |
+| H1 | High | Give each subsystem exactly one update per cycle | Robot loop and shooter | Confirmed defect |
+| H2 | High | Establish one timestamp-consistent odometry pipeline | Drive and shared state | Confirmed defect |
+| H3 | High | Define and verify heading/reset conventions | Gyro, driving, alliance handling | Confirmed behavior mismatch; team frame policy |
+| H4 | High | Fix command ownership, mode gating, and termination behavior | Controls and autonomous | Confirmed defect; team operating policy |
+| H5 | High | Establish valid mechanism references and travel limits | Turret, hood, intake | Confirmed limit behavior; hardening |
+| H6 | High | Make shooting use one solution and explicit readiness policy | Shooter and feeder | Confirmed inconsistencies; team shot/feed policy |
+| H7 | High | Apply vision uncertainty and validate camera observations | Vision and estimator | Confirmed defect; separate hardening |
+| H8 | High | Make supported runtime modes complete and internally consistent | Real, sim, replay | Confirmed defects; team coverage choice |
+| H9 | High | Separate reusable code from season/hardware assumptions | Configuration and migration | Team design choice; configuration reconciliation |
+| H10 | High | Establish an enforceable Java standard and non-mutating CI checks | Build and style | Team style/workflow choice |
+| M1 | Medium | Rename team-owned APIs systematically | Whole maintained source tree | Team naming choice |
+| M2 | Medium | Reduce global mutable state and hidden construction effects | Constants, state, utilities | Team design choice; hardening |
+| M3 | Medium | Make IO contracts explicit and failures observable | Hardware adapters | Hardening; team API choice |
+| M4 | Medium | Restore persistent logging and improve diagnostics | Logging and dashboards | Team recording/diagnostics choice |
+| M5 | Medium | Integrate only supported autonomous assets | Autonomous tooling | Inactive integration gaps; team scope choice |
+| M6 | Medium | Simplify build, deployment, and IDE configuration | Developer workflow | Team workflow choice |
+| M7 | Medium | Remove unfinished and obsolete code from the reusable core | Legacy mechanisms and helpers | Team scope/maintenance choice |
+| M8 | Medium | Fix retained shared utility defects | Choosers, tuning, caching | Confirmed defects or risks in retained helpers |
+| L1 | Low | Correct LED boundary and waveform behavior | LED utility | Confirmed defects |
+| L2 | Low | Make geometric utilities and direction names unambiguous | Zones and directions | Team API/geometry policy |
+| L3 | Low | Harden characterization commands before exposing them | Drive calibration helpers | Hardening of inactive helpers |
+| L4 | Low | Improve comments and optimize only measured bottlenecks | Documentation and loop efficiency | Team maintenance choice |
+
+## Work already present in the baseline
+
+The following changes are implemented in the reviewed source. This is a status record, not a claim that every H10/M6 acceptance step has passed.
+
+| Work | Baseline status | Remaining work |
+| --- | --- | --- |
+| Explicit formatting | `compileJava` no longer depends on `spotlessApply` | Keep the build free of source-rewriting verification steps |
+| Formatting scope | Java, Gradle, JSON, and Markdown targets are scoped; generated `BuildConstants.java` is excluded | Review any additional generated/imported-code exceptions separately |
+| Pinned formatter | Spotless `6.25.0`, google-java-format `1.21.0` | Change versions only with compatibility checks and a reviewed formatting diff |
+| CI | Java 17 setup, `spotlessCheck`, then `build` | Verify a hosted run and remaining checker/report integration |
+| Local hook | Versioned pre-commit hook checks staged whitespace and working-tree formatting | Each checkout must activate it; follow the [README](../README.md) and preserve existing hooks |
+| Naming enforcement | Checkstyle is absent | Adopt rules, install the checker, migrate names, and demonstrate failures/passes |
+| Deployment/editor workflow | `eventDeploy` and editor settings remain | Decide the event commit policy and complete M6 verification |
+
+The formatter downgrade records a team version choice; Java 17 alone does not require changing from google-java-format `1.22.0` to `1.21.0`. The `1.22.0` sources include a Java 17 build profile. [Formatter build configuration](https://github.com/google/google-java-format/blob/v1.22.0/core/pom.xml). The local hook does not format, stage, or validate robotics behavior. With partial staging, its working-tree check can differ from the committed snapshot that CI checks.
 
 ## How to run and record acceptance checks
 
-The procedures below describe verification to perform **after implementing the corresponding change**. They are not completed test results. All delivery tasks start as unassigned and not started. Use the recommendation IDs, such as H2 or M4, in changes and evidence records so the plan remains usable after Java names change.
+The procedures below describe verification to perform **after implementing the corresponding change**. They are not completed test results. Owners and reviewers remain unassigned; tooling packages have the partial implementation status recorded above. Use the recommendation IDs, such as H2 or M4, in changes and evidence records so the plan remains usable after Java names change.
 
 ### Environments and prerequisites
 
@@ -127,13 +154,13 @@ For temporary negative checks, save the starting diff and remove only the delibe
 
 ### H1. Give each subsystem exactly one update per cycle
 
-**What the code does:** [Shooter.java](src/main/java/frc/robot/subsystems/shooter/Shooter.java), `periodic()`, manually invokes the hood, turret, and flywheel periodic methods. Each child already extends `SubsystemBase`, directly or through `FullSubsystem`. The scheduler also invokes registered subsystem periodic methods, as described in the [WPILib scheduler documentation](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html).
+**What the code does:** [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java), `periodic()`, manually invokes the hood, turret, and flywheel periodic methods. Each child already extends `SubsystemBase`, directly or through `FullSubsystem`. The scheduler also invokes registered subsystem periodic methods, as described in the [WPILib scheduler documentation](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html).
 
 **Why this matters:** duplicate device reads and logging; simulated shooter models advance by 20 ms twice within a nominal 20 ms robot cycle. Timing-sensitive logic is harder to interpret.
 
 **Recommended action:** remove child periodic calls from the coordinating shooter class. Use a plain command coordinator if it only combines child commands. Retain a subsystem only when it has its own scheduler-managed responsibility. Record who owns each lifecycle callback. Continue manually updating `Module` objects because those are not registered subsystems.
 
-Choose a consistent output policy. Immediate IO writes or a deliberate post-scheduler output stage can both work; the important point is that commands, defaults, and periodic code have a documented order. Do not introduce a second update path when standardizing them. Use one loop-period source for the robot loop and simulation steps instead of scattered `0.02` literals.
+Document output timing for each mechanism. Immediate IO writes, applying a stored goal in `periodic()`, and a deliberate post-scheduler output stage can each work. Currently the flywheel writes immediately, hood angle requests wait for `periodic()`, and turret requests use the post-scheduler stage. Standardizing these is a design choice; removing duplicate registered-subsystem updates is the required repair. Do not introduce a second update path when changing the policy. Use one loop-period source for the robot loop and simulation steps instead of scattered `0.02` literals.
 
 #### Acceptance H1
 
@@ -150,7 +177,7 @@ Choose a consistent output policy. Immediate IO writes or a deliberate post-sche
 
 ### H2. Establish one timestamp-consistent odometry pipeline
 
-**What the code does:** [Robot.java](src/main/java/frc/robot/Robot.java) runs the container before the scheduler. [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java), `robotPeriodic()`, submits cached drive measurements with the current timestamp. [Drive.java](src/main/java/frc/robot/subsystems/drive/Drive.java) refreshes them later. Its high-frequency estimator update and wheel-based gyro fallback are commented out. [GyroIOPigeon2.java](src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) registers queues but leaves extraction and clearing commented out.
+**What the code does:** [Robot.java](../src/main/java/frc/robot/Robot.java) runs the container before the scheduler. [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), `robotPeriodic()`, submits cached drive measurements with the current timestamp. [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) refreshes them later. Its high-frequency estimator update and wheel-based gyro fallback are commented out. [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) registers queues but leaves extraction and clearing commented out.
 
 **Why this matters:** measurement age and timestamp differ by roughly a main-loop interval. Fast sampling adds complexity without supplying fast estimator updates. The missing heading fallback also prevents realistic simulated rotation.
 
@@ -205,11 +232,11 @@ Choose explicitly whether joystick driving follows an estimator heading or a gyr
 
 **Evidence:** the expected/observed table and reset timestamps, including at least the following sensor refresh. Document absent-alliance behavior explicitly.
 
-Sources: [GyroIOPigeon2.java](src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java), [DriveCommands.java](src/main/java/frc/robot/commands/DriveCommands.java), [AllianceFlipUtil.java](src/main/java/frc/robot/util/AllianceFlipUtil.java).
+Sources: [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java), [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), [AllianceFlipUtil.java](../src/main/java/frc/robot/util/AllianceFlipUtil.java).
 
 ### H4. Fix command ownership, mode gating, and termination behavior
 
-**What the code does:** hood D-pad `StartEndCommand`s in [DriverControls.java](src/main/java/frc/robot/control/DriverControls.java) omit a hood requirement, while the hood has an active default command. Intake roller and pivot commands all claim `Intake`. The active autonomous command claims neither drivetrain nor turret. Controller bindings and joystick defaults are not explicitly restricted to teleop. Some tracking commands rely on a later default to restore outputs.
+**What the code does:** hood D-pad `StartEndCommand`s in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java) omit a hood requirement, while the hood has an active default command. Intake roller and pivot commands all claim `Intake`. The active autonomous command claims neither drivetrain nor turret. Controller bindings and joystick defaults are not explicitly restricted to teleop. Some tracking commands rely on a later default to restore outputs.
 
 **Recommended action:** require the correct subsystem on every mechanism command. Audit simultaneous button presses, not just each button independently. If roller and pivot must operate independently, split their scheduler ownership or supply an intentional combined command; do not remove requirements to bypass conflicts.
 
@@ -235,6 +262,8 @@ Gate normal driving and operator actions to enabled teleop, or document narrowly
 
 **What the code does:** turret and hood relative encoders are set to zero at startup without establishing a physical reference. Turret Spark position wrapping is enabled while configured mechanical travel is limited to -90°…210°, and hardware soft limits are disabled. Turret open-loop code blocks both motion directions after the measured angle is outside the range. Hood open-loop control bypasses angle clamping. Intake deployment is open-loop, with no end-position input in its IO record.
 
+The source cannot establish whether the team already aligns the mechanisms physically before startup. Confirm that procedure with the operators before changing it. This section combines observable limit-handling behavior with proposed referencing and fault-response requirements; it does not prove the robot has been operated without a valid reference.
+
 **Why this matters:** software limits are meaningful only if the encoder's zero is meaningful. A wrapped target also does not identify which mechanically reachable turn should be used.
 
 **Recommended action:** define a startup referencing procedure for each retained mechanism: an absolute sensor, controlled homing with an appropriate sensor, or a documented physical alignment procedure. Track whether the mechanism is referenced and permit position-dependent behavior only when valid. Do not let a casually accessible “zero” button silently redefine travel limits at an arbitrary position.
@@ -255,11 +284,11 @@ For a limited-travel turret, represent physical position in an explicitly bounde
 
 **Evidence:** reference procedure, signed travel diagram, boundary input/output table, and physical position/current/output traces. Record what is software-verified versus physically verified.
 
-Sources: [Turret.java](src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [TurretIOSparkMax.java](src/main/java/frc/robot/subsystems/shooter/turret/TurretIOSparkMax.java), [HoodIOSparkMax.java](src/main/java/frc/robot/subsystems/shooter/hood/HoodIOSparkMax.java), [IntakeIO.java](src/main/java/frc/robot/subsystems/intake/IntakeIO.java).
+Sources: [Turret.java](../src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [TurretIOSparkMax.java](../src/main/java/frc/robot/subsystems/shooter/turret/TurretIOSparkMax.java), [HoodIOSparkMax.java](../src/main/java/frc/robot/subsystems/shooter/hood/HoodIOSparkMax.java), [IntakeIO.java](../src/main/java/frc/robot/subsystems/intake/IntakeIO.java).
 
 ### H6. Make shooting use one solution and explicit readiness policy
 
-**What the code does:** [TrajectoryCalculator.java](src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java) has a full solution plus separate helpers returning `0.6 * RPM` and `0.5 * hoodAngle`. Active turret tracking uses separate geometry, active hood tracking uses the half-angle helper, and active flywheel tracking uses the full calculator. `RobotState.setRobotVelocity()` has no active callers. The one-time autonomous wait checks cached flywheel readiness; manual feed has no readiness check.
+**What the code does:** [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java) has a full solution plus separate helpers returning `0.6 * RPM` and `0.5 * hoodAngle`. Active turret tracking uses separate geometry, active hood tracking uses the half-angle helper, and active flywheel tracking uses the full calculator. `RobotState.setRobotVelocity()` has no active callers. The one-time autonomous wait checks cached flywheel readiness; manual feed has no readiness check.
 
 Flywheel tolerance `25.0` is compared in rad/s, approximately 239 RPM. Turret/hood readiness updates occur in setters and use falling-edge debounce. Flywheel open-loop cancellation leaves its old goal RPM stored. A stationary flywheel can have an at-goal result for its initial zero target before a new shot request is processed.
 
@@ -286,17 +315,21 @@ Recompute readiness from current inputs, current command mode, connection/refere
 
 ### H7. Apply vision uncertainty and validate camera observations
 
-**What the code does:** [Vision.java](src/main/java/frc/robot/subsystems/vision/Vision.java) calculates measurement standard deviations, including an infinite MegaTag 2 heading standard deviation. [RobotState.java](src/main/java/frc/robot/RobotState.java) discards them by calling the estimator overload with only pose and timestamp. [CameraIOLimelight.java](src/main/java/frc/robot/subsystems/vision/CameraIOLimelight.java) checks only that raw arrays are nonempty before reading indices through 9. Numeric filters do not explicitly reject non-finite measurements.
+**What the code does:** [Vision.java](../src/main/java/frc/robot/subsystems/vision/Vision.java) calculates measurement standard deviations, including an infinite MegaTag 2 heading standard deviation. [RobotState.java](../src/main/java/frc/robot/RobotState.java) discards them by calling the estimator overload with only pose and timestamp. [CameraIOLimelight.java](../src/main/java/frc/robot/subsystems/vision/CameraIOLimelight.java) checks only that raw arrays are nonempty before reading indices through 9. Numeric filters do not explicitly reject non-finite measurements.
+
+**Scope:** dropping the calculated uncertainty is a confirmed integration defect. The parsing assumptions and use of both MegaTag streams also appear in the [AdvantageKit `v26.0.1` Limelight adapter](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/vision/src/main/java/frc/robot/subsystems/vision/VisionIOLimelight.java). Additional input guards are hardening; no malformed live camera packet or resulting crash was observed in this review. Split that work from the uncertainty repair so it can be reviewed and accepted independently.
 
 **Recommended action:** pass the uncertainty matrix into the estimator's corresponding overload; that API accepts per-measurement standard deviations. See the [WPILib pose-estimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html).
 
-Validate the expected base payload length and optional tag payload structure, finite pose coordinates, plausible tag count/distance, and usable timestamps before constructing observations. Reject stale, malformed, or impossible observations with logged reasons. Preserve deliberate infinite uncertainty where it expresses “do not trust this measurement component”; do not blanket-reject that configuration as invalid numeric input.
+For the hardening package, validate the expected base payload length and optional tag payload structure, finite pose coordinates, plausible tag count/distance, and usable timestamps before constructing observations. Reject stale, malformed, or impossible observations with logged reasons. Preserve deliberate infinite uncertainty where it expresses “do not trust this measurement component”; do not blanket-reject that configuration as invalid numeric input.
 
-Both MegaTag 1 and MegaTag 2 streams currently feed the estimator. They can represent correlated estimates from the same image, so explicitly select a strategy per frame or assess the weighting of both; do not assume they are independent evidence. Keep camera and field configuration consistent between geometry and vision.
+Both MegaTag 1 and MegaTag 2 streams currently feed the estimator. They may describe the same image and share information. Record whether to retain both with deliberate weighting or select a stream, then compare that policy using suitable logs. Processing both is not by itself a WPILib violation or a demonstrated localization failure. Keep camera and field configuration consistent between geometry and vision.
 
 #### Acceptance H7
 
-**Environment and prerequisites:** desktop diagnostic inputs; SIM or completed REPLAY for repeatable fusion; camera/ROBOT for live measurements. H2/H3 must provide trustworthy timing and frames before judging fusion. Define the accepted payload schema and stale/future timestamp thresholds for the retained camera protocol.
+**Environment and prerequisites:** desktop diagnostic inputs; SIM or completed REPLAY for repeatable fusion; camera/ROBOT for live measurements. H2/H3 must provide trustworthy timing and frames before judging live fusion. Define the accepted payload schema and stale/future timestamp thresholds for the retained camera protocol when implementing hardening.
+
+For the small uncertainty repair, use steps 3 and 4's matrix/heading checks with controlled estimator history; it need not wait for the full odometry refactor or parser work. Steps 1–2 cover the additional parser hardening. Step 4's stream-policy review is separate from passing through the matrix. Step 5 establishes live integration after the relevant timing/frame work. Record these results separately.
 
 1. Build a small input matrix: empty array; short nonempty array; valid base payload; truncated optional tag data; zero/invalid tag count; non-finite pose/distance; stale/future timestamp; out-of-field pose; valid single-tag and multi-tag observations. Inject at the camera parsing boundary, before pose construction, so the check covers parsing as well as filtering.
 2. For each case, record parser outcome, accepted/rejected reason, observation timestamp, and estimator-update count. Invalid cases must not call the estimator or throw an uncaught parsing exception. A malformed packet followed by a valid one must recover without requiring a process restart.
@@ -304,7 +337,7 @@ Both MegaTag 1 and MegaTag 2 streams currently feed the estimator. They can repr
 4. Exercise MegaTag 2 with the intentional untrusted-heading setting: a differing heading must not produce an independent heading correction, while usable translation can still contribute. Verify the matrix reaches the estimator and no `NaN` emerges from uncertainty calculations. Check the declared per-frame MegaTag 1/2 selection/correlation policy using observation IDs or timestamps.
 5. In live operation, record a stationary known pose, a short move, tag loss/covering, and reacquisition. Inspect rejection reasons, pose continuity, and connection status. Compare location error with the team's selected measurement limits.
 
-**Pass:** invalid inputs are rejected predictably; valid recovery succeeds; per-observation uncertainty affects fusion as intended; no duplicate/correlated fusion violates the selected strategy; live accuracy meets recorded criteria. A camera connection indicator alone does not establish pose quality.
+**Pass:** the uncertainty repair passes when the supplied matrix reaches the estimator, weighting changes the controlled result as expected, and the intentional untrusted-heading setting is preserved. The additional hardening passes when invalid inputs are rejected predictably, valid recovery succeeds, and stream handling matches the documented strategy. Live integration needs measured accuracy against recorded criteria. Pending hardening must not be reported as complete, but it does not invalidate independently demonstrated uncertainty repair. A camera connection indicator alone does not establish pose quality.
 
 **Evidence:** input matrix, controlled uncertainty comparison traces, accepted/rejected counters, and live log timestamps. Restore normal camera inputs after the controlled comparison.
 
@@ -331,7 +364,7 @@ For simulation, correct units and introduce explicit stopped/open-loop/closed-lo
 
 **Evidence:** mode/coverage matrix, startup output, mode-transition plots, and replay input/output filenames and timestamps. Restore the normal desktop selection after checking alternate modes.
 
-Sources: [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java), [FlywheelIOSim.java](src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java), [IntakeIOSim.java](src/main/java/frc/robot/subsystems/intake/IntakeIOSim.java), [IndexerIOSim.java](src/main/java/frc/robot/subsystems/indexer/IndexerIOSim.java).
+Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [FlywheelIOSim.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java), [IntakeIOSim.java](../src/main/java/frc/robot/subsystems/intake/IntakeIOSim.java), [IndexerIOSim.java](../src/main/java/frc/robot/subsystems/indexer/IndexerIOSim.java).
 
 ### H9. Separate reusable code from season and hardware assumptions
 
@@ -364,19 +397,21 @@ Move target selection out of the generic pose store into season-level behavior. 
 
 **Evidence:** reuse/configuration inventory, reviewed dependency-search results, clean desktop build/startup output, and a later season-compatibility record.
 
-Sources: [Constants.java](src/main/java/frc/robot/Constants.java), [DriveConstants.java](src/main/java/frc/robot/subsystems/drive/DriveConstants.java), [FieldConstants.java](src/main/java/frc/robot/util/FieldConstants.java), [PathPlanner settings](src/main/deploy/pathplanner/settings.json).
+Sources: [Constants.java](../src/main/java/frc/robot/Constants.java), [DriveConstants.java](../src/main/java/frc/robot/subsystems/drive/DriveConstants.java), [FieldConstants.java](../src/main/java/frc/robot/util/FieldConstants.java), [PathPlanner settings](../src/main/deploy/pathplanner/settings.json).
 
 ### H10. Establish an enforceable Java standard and non-mutating CI checks
 
-**What the code does:** the project mixes `kLoopPeriodSeconds`, `MIN_SHOOTING_DISTANCE`, mutable `kTuningMode`, and fields such as `FrontLeft`/`DrivetrainConstants`. [build.gradle](build.gradle) already uses Spotless with google-java-format, but `compileJava.dependsOn(spotlessApply)` silently reformats files during compilation. There is no Checkstyle or SpotBugs configuration.
+**What the code does now:** the project mixes `kLoopPeriodSeconds`, `MIN_SHOOTING_DISTANCE`, mutable `kTuningMode`, and fields such as `FrontLeft`/`DrivetrainConstants`. [build.gradle](../build.gradle) uses Spotless `6.25.0` with google-java-format `1.21.0`. Compilation no longer triggers `spotlessApply`; CI explicitly checks formatting before building. There is no Checkstyle or SpotBugs configuration.
 
-**Recommended action:** adopt the naming policy below for maintained team code, retain one formatter, and add a focused Checkstyle gate. Remove automatic formatting from the compile dependency chain. Formatting should be an explicit local operation; CI should report a failure on incorrectly formatted source. A build that repairs its own input can otherwise pass without establishing that committed code met the style standard.
+**Remaining action:** adopt the naming policy below for maintained team code, retain the existing explicit formatter workflow, and add a focused Checkstyle gate. H10 is a proposed team release policy, not a claim that `k` constants or uppercase `IO` violate WPILib guidance.
+
+The earlier compile-time formatting and recursive targets with exclusions follow the matching AdvantageKit template. Explicit apply/check tasks and narrower targets fit our chosen review workflow: formatting changes are visible before commit and CI checks the committed input. Both targeting strategies are legitimate; the old exclusions were not evidence of an architectural defect. See the [upstream comparison](ARCHITECTURE_REVIEW.md#recognize-the-upstream-starting-point).
 
 During migration, make existing naming violations visible and convert manageable groups. Before declaring the reusable foundation ready, require the documented team rules on all maintained team-owned code. Avoid a permanent “new lines only” exception that leaves two naming systems indefinitely.
 
 #### Acceptance H10
 
-**Environment and prerequisites:** desktop and CI only. First install the chosen checker/configuration and remove compile-time `spotlessApply`. Complete M1 renames or record a temporary explicit migration baseline; final foundation acceptance requires full enforcement on the documented maintained source set.
+**Environment and prerequisites:** desktop and CI only. Install the chosen checker/configuration; explicit formatting and the non-mutating compile dependency are already implemented. Complete M1 renames or record a temporary explicit migration baseline; final acceptance of the adopted team policy requires full enforcement on the documented maintained source set. This migration is not a prerequisite for correcting runtime defects.
 
 1. Record the pinned formatter/checker versions, Java runtime, checked source paths, and justified exclusions. Run `./gradlew spotlessCheck checkstyleMain` on a known compliant revision. It must exit successfully with no unexplained suppressions. Confirm ignored generated sources and valid IO payloads do not produce spurious findings.
 2. In a temporary team-owned Java file, introduce one violation at a time: formatter-visible spacing; `static final double kAcceptanceProbe = 1.0;`; then an ordinary field/type name that violates the team casing/acronym policy. Run the relevant task for each. Require nonzero exit and a diagnostic identifying the file and offending rule. Keep the file syntactically valid so compilation errors do not masquerade as successful style enforcement.
@@ -435,11 +470,13 @@ Keep the implementation small: constructor parameters and clear ownership are su
 
 **What the code does:** `setOpenLoop(double)` means volts for drive modules and duty cycle for mechanisms. Flywheel IO expects RPS while public mechanism methods accept RPM. Input payloads expose connection flags that are not consistently used in readiness decisions. `PhoenixUtil.tryUntilOk()` does not report failure after exhausting retries. Intake configuration calls are inconsistently checked. `SparkUtil` has a shared static fault flag used during reads.
 
+The local [Spark helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/spark_swerve/src/main/java/frc/robot/util/SparkUtil.java) and [Phoenix helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/talonfx_swerve/src/main/java/frc/robot/util/PhoenixUtil.java) match AdvantageKit `v26.0.1`. Hood and turret each reset the REV scratch flag at the start of `updateInputs()` and consume it before returning. Their sequential main-thread calls do not demonstrate cross-device fault leakage. Clearer status handling is a maintainability/diagnostics recommendation, not a correction to a known upstream defect.
+
 **Recommended action:** name interfaces by physical quantity: `setVoltage`, `setDutyCycle`, `setVelocityRpm`, or `setVelocityRadiansPerSecond`. Select one unit at each boundary and convert once. Use WPILib typed quantities at important boundaries where they improve clarity; explicit suffixes are sufficient for many scalar fields and logged payloads.
 
 Make configuration retries return success/failure or a status and raise a useful alert naming the device/bus when exhausted. Keep connection, configuration, and measurement-validity conditions distinct. Define each mechanism's response to stale/disconnected feedback; do not assume every motor should receive the same response. Keep failed readings from making “at goal” appear valid.
 
-Replace the global REV read-fault scratch state with per-device/per-refresh state if that helper is retained. Preserve simple no-op IO for replay, but distinguish deliberately absent hardware from a supposedly real adapter with empty methods.
+Either retain the documented reset/read/consume discipline or use per-device/per-refresh status if it makes the code easier to maintain. Revisit the shared flag before adding concurrent readers; the present helper does not establish thread-safe use. Preserve simple no-op IO for replay, but distinguish deliberately absent hardware from a supposedly real adapter with empty methods.
 
 #### Acceptance M3
 
@@ -447,16 +484,16 @@ Replace the global REV read-fault scratch state with per-device/per-refresh stat
 
 1. Prepare an IO contract table: method, unit/range, sensor frame, stop semantics, invalid-input behavior. Trace one known value from caller through real and simulated adapters; compare conversion results.
 2. Stub configuration calls to fail for all attempts, then fail briefly before succeeding. Count attempts and inspect returned status/alert. Exhaustion must identify the device/bus and must not look like success; recovery must follow the declared clearing policy.
-3. Inject disconnected/stale readings for one device while another remains healthy. Confirm validity/readiness changes only as intended and shared scratch state does not mislabel the healthy device.
+3. Inject disconnected/stale readings for one device while another remains healthy. Confirm validity/readiness changes only as intended. If the shared REV flag is retained, verify reset/read/consume ordering for each refresh and confirm one device's failed read does not mislabel the next healthy device. Replacing the helper is not required to pass this check.
 4. On real hardware, verify configured values/status reports and a constrained command/stop response. Do not intentionally damage configuration or disconnect energized wiring to create a fault.
 
 **Pass/evidence:** contract table agrees with all adapters; failure categories are distinguishable and bounded retries behave correctly. Save diagnostic results and hardware trace; mark physical confirmation pending when unavailable.
 
-Sources: [ModuleIO.java](src/main/java/frc/robot/subsystems/drive/ModuleIO.java), [FlywheelIO.java](src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIO.java), [PhoenixUtil.java](src/main/java/frc/robot/util/PhoenixUtil.java), [SparkUtil.java](src/main/java/frc/robot/util/SparkUtil.java).
+Sources: [ModuleIO.java](../src/main/java/frc/robot/subsystems/drive/ModuleIO.java), [FlywheelIO.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIO.java), [PhoenixUtil.java](../src/main/java/frc/robot/util/PhoenixUtil.java), [SparkUtil.java](../src/main/java/frc/robot/util/SparkUtil.java).
 
 ### M4. Restore persistent logging and improve diagnostics
 
-The real-mode `WPILOGWriter` in [Robot.java](src/main/java/frc/robot/Robot.java) is commented out; live NetworkTables publication alone does not create a persistent replay file. Make reliable recording central to our manual verification process. Verify file creation and retrieval rather than assuming a USB device is sufficient.
+The real-mode `WPILOGWriter` in [Robot.java](../src/main/java/frc/robot/Robot.java) is commented out; live NetworkTables publication alone does not create a persistent replay file. Make reliable recording central to our manual verification process. Verify file creation and retrieval rather than assuming a USB device is sufficient.
 
 Record requested target, applied/clamped target, actual value, control mode, readiness reason, and connection/reference validity for important mechanisms. Add command start/end/interruption diagnostics and loop timing so control conflicts and overruns can be diagnosed. Keep build metadata, which already identifies the code revision.
 
@@ -492,30 +529,30 @@ Rename assets through the editor or update all references together. Document abb
 
 **Pass/evidence:** validation rejects bad references, all exposed routines load and terminate as specified, and physical routes meet selected criteria. Preserve validator output and a per-auto result table; unsupported historical routes are explicitly excluded.
 
-Sources: [RobotContainer.java](src/main/java/frc/robot/RobotContainer.java), [PathPlanner assets](src/main/deploy/pathplanner), [build.gradle](build.gradle).
+Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [PathPlanner assets](../src/main/deploy/pathplanner), [build.gradle](../build.gradle).
 
 ### M6. Simplify build, deployment, and IDE configuration
 
-The deployment hook runs `git add -A` and makes a commit on any branch starting with `event`. Move this to an explicit opt-in task or documented team workflow so a deployment cannot unexpectedly stage unrelated work. Preserve build revision metadata independently.
+The deployment task runs `git add -A` and makes a commit on branches starting with `event` when a deploy task is requested. This follows the AdvantageKit template and can preserve the exact working changes used at an event. It can also include unrelated edits. Decide whether to retain it with an explicit event-branch workflow or move it to a separate opt-in task. In either case, make the staging behavior clear to the person deploying and preserve build revision metadata. This is a workflow tradeoff, not an FRC rule. See the [upstream comparison](ARCHITECTURE_REVIEW.md#recognize-the-upstream-starting-point).
 
-The CI container is tagged `2024-22.04` while GradleRIO is 2026.2.1. Confirm compatibility on a clean environment and move to a supported season toolchain during migration; the tag mismatch alone is not proof of a current failure. Pin analyzer versions, formatter versions, wrapper version, and relevant tool runtimes rather than taking floating latest releases.
+The CI container is tagged `2024-22.04` while GradleRIO is 2026.2.1; the workflow now explicitly installs Java 17. Confirm compatibility on a clean environment. WPILib's current example uses the 2025 image for 2026, so a year mismatch alone is not proof of failure; that guidance does not verify our 2024 image. Select a supported toolchain during migration. Pin analyzer versions, formatter versions, wrapper version, and relevant tool runtimes. [WPILib CI guidance](https://docs.wpilib.org/en/stable/docs/software/advanced-gradlerio/robot-code-ci.html).
 
 The editor configuration selects Spotless globally but overrides Java formatting with `redhat.java`; align the Java formatting path with the build. It also disables Gradle annotation processing import and requests a language-server maximum heap of `64G`. Confirm generated AdvantageKit symbols resolve in the intended WPILib editor setup, and replace that machine-sized heap override with a documented portable setting or remove it. Do not change the robot JVM heap based on this unrelated editor setting.
 
-Narrow Spotless's broad file patterns so generated output, simulator state, and externally maintained manifests/helpers are not rewritten unnecessarily. Keep optional checks out of a deployment path where their runtime cost would hinder field work, while requiring successful CI checks before accepting reusable-code changes.
+Spotless now uses scoped source/configuration/documentation targets, excluding build output and root simulator state. It intentionally includes `vendordeps/**/*.json` and team source, including copied helpers unless specifically excluded; do not describe all external files as exempt. Review further exclusions only where ownership warrants them. Recursive includes plus explicit exclusions are also valid; changing that strategy was a team choice. Keep optional checks out of a deployment path where their runtime cost would hinder field work, while requiring successful CI checks before accepting reusable-code changes.
 
 #### Acceptance M6
 
-**Environment/prerequisites:** a clean desktop checkout/CI and a scheduled ROBOT deployment check. H10 task wiring must be corrected first.
+**Environment/prerequisites:** a clean desktop checkout/CI and a scheduled ROBOT deployment check. The explicit formatter task wiring is already present; use H10's remaining checker configuration when verifying naming/editor integration.
 
 1. Follow setup instructions in a clean environment using documented JDK/tool versions. Import, generate code, format a sample, check, and build. Confirm generated symbols resolve without undocumented local fixes and editor formatting matches the build formatter.
-2. Record branch, commit, index, and working-tree status before/after a build. Inspect deployment task wiring for Git mutations. In an isolated checkout, exercise any retained explicit commit helper separately from deployment.
-3. During an authorized normal deployment, compare Git state before/after, including an `event`-prefixed review branch if that old conditional is relevant. Deployment must not stage or commit unrelated work. A dry-run alone is not proof that task actions cannot mutate Git.
-4. Inspect build/task timing and tool reports on the intended team laptop and CI. Confirm ignored simulator state and externally maintained files were not reformatted.
+2. Record branch, commit, index, and working-tree status before/after a build. Inspect deployment task wiring for Git mutations. In an isolated checkout, exercise the selected event commit policy: either a separate opt-in helper or the documented automatic behavior on an `event` branch. Include an unrelated temporary file to make the scope of `git add -A` visible, then discard the isolated diagnostic checkout through the team's normal process.
+3. During an authorized normal deployment, compare Git state before/after. For an explicit-helper policy, deployment must not stage or commit work. If automatic event commits are retained, confirm they happen only under the documented condition and include exactly the working changes reviewed before deployment. Record all-worktree staging as an accepted tradeoff; a dry-run alone does not verify task actions.
+4. Inspect build/task timing and tool reports on the intended team laptop and CI. Confirm root simulator state/build output is outside formatter targets and generated/imported-code exclusions match the documented policy. Vendor JSON remains intentionally included.
 
-**Pass/evidence:** reproducible setup/build, matching formatting, and no hidden Git changes. Keep environment versions, outputs, Git-state comparison, and measured task durations; deployment confirmation remains pending until exercised.
+**Pass/evidence:** reproducible setup/build, matching formatting, and Git behavior that matches the adopted policy. Keep environment versions, outputs, Git-state comparison, and measured task durations; deployment confirmation remains pending until exercised.
 
-Sources: [build.gradle](build.gradle), [CI workflow](.github/workflows/build.yml), [editor settings](.vscode/settings.json).
+Sources: [build.gradle](../build.gradle), [CI workflow](../.github/workflows/build.yml), [editor settings](../.vscode/settings.json).
 
 ### M7. Remove unfinished and obsolete code from the reusable core
 
@@ -557,7 +594,7 @@ These utilities are currently inactive or lightly connected, so they do not all 
 
 **Pass/evidence:** documented scenarios work without null errors, stale updates, duplicate callbacks, or unjustified thread-safety claims. Save diagnostic inputs/results and lifecycle/locking review; mark removed helpers not applicable with the disposition reason.
 
-Sources: [CachedSupplier.java](src/main/java/frc/robot/util/CachedSupplier.java), [LoggedDashboardChooser.java](src/main/java/frc/robot/util/LoggedDashboardChooser.java), [LoggedTunableNumber.java](src/main/java/frc/robot/util/LoggedTunableNumber.java), [FullSubsystem.java](src/main/java/frc/robot/util/FullSubsystem.java).
+Sources: [CachedSupplier.java](../src/main/java/frc/robot/util/CachedSupplier.java), [LoggedDashboardChooser.java](../src/main/java/frc/robot/util/LoggedDashboardChooser.java), [LoggedTunableNumber.java](../src/main/java/frc/robot/util/LoggedTunableNumber.java), [FullSubsystem.java](../src/main/java/frc/robot/util/FullSubsystem.java).
 
 ## Low-priority recommendations
 
@@ -577,7 +614,7 @@ Check every pixel on a 30-LED strip and the full waveform period. This is a good
 
 **Pass/evidence:** correct section boundaries, no invalid numeric waveform values, and expected mode patterns. Save buffer values or strip photos plus mode settings; simulator-only evidence does not prove strip wiring.
 
-Source: [Leds.java](src/main/java/frc/robot/subsystems/leds/Leds.java).
+Source: [Leds.java](../src/main/java/frc/robot/subsystems/leds/Leds.java).
 
 ### L2. Make geometric utilities and direction names unambiguous
 
@@ -595,7 +632,7 @@ Source: [Leds.java](src/main/java/frc/robot/subsystems/leds/Leds.java).
 
 **Pass/evidence:** no angle/vector naming contradiction, boundary cases are intentional, and predicate/trigger results agree. Keep the input/expected/observed table and corrected API documentation.
 
-Sources: [Direction.java](src/main/java/frc/robot/util/Direction.java), [Zone.java](src/main/java/frc/robot/util/Zone.java).
+Sources: [Direction.java](../src/main/java/frc/robot/util/Direction.java), [Zone.java](../src/main/java/frc/robot/util/Zone.java).
 
 ### L3. Harden characterization commands before exposing them
 
@@ -613,7 +650,7 @@ These commands are not actively bound, which makes this low priority today. Trea
 
 **Pass/evidence:** invalid data is rejected, known valid data recovers expected values, and cancellation neutralizes outputs. Retain the dataset/result and cancellation trace. Physical calibration still needs measured robot validation before accepting new gains/radius.
 
-Source: [DriveCommands.java](src/main/java/frc/robot/commands/DriveCommands.java).
+Source: [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java).
 
 ### L4. Improve comments and optimize only measured bottlenecks
 
@@ -735,7 +772,7 @@ Adopt the standard across all maintained team-owned code, with explicit boundari
 
 | Tool | Recommendation | Responsibility |
 | --- | --- | --- |
-| Spotless + google-java-format | Keep; correct task wiring and scope | Formatting, import cleanup, whitespace |
+| Spotless + google-java-format | Keep the explicit apply/check workflow and scoped targets already implemented | Formatting, import cleanup, whitespace |
 | Checkstyle through Gradle | Add as the naming/structure gate | Naming, imports, braces, basic source conventions |
 | SpotBugs through Gradle | Add later, selectively, if findings are useful | Bytecode patterns associated with bugs |
 | Compiler warnings | Review useful warnings and resolve team-code findings | Compile-time issues and migration warnings |
@@ -758,11 +795,13 @@ Use a checked-in `config/checkstyle/checkstyle.xml` and an explicit, narrow supp
 | Constants | `ConstantName` | Upper snake case with narrow documented mutable-service exceptions |
 | Methods and variables | `MethodName`, `ParameterName`, `LocalVariableName`, `RecordComponentName` | Lower camel case, including record components |
 | Acronyms | `AbbreviationAsWordInName` | Treat acronyms as words in team declarations; respect overrides and external boundaries |
-| Imports | `AvoidStarImport`, `UnusedImports` | Explicit imports; formatter owns ordering |
+| Imports | `AvoidStarImport`, `UnusedImports` | Explicit imports by default; decide whether to allow the WPILib units exception below; formatter owns ordering |
 | Simple structure | `NeedBraces`, `EmptyStatement`, `ModifierOrder` | Prevent avoidable ambiguity and stray statements |
 | Utility design | `HideUtilityClassConstructor` | Private constructor on static-only utility holders |
 
 Available checks are documented in the [Checkstyle check catalog](https://checkstyle.org/checks/). Configure an acronym rule deliberately: ordinary `TypeName` matching alone will still accept many all-capital acronym runs. See [AbbreviationAsWordInName](https://checkstyle.org/checks/naming/abbreviationaswordinname.html).
+
+WPILib specifically recommends `import static edu.wpi.first.units.Units.*;` for its units library. An explicit-import policy is a valid team preference, but a blanket wildcard ban should not be described as WPILib guidance. My recommendation is to permit this one static-import exception and enforce explicit imports elsewhere. Record the decision in Checkstyle and demonstrate both an allowed units import and a rejected unrelated wildcard in H10's negative/positive checks. [WPILib Java units](https://docs.wpilib.org/en/stable/docs/software/basic-programming/java-units.html).
 
 A lower-camel-case regex alone still accepts `kLoopPeriodSeconds`. For fields that must reject that prefix, a proposed pattern is `^(?!k[A-Z])[a-z][a-zA-Z0-9]*$`. Apply it only to the intended team-owned field categories, not library calls or mathematical notation everywhere. The ordinary constant-name rule catches `k`-prefixed `static final` numeric constants by requiring upper snake case.
 
@@ -778,13 +817,13 @@ At review time, Checkstyle documents Java 17+ for its 11.x/12.x releases and Jav
 
 ### Proposed task workflow
 
-First remove `compileJava.dependsOn(spotlessApply)`. Keep normal generation tasks needed for compilation. After Checkstyle has been added and versions/exclusions verified, the local workflow should be:
+The compile-time `spotlessApply` dependency has already been removed. Keep normal generation tasks needed for compilation. Today's workflow is explicit `spotlessApply` when needed, then `spotlessCheck` and `build`. **After Checkstyle is installed** and versions/exclusions are verified, add naming checks as follows:
 
 ```bash
 # Explicit formatting operation; review its diff.
 ./gradlew spotlessApply
 
-# Verify committed formatting and naming.
+# Verify formatting and naming in the current working tree.
 ./gradlew spotlessCheck checkstyleMain
 
 # Compile/package and run the configured verification lifecycle.
@@ -795,7 +834,7 @@ In CI, perform checks without `spotlessApply` and retain reports on failure. If 
 
 Roll out rules in two steps: inventory existing violations, then fix and enforce on the documented source set. Keep suppressions specific, justified, and reviewed. Make editor diagnostics use the same checked-in configuration; do not make an IDE extension the only source of enforcement.
 
-The initial implementation would modify `build.gradle`, `.github/workflows/build.yml`, and `.vscode/settings.json`, and add the Checkstyle configuration files. Assign those build changes through Phase 2; their implementation remains pending.
+Remaining tooling work adds Checkstyle configuration and integrates its reports/checks with Gradle, CI, and the editor as needed. Assign that work through Phase 2. Preserve the existing explicit formatting, scoped targets, Java 17 setup, and local hook rather than treating those changes as pending.
 
 ## Verification without a unit-test program
 
@@ -835,7 +874,7 @@ These can be small deterministic checks with no motors, HAL initialization, or v
 
 Use the following work packages to assign the preseason effort and review progress. Priority remains unchanged: some medium-priority work, such as IO diagnostics, happens early because it helps verify high-priority fixes. At kickoff, the student lead and mentor should set dates from team availability, robot access, and toolchain availability. Review blocked work at each programming meeting.
 
-**Initial status:** every implementation package below is **not started**, with owner and reviewer **unassigned**. The package owner supplies the implementation and results; the assigned reviewer records acceptance. A software package may be merged with hardware verification pending, but the affected capability must not be labelled robot-ready or enabled as an accepted feature until its required checks pass.
+**Status at the reviewed baseline:** P2.1 is partially implemented: explicit formatting, scoped targets, formatter pinning, and the CI/hook changes are present. Naming rules, checker installation, migration, and broader M6 decisions remain open. Other implementation packages have no recorded completion here; owner and reviewer are **unassigned**. The package owner supplies the implementation and results; the assigned reviewer records acceptance. A software package may be merged with hardware verification pending, but the affected capability must not be labelled robot-ready or enabled as an accepted feature until its required checks pass.
 
 ### Phase overview and dependencies
 
@@ -843,12 +882,14 @@ Use the following work packages to assign the preseason effort and review progre
 | --- | --- | --- | --- | --- |
 | 1. Baseline and scope | Reuse inventory, configuration provenance, evidence template, known baseline | None | Helpful for baseline; absence must be recorded | Mentor and student lead record scope and measurement needs |
 | 2. Coding-standard tooling | Explicit formatter, focused checker, scoped exclusions, CI reports | Phase 1 ownership boundaries | None | Positive/negative tooling checks work; existing naming debt inventoried |
-| 3. Naming migration | Consistent maintained Java APIs and regenerated IO references | Phase 2 rules and build workflow | Usually none; runtime smoke checks use desktop | Full style gate passes; no unexplained behavior/string/value changes |
-| 4. Runtime foundations | Single lifecycle, usable sim contracts, coherent pose/heading, command ownership, diagnostics | Phase 3; baseline measurements for physical comparisons | Drive hardware for physical pose/heading gate | Core software checks pass; physical checks separately signed off |
-| 5. Mechanisms and vision | Valid references/limits, coherent shooting/readiness, robust vision | Phase 4 relevant checks | Required for retained mechanisms/cameras/calibration | Per-feature physical acceptance meets preselected criteria |
-| 6. Reusable release | Season/config separation, supported modes/autos, retained utilities, reproducible release evidence | Relevant Phase 4/5 gates; supported season toolchain for 2027 release | Required for final hardware-supported release | All retained high-priority checks pass or feature is explicitly excluded |
+| 3. Runtime foundations | Single lifecycle, usable sim contracts, coherent pose/heading, command ownership, diagnostics | Phase 1 scope; current build workflow is sufficient to begin | Drive hardware for physical pose/heading gate | Core software checks pass; physical checks separately signed off |
+| 4. Naming migration | Consistent maintained Java APIs and regenerated IO references | Phase 2 rules; coordinate files with runtime work | Usually none; runtime smoke checks use desktop | Full style gate passes; no unexplained behavior/string/value changes |
+| 5. Mechanisms and vision | Valid references/limits, coherent shooting/readiness, robust vision | Phase 3 relevant checks | Required for retained mechanisms/cameras/calibration | Per-feature physical acceptance meets preselected criteria |
+| 6. Reusable release | Season/config separation, supported modes/autos, retained utilities, reproducible release evidence | Relevant Phase 3/5 gates; supported season toolchain for 2027 release | Required for final hardware-supported release | All retained high-priority checks pass or feature is explicitly excluded |
 
 Phases are review checkpoints, not a demand to leave people idle. While hardware verification is blocked, tooling, documentation, configuration review, parser diagnostics, and utility cleanup can proceed independently. Do not use that parallel progress to mark an unmet physical criterion passed.
+
+**Begin with small runtime repairs.** After recording the baseline, assign separate changes for H1 duplicate callbacks, H4 missing hood requirements, H7 uncertainty forwarding, and H8 flywheel simulation units/control modes. Use the applicable acceptance steps for each change; complete the wider mode, mechanism, and localization checks as their prerequisites become available. None of these repairs depends on renaming constants, changing `IO` casing, or installing Checkstyle. Tooling and naming can proceed alongside them with coordinated file ownership.
 
 ### Phase 1 — establish the baseline and reuse scope
 
@@ -858,7 +899,7 @@ Phases are review checkpoints, not a demand to leave people idle. While hardware
 | P1.2 | Define supported modes/mechanisms, current defects, verification environments, evidence locations, and required hardware access | H8; [coverage matrix](#acceptance-h8), [evidence protocol](#how-to-run-and-record-acceptance-checks) |
 | P1.3 | Record current configuration sources and collect available baseline telemetry; assign who will choose physical limits and reference procedures | H5/H6/M4; [reference criteria](#acceptance-h5), [shot criteria](#acceptance-h6), [logging procedure](#acceptance-m4) |
 
-Record known failures in the baseline so the team can demonstrate what improves after a fix. If persistent logging is unavailable, preserve a documented live capture/screenshot or mark the baseline capture pending; M4 implementation follows in Phase 4. Do not change gains while collecting the baseline solely to make it appear healthy.
+Record known failures in the baseline so the team can demonstrate what improves after a fix. If persistent logging is unavailable, preserve a documented live capture/screenshot or mark the baseline capture pending; M4 implementation follows in Phase 3. Do not change gains while collecting the baseline solely to make it appear healthy.
 
 **Exit:** a reviewer can identify what will be reused, what will be excluded, what is currently unverified, and which measurements require the robot. Owners of physical criteria are assigned even if values must await measurements. No source behavior changes are required to complete this phase.
 
@@ -866,50 +907,50 @@ Record known failures in the baseline so the team can demonstrate what improves 
 
 | Package | Deliverable and work | Recommendations / acceptance |
 | --- | --- | --- |
-| P2.1 | Select naming rules; define generated/vendor ownership; remove automatic formatting from compilation; pin compatible checker/runtime versions | H10/M6; [tooling checks](#acceptance-h10), [workflow checks](#acceptance-m6) |
+| P2.1 | Preserve completed formatting/CI work; select naming/import rules and generated/vendor boundaries; pin compatible checker/runtime versions | H10/M6; partial implementation recorded above; [tooling checks](#acceptance-h10), [workflow checks](#acceptance-m6) |
 | P2.2 | Add Checkstyle rules/reports and CI/editor integration; demonstrate valid and deliberately invalid examples; inventory existing violations | H10; [negative/positive probes](#acceptance-h10) |
 
-Keep tool installation and generated-code boundary changes separate from broad symbol renames. Existing naming violations are expected at this stage: make them visible with an explicitly temporary migration approach, then enforce the complete maintained source set at Phase 3. Passing tool-configuration probes is only partial H10 acceptance; a permanently warning-only checker is not the final deliverable.
+Keep tool installation and generated-code boundary changes separate from broad symbol renames. Existing naming violations are expected at this stage: make them visible with an explicitly temporary migration approach, then enforce the complete maintained source set at Phase 4. Passing tool-configuration probes is only partial H10 acceptance; a permanently warning-only checker is not the final deliverable.
 
-**Exit:** formatter/checker responsibilities are clear, deliberately invalid examples fail for the right reason, normal verification does not modify tracked code, exclusions are reviewed, and Phase 3 has a concrete list of remaining naming work. No robot session is needed.
+**Exit:** formatter/checker responsibilities are clear, deliberately invalid examples fail for the right reason, normal verification does not modify tracked code, exclusions are reviewed, and Phase 4 has a concrete list of remaining naming work. No robot session is needed.
 
-### Phase 3 — migrate names without changing behavior
-
-| Package | Deliverable and work | Recommendations / acceptance |
-| --- | --- | --- |
-| P3.1 | Rename constants/mutable configuration and ambiguous scalar fields while preserving values and units | M1; [rename checks](#acceptance-m1) |
-| P3.2 | Rename command factories/direct operations and coordinator/control classes; migrate IO types and regenerate generated references | M1; [symbol/IO checks](#acceptance-m1) |
-| P3.3 | Remove temporary naming migration exceptions, align documentation, and enable the full team style gate | H10/L4; [final tooling acceptance](#acceptance-h10), [comment review](#acceptance-l4) |
-
-Use a small series of changes grouped by subsystem or API family. Avoid concurrent edits to shared renamed APIs until downstream references are updated. Treat telemetry keys, camera names, serialized data, and named auto actions as separate contracts: preserve them in a Java-only rename. If a behavior defect is encountered, record it and fix it in the appropriate later package rather than hiding it inside the rename diff.
-
-**Exit:** clean build and full maintained-source style check; generated symbols resolve; no unexplained numeric, unit, sign, string-contract, requirement, or control-flow change. The baseline's known behavioral defects may remain; Phase 3 does not claim to fix them.
-
-### Phase 4 — repair runtime foundations and verification infrastructure
+### Phase 3 — repair runtime foundations and verification infrastructure
 
 | Package | Deliverable and work | Recommendations / acceptance |
 | --- | --- | --- |
-| P4.1 | Remove duplicate callbacks; define update/output ownership and shared loop timing | H1; [cycle-count procedure](#acceptance-h1) |
-| P4.2 | Correct simulation timing/units/control modes; add known input/output capture and declared gyro simulation/fallback support | H8/M3, initial subset; [sim contracts](#acceptance-h8), [IO conversion checks](#acceptance-m3) |
-| P4.3 | Implement one odometry/velocity path and deliberate heading/reset semantics; handle queue/lock lifecycle if retained | H2/H3; [sample pipeline](#acceptance-h2), [heading matrix](#acceptance-h3) |
-| P4.4 | Correct requirements, mode gating, interruption/stop behavior; expose device/configuration validity and command diagnostics | H4/M3; [control matrix](#acceptance-h4), [fault diagnostics](#acceptance-m3) |
-| P4.5 | Enable reliable persistent recording, metadata, and event/readiness diagnostics; retrieve a representative run | M4; [recording acceptance](#acceptance-m4) |
+| P3.1 | Remove duplicate callbacks; define update/output ownership and shared loop timing | H1; [cycle-count procedure](#acceptance-h1) |
+| P3.2 | Correct simulation timing/units/control modes; add known input/output capture and declared gyro simulation/fallback support | H8/M3, initial subset; [sim contracts](#acceptance-h8), [IO conversion checks](#acceptance-m3) |
+| P3.3 | Implement one odometry/velocity path and deliberate heading/reset semantics; handle queue/lock lifecycle if retained | H2/H3; [sample pipeline](#acceptance-h2), [heading matrix](#acceptance-h3) |
+| P3.4 | Correct requirements, mode gating, interruption/stop behavior; expose device/configuration validity and command diagnostics | H4/M3; [control matrix](#acceptance-h4), [fault diagnostics](#acceptance-m3) |
+| P3.5 | Enable reliable persistent recording, metadata, and event/readiness diagnostics; retrieve a representative run | M4; [recording acceptance](#acceptance-m4) |
 
-Start with P4.1, then P4.2's basic model/output contracts. Develop P4.3's heading and odometry changes together as needed: controlled samples establish ordering/frames before joint physical drive checks. A kinematic gyro fallback may require the H2 and H8 changes in the same reviewed package. Avoid circular acceptance by distinguishing these software prerequisites from the final integrated motion checks.
+Start with P3.1, then P3.2's basic model/output contracts. Develop P3.3's heading and odometry changes together as needed: controlled samples establish ordering/frames before joint physical drive checks. A kinematic gyro fallback may require the H2 and H8 changes in the same reviewed package. Avoid circular acceptance by distinguishing these software prerequisites from the final integrated motion checks.
 
-P4.4 can exercise mechanism ownership through output-capturing IO before physical mechanisms are cleared in Phase 5. Its physical mechanism rows remain pending until referencing/limits are verified; drivetrain checks use the team's existing controlled drive bring-up. P4.5 should be ready before Phase 5 calibration sessions so evidence is saved. Use early live captures for P4.1–P4.4 if persistent recording is still being completed.
+P3.4's small hood-requirement repair can start alongside P3.1; use the lifecycle fix before its integrated acceptance. The broader ownership work can use output-capturing IO before physical mechanisms are cleared in Phase 5. Its physical mechanism rows remain pending until referencing/limits are verified; drivetrain checks use the team's existing controlled drive bring-up. P3.5 should be ready before Phase 5 calibration sessions so evidence is saved. Use early live captures for P3.1–P3.4 if persistent recording is still being completed.
 
 **Exit:** H1 and the software parts of H2/H3/H4/H8/M3 pass on a named revision. Perform the physical drive/heading checks and record them separately; if unavailable, the core can be marked software-verified but not hardware-verified. No mechanism may inherit physical approval merely because its command scheduling passed with a stub.
+
+### Phase 4 — migrate names without changing behavior
+
+| Package | Deliverable and work | Recommendations / acceptance |
+| --- | --- | --- |
+| P4.1 | Rename constants/mutable configuration and ambiguous scalar fields while preserving values and units | M1; [rename checks](#acceptance-m1) |
+| P4.2 | Rename command factories/direct operations and coordinator/control classes; migrate IO types and regenerate generated references | M1; [symbol/IO checks](#acceptance-m1) |
+| P4.3 | Remove temporary naming migration exceptions, align documentation, and enable the full team style gate | H10/L4; [final tooling acceptance](#acceptance-h10), [comment review](#acceptance-l4) |
+
+Use a small series of changes grouped by subsystem or API family. Prioritize misleading action/unit names over cosmetic casing. Coordinate with runtime fixes before renaming their shared APIs. Treat telemetry keys, camera names, serialized data, and named auto actions as separate contracts: preserve them in a Java-only rename. If a behavior defect is encountered, fix it in a separate focused change; it does not have to wait for the naming migration to finish.
+
+**Exit:** clean build and full maintained-source style check; generated symbols resolve; no unexplained numeric, unit, sign, string-contract, requirement, or control-flow change. Naming acceptance does not establish runtime correctness; keep the separate runtime evidence.
 
 ### Phase 5 — validate retained mechanisms and vision
 
 | Package | Deliverable and work | Recommendations / acceptance |
 | --- | --- | --- |
 | P5.1 | Establish references, feasible targets, boundary/recovery behavior, and relevant fault response for each retained mechanism | H5 plus physical H4/M3 rows; [boundary/reference procedure](#acceptance-h5), [control transitions](#acceptance-h4) |
-| P5.2 | Validate camera parsing/filtering and uncertainty; establish live pose quality in the chosen field frame | H7; [camera matrix and fusion comparison](#acceptance-h7) |
+| P5.2 | First repair discarded uncertainty; separately add adopted camera hardening and establish live pose quality | H7; [separate repair/hardening acceptance](#acceptance-h7) |
 | P5.3 | Consolidate shot solution/readiness/feed policy; recalibrate stationary shooting, then separately validate any moving-shot support | H6; [solution and shot procedure](#acceptance-h6) |
 
-P5.1 depends on command ownership and trustworthy IO. P5.2's parser checks can start earlier on desktop, but fusion acceptance depends on the Phase 4 pose pipeline. P5.3 can use a controlled known pose while vision work proceeds; camera-driven shooting acceptance requires P5.2 to pass. Preserve the distinction between no-ball control checks and actual fuel-shot calibration.
+P5.1 depends on command ownership and trustworthy IO. P5.2's uncertainty-forwarding repair and controlled estimator comparison can start during the first runtime fixes; parser hardening can also proceed independently. Live fusion acceptance depends on the Phase 3 pose pipeline. P5.3 can use a controlled known pose while vision work proceeds; camera-driven shooting acceptance requires the relevant P5.2 checks to pass. Preserve the distinction between no-ball control checks and actual fuel-shot calibration.
 
 Schedule hardware sessions around explicit cases: referencing/limits first, control transitions second, then shot calibration. Set physical tolerances and success criteria before recording pass/fail. A blocked session should leave its cases pending and allow independent desktop work to continue. Do not choose new pass thresholds after seeing a failed result without documenting a reviewed requirement change and rerunning.
 
@@ -924,7 +965,7 @@ Schedule hardware sessions around explicit cases: referencing/limits first, cont
 | P6.3 | Repair or remove retained helpers; complete optional utility/LED/calibration/comment cleanup | M8/L1–L4; [helpers](#acceptance-m8), [LEDs](#acceptance-l1), [geometry](#acceptance-l2), [characterization](#acceptance-l3), [comments/performance](#acceptance-l4) |
 | P6.4 | Build with the supported season toolchain, confirm configuration provenance, and rerun affected acceptance on the release revision and actual robot | H9 and retained feature checks; [season acceptance](#acceptance-h9), [release checklist](#release-checklist) |
 
-P6.1 inventory work starts in Phase 1; extraction uses corrected components rather than moving unreviewed code wholesale. P6.2 replay depends on a compatible saved log from P4.5. Auto loading/reference checks are independent of physical route validation; routes need accepted drive, field, and mechanism behavior. P6.3 work can proceed during hardware waits, but optional cleanup must not delay resolution of retained high-priority failures. Promote calibration-helper verification before using that helper to derive production values.
+P6.1 inventory work starts in Phase 1; extraction uses corrected components rather than moving unreviewed code wholesale. P6.2 replay depends on a compatible saved log from P3.5. Auto loading/reference checks are independent of physical route validation; routes need accepted drive, field, and mechanism behavior. P6.3 work can proceed during hardware waits, but optional cleanup must not delay resolution of retained high-priority failures. Promote calibration-helper verification before using that helper to derive production values.
 
 Do not wait for 2027 hardware to organize the core, but do wait for the actual supported toolchain and measurements before calling it a validated 2027 robot release. Porting to a new template or changing library versions can invalidate earlier evidence; rerun relevant lifecycle, mode, IO, and integration checks on the final combination. Results from the 2026 robot support the port but do not certify new mechanisms.
 
@@ -964,7 +1005,7 @@ Maintain a known accepted revision **with its matching configuration and calibra
 
 ### Release checklist
 
-- [ ] Retained/excluded capabilities and modes are listed; all required high-priority procedures pass for retained features.
+- [ ] Retained/excluded capabilities and modes are listed; confirmed high-priority defects are resolved and the adopted hardening/team-policy checks pass for retained features.
 - [ ] The final revision builds and passes the team formatting/naming checks without modifying tracked source.
 - [ ] Supported modes initialize correctly; simulation coverage and any replay limitation are explicit.
 - [ ] Lifecycle, pose/heading, command transitions, and supported mechanism checks have evidence tied to compatible code/configuration.
