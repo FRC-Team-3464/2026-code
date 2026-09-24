@@ -5,7 +5,7 @@ The code has been extensively documented to be used as reference in training and
 
 To check formatting, run `./gradlew spotlessCheck`. Run `./gradlew spotlessApply` when you want to format files, then review and stage the resulting changes yourself. CI runs `spotlessCheck` and `build`.
 
-The optional `git-hooks/pre-commit` checks staged changes for whitespace errors without changing or staging files. To use it locally, first check whether you already have a custom hook path with `git config --local --get core.hooksPath`. If you do not, run `git config --local core.hooksPath git-hooks`. This Git setting affects only your local checkout.
+The `git-hooks/pre-commit` checks staged changes for whitespace errors and runs `spotlessCheck` before each commit. Spotless checks the working tree, including unstaged changes, so an unrelated unformatted file can also block a commit. The hook does not change or stage files. To enable it locally, first check whether you already have a custom hook path with `git config --local --get core.hooksPath`. If you do not, run `git config --local core.hooksPath git-hooks`. This Git setting affects only your local checkout; CI checks formatting for everyone even if they do not enable the hook.
 
 ## Structure
 
