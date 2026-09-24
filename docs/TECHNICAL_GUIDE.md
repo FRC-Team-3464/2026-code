@@ -76,11 +76,20 @@ The robot's main computer, the **roboRIO**, runs this Java program. Motor contro
 
 ### Open-loop and closed-loop control
 
-**Open-loop control** requests an output without correcting for measured speed or position. For example, `IntakeIOTalonFX.setWheelSpeed(0.8)` asks for 80% motor output. It does not guarantee 80% of a particular physical speed: loading and battery voltage affect the result.
+Consider two motors already in this robot. Holding the operator's left bumper while the left trigger is released runs the intake rollers. A shooter command instead asks the flywheel to reach a particular rotational speed. Both use motors, but they answer different questions: **“How much output should I request?”** and **“How fast should the wheel actually turn?”**
 
-**Closed-loop control** continually compares a measured value with a desired value, called the **setpoint**, and adjusts output to reduce the difference. This project uses position control for steering, turret, and hood, and velocity control for the drivetrain and flywheel.
+**Open-loop control** answers the first question. `Intake.intake()` passes `IntakeConstants.kRollerMotorSpeed`, currently `0.8`, to `IntakeIOTalonFX.setWheelSpeed()`. That sends a `0.8` duty-cycle request to the Talon FX. The controller does not compare the roller's measured speed with a target speed. A battery voltage drop or fuel pressing against the roller can slow it even while the request remains `0.8`.
 
-A simplified control equation is:
+**Closed-loop control** answers the second question. Suppose a shooter command calls `Flywheel.setVelocity(2400)` to request 2,400 revolutions per minute (RPM). That method converts the request to 40 revolutions per second (RPS) for `FlywheelIOTalonFX`. The Talon FX uses motor-speed feedback to adjust its output toward the requested speed. Meanwhile, `Flywheel.periodic()` reads the measured speed and logs it. The requested value is a **setpoint**; the measured value tells us what the motor achieved. Feedback can correct for a changing load while sufficient power is available, but it cannot guarantee that the motor reaches its target.
+
+```text
+Intake:   button → request 0.8 output → roller turns; measured speed is not used to correct it
+Flywheel: target speed → controller → motor → speed sensor → controller adjusts output
+```
+
+This project also uses closed-loop position control for module steering, turret, and hood, and closed-loop velocity control for drive wheels. “Closed-loop” describes the use of feedback; it does not mean every mechanism uses the same sensor, gains, or control code.
+
+A simplified equation for a controller that uses PID and feedforward is:
 
 ```text
 error = target - measurement
@@ -88,13 +97,15 @@ output = kP * error + kI * accumulated_error + kD * rate_of_error_change
          + feedforward
 ```
 
-`kP` corrects present error, `kI` corrects persistent error, and `kD` responds to how quickly error changes. **Feedforward** predicts the output needed for a requested motion. Constants such as `kS`, `kV`, and `kA` commonly represent friction, speed, and acceleration contributions.
+Here, `error` means **requested value minus measured value**. `kP` responds to the current difference, `kI` can respond to an error that persists, and `kD` responds to how the difference changes. **Feedforward** estimates output needed for the requested motion before feedback corrects the remaining error. `ShooterConstants.FlywheelConstants.kGains` supplies the real flywheel controller with `kP`, `kI`, `kD`, `kS`, `kV`, and `kA` values. Those constants configure this particular controller; the equation is a teaching model, not a claim that every motor uses all six terms. Incorrect gains or insufficient available output can still prevent the flywheel from reaching its setpoint.
 
-The real Talon FX and Spark MAX implementations generally send targets and gains to the motor controllers. The simulation implementations instead use Java controllers and simulated motor models.
+The real Talon FX and Spark MAX implementations generally send targets and gains to the motor controllers. The simulation implementations instead use Java controllers and simulated motor models. The current flywheel simulator has a unit mismatch, described in [Section 13](#flywheel-simulation-mismatch), so its apparent response should not be used to judge real flywheel tuning.
 
 ### Coordinates and units
 
 The robot coordinate convention is **+X forward, +Y left, +Z up**, with positive planar rotation counterclockwise when viewed from above. A field-relative command uses axes fixed to the field; a robot-relative command uses axes that turn with the robot. See the [WPILib coordinate-system explanation](https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html).
+
+For this robot's normal joystick drive, `DefaultControls` passes the driver's left-stick values to `DriveCommands.joystickDrive()`. On blue alliance, a forward stick request points toward field +X. If the raw gyro reports that the robot has turned +90° from field +X, the same field-forward request becomes robot-right (negative robot Y) before `Drive.runVelocity()` receives it. The transformation keeps the requested field direction fixed while the robot turns. Red-alliance driver perspective adds an additional transform; the example assumes blue alliance and a correctly referenced gyro.
 
 | Type or unit | Meaning in this repository |
 | --- | --- |
@@ -208,8 +219,8 @@ The scheduler runs registered subsystem `periodic()` methods, polls triggers, ex
 
 Two project-specific details are easy to miss:
 
-- `RobotContainer.robotPeriodic()` runs **before** `Drive.periodic()` refreshes inputs. The estimator therefore consumes the previous refresh's wheel and gyro values, but supplies a current timestamp. The nominal age difference is roughly one main-loop period.
-- `Shooter.periodic()` manually calls `periodic()` on the hood, turret, and flywheel. Those children also inherit from registered subsystem classes, so the scheduler calls them too. They are updated twice per scheduler cycle. In their simulators, each update advances the model by 20 ms, which makes the timing inconsistency significant.
+- `RobotContainer.robotPeriodic()` runs **before** `Drive.periodic()` refreshes inputs. For example, at the start of a loop it submits the module positions saved by the previous loop, but attaches the current time. Only afterward does `Drive.periodic()` read the newer positions. The nominal age difference is roughly one main-loop period.
+- `Shooter.periodic()` manually calls `periodic()` on the hood, turret, and flywheel. Those children also inherit from registered subsystem classes, so the scheduler calls them too. In a nominal 20 ms robot cycle, their simulated models each receive two 20 ms updates: 40 ms of simulated motion for one robot cycle. This is why counting actual update calls matters when checking simulation results.
 
 `FullSubsystem` adds an output stage after command execution. Only the turret currently extends it. The flywheel writes its velocity request to IO inside its setter. The hood's angle setter stores a target, and `Hood.periodic()` sends that target to IO; a target chosen during command execution therefore takes effect on the next periodic update. Hood open-loop requests call IO immediately. Keep these different timings in mind when reading a command trace.
 
@@ -250,6 +261,8 @@ For example, `indexer.index()` **creates and returns** a command. It does not im
 
 The shooter is a coordinating subsystem with three child subsystems. Its active tracking composition separately requires turret, hood, and flywheel, allowing an independent indexer command to run alongside them.
 
+Follow the operator's right bumper as an example. `DriverControls` schedules a command that tracks the turret, hood, and flywheel. Each tracking command declares the child subsystem it controls. If the operator also holds the right trigger, `indexer.index()` can run because it declares the separate `Indexer` requirement. Releasing the bumper ends tracking; releasing the trigger ends feeding. The hood D-pad commands are an exception to this ownership pattern: they request manual hood output without declaring a hood requirement, so the scheduler cannot keep the hood's default command from competing with them. A requirement is therefore a practical rule for **who gets to control a mechanism**, not just a label on a command.
+
 ### IO separates behavior from devices
 
 Most mechanisms have this structure:
@@ -263,6 +276,8 @@ MechanismConstants.java Configuration values
 ```
 
 For example, `Flywheel` knows it needs a velocity measurement and a way to set velocity. `FlywheelIOTalonFX` knows how to communicate with a Talon FX. `RobotContainer` chooses the implementation and passes it into the subsystem constructor. This is **dependency injection**: the behavior receives its hardware dependency instead of creating it internally.
+
+On the real robot, `RobotContainer` constructs `FlywheelIOTalonFX`; in desktop `SIM` mode, it constructs `FlywheelIOSim`. `Flywheel.periodic()` uses the same `FlywheelIO` methods in both cases: read the current inputs, log them, and evaluate readiness. The implementation behind the interface decides where measurements come from and how an output request is applied. Swapping IO implementations does not make the simulation physically accurate; its modeled behavior still needs checking.
 
 The usual input pattern is:
 
@@ -335,6 +350,8 @@ Sources: [Constants.java](../src/main/java/frc/robot/Constants.java), [DriveCons
 
 Each wheel assembly has one motor to roll the wheel and another to turn its direction. The robot can drive forward, move sideways, rotate, or combine translation and rotation.
 
+For a simple example, `Drive.runVelocity(new ChassisSpeeds(1.0, 0.0, 0.0))` requests motion forward at 1 m/s in robot coordinates with no rotation. Before module optimization, the ideal target for all four wheels is forward at 1 m/s. A request of `(0.0, 0.0, 1.0)` instead asks the robot to rotate; each wheel then needs a different direction based on its position around the robot center. `Drive` asks WPILib's `SwerveDriveKinematics` to calculate those targets and may reverse a wheel's rolling direction to reduce the amount its steering motor must turn.
+
 For a module located at `(x_i, y_i)` relative to the robot center, the basic velocity relationship is:
 
 ```text
@@ -401,6 +418,8 @@ Sources: [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.
 
 **Odometry** estimates movement from wheel travel and heading. It is useful over short intervals, but wheel slip and calibration errors accumulate. Cameras can recognize **AprilTags**, known visual markers on the field, to provide location measurements that help correct that estimate.
 
+In this program, `Drive` supplies four wheel-position readings and a gyro angle; `RobotContainer.robotPeriodic()` submits them to `RobotState`. Imagine the wheels report forward travel while the gyro reports a turn: the pose estimator combines both to update where the robot is facing and where it has moved. A Limelight can separately report a field pose from visible AprilTags. `RobotState` combines the camera observation with wheel/gyro history; the camera is another measurement, not a replacement for the wheel sensors.
+
 `RobotState` owns a single `SwerveDrivePoseEstimator` and makes its result available throughout the program.
 
 ```mermaid
@@ -437,6 +456,8 @@ angular_standard_deviation = 0.06 rad * factor
 ```
 
 It also applies camera factors and MegaTag 2 factors. The MegaTag 2 angular factor is infinity, expressing the intent to avoid treating its heading as an independent rotation measurement.
+
+For example, with the same camera and one visible tag, doubling the reported average tag distance multiplies the calculated standard deviation by four. The intended result is to trust a distant observation less. A measurement with more visible tags receives a smaller calculated standard deviation under this formula. These are properties of the calculated values, not proof of real camera accuracy.
 
 **Current implementation gap:** the `VisionMeasurement` record carries these standard deviations, but `RobotState.addVisionMeasurement()` calls the estimator overload with only pose and timestamp. The calculated per-observation uncertainty is discarded. Consequently, the intended confidence weighting, including suppressing MegaTag 2 heading influence, is not applied through this path.
 
@@ -504,6 +525,8 @@ Sources: [Intake.java](../src/main/java/frc/robot/subsystems/intake/Intake.java)
 The turret controls horizontal direction. The hood controls a mechanism angle that changes the shot. The flywheel controls launch energy through rotational speed.
 
 `Shooter.readyToShoot()` combines all three `atGoal()` values. However, the active manual feed control does not use it, and autonomous checks only `flywheelAtGoal()`.
+
+The operator controls make that distinction concrete: holding the right bumper asks the shooter to aim and spin, while holding the right trigger runs the indexer that feeds fuel. The trigger does not consult `Shooter.readyToShoot()`. The robot may therefore feed while the flywheel is still speeding up or while the turret or hood is still moving. A readiness flag reports what its code checks; it is not a physical guarantee that a shot will score.
 
 ### Distance lookup table
 
@@ -632,6 +655,8 @@ There is no explicit drive trajectory, turret tracking command, intake command, 
 
 The readiness wait is a **one-time gate**. Once indexing begins, a subsequent RPM drop does not return the sequence to its waiting step. The condition is the flywheel's cached readiness field, so it should not be interpreted as a fresh combined turret/hood/flywheel alignment check.
 
+For example, if the flywheel becomes ready and fuel starts feeding, a later fuel impact might slow the wheel. The running indexer command continues because the earlier `waitUntil` step has already finished. This follows directly from the command sequence; it does not depend on PathPlanner files, which are not connected to the active autonomous command.
+
 ### What the stored files represent
 
 PathPlanner `.path` files contain geometry and motion constraints. `.auto` files compose paths, waits, and named robot actions. `settings.json` contains the robot model and editor defaults; `navgrid.json` contains a pathfinding grid.
@@ -671,6 +696,8 @@ Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), 
 | LEDs | No instance constructed in `SIM` | No active LED simulation wiring |
 
 There is no implemented end-to-end fuel trajectory, ball transport, scoring, or contact/obstacle simulation. Desktop simulation can expose control flow and some mechanism behavior, but it cannot currently demonstrate an accurate full match.
+
+For example, in `SIM` the operator's right trigger can schedule `indexer.index()`, but `IndexerIOSim` does not model fuel moving through the robot. The flywheel and hood have simulated motors, subject to the timing and unit problems described here. A simulated button press can help explain the command path; it cannot by itself show that fuel reached the hub.
 
 ### Flywheel simulation mismatch
 
