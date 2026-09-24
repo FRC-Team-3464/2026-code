@@ -1,8 +1,17 @@
 #!/bin/sh
 
-# Inspect the staged snapshot only. Formatting is an explicit developer action,
-# and CI runs Spotless against the committed files.
+# Check the staged snapshot for whitespace errors.
 if ! git diff --cached --check; then
     echo "Staged changes contain whitespace errors. Fix and restage them." >&2
+    exit 1
+fi
+
+# Spotless checks files in the working tree and never edits them. Run from the
+# repository root so the hook works when a commit starts in a subdirectory.
+repo_root=$(git rev-parse --show-toplevel) || exit 1
+cd "$repo_root" || exit 1
+
+if ! ./gradlew spotlessCheck; then
+    echo "Formatting check failed. Run ./gradlew spotlessApply, review the changes, and restage them." >&2
     exit 1
 fi
