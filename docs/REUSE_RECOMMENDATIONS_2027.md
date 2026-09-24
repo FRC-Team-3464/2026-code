@@ -17,10 +17,12 @@ The separate [Architecture Review](ARCHITECTURE_REVIEW.md) explains which parts 
 ## Contents
 
 - [Expectations for the programming team](#expectations-for-the-programming-team)
+- [Start here: a student's route through one change](#start-here-a-students-route-through-one-change)
 - [Scope and priority definitions](#scope-and-priority-definitions)
 - [Priority overview](#priority-overview)
 - [Work already present in the baseline](#work-already-present-in-the-baseline)
 - [How to run and record acceptance checks](#how-to-run-and-record-acceptance-checks)
+- [Decisions that code cannot supply](#decisions-that-code-cannot-supply)
 - [High-priority recommendations](#high-priority-recommendations)
 - [Medium-priority recommendations](#medium-priority-recommendations)
 - [Low-priority recommendations](#low-priority-recommendations)
@@ -37,9 +39,62 @@ The following working agreement is recommended for this effort. Assign the roles
 - **The student lead assigns manageable work and coordinates shared changes.** Every package has one accountable owner and a reviewer. Students should be able to explain their implementation and demonstrate the acceptance procedure.
 - **Technical alternatives are welcome when supported by evidence.** Bring the affected code, the reason for the alternative, and a way to compare results. The designated reviewer resolves routine implementation choices; the mentor resolves unresolved architecture, scope, and release decisions. Unanimous agreement is not a prerequisite for moving forward.
 - **The checked-in coding standard applies to everyone.** Decide the rules during setup, then use the same formatter and checker on every contribution. Exceptions need a specific reason and reviewer approval.
-- **Completion requires a repeatable result.** A successful build establishes that the code compiles. Behavior changes also need the applicable acceptance checks and saved results. The mentor responsible for robot bring-up reviews physical limits and hardware acceptance.
+- **Completion requires a repeatable result.** A successful build establishes that the code compiles. Behavior changes also need the applicable acceptance checks and saved results. The team may review and commit a software package while the robot is unavailable; record its desktop result and its outstanding physical checks separately. When the robot is ready for a first powered check, the assigned mentor and student owner confirm the relevant starting position, safe range of motion, output limits, and test procedure. They review the recorded results against the acceptance criteria before marking that physical check complete. Desktop-only changes need a robot check only when their acceptance procedure calls for one.
 
 Review the priority overview together, then assign individual work packages. Each student can work from the relevant recommendation and acceptance section without reading the entire document at once. Use code reviews to explain units, ownership, and timing so that more students can maintain the robot independently.
+
+## Start here: a student's route through one change
+
+This document is a work queue and acceptance guide, not a set of edits to apply all at once. A student implementing one package needs its row in the [delivery plan](#delivery-plan), its linked H/M/L recommendation, and the relevant part of the [Technical Guide](TECHNICAL_GUIDE.md). Read the Technical Guide's [control-loop explanation](TECHNICAL_GUIDE.md#4-startup-and-the-repeating-control-loop) and [command/IO explanation](TECHNICAL_GUIDE.md#5-commands-subsystems-and-hardware-interfaces) before editing runtime code; use its [glossary](TECHNICAL_GUIDE.md#18-glossary) for unfamiliar robotics terms. `Robot` runs the loop; `RobotContainer` constructs subsystems and bindings; each subsystem applies behavior through an IO interface; the REAL or SIM adapter reads sensors and sends device requests.
+
+For a concrete trace, the operator's left bumper, while the left trigger is released, schedules `intake.intake()` in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java). The command belongs to [Intake.java](../src/main/java/frc/robot/subsystems/intake/Intake.java), which sends a duty-cycle request through [IntakeIO.java](../src/main/java/frc/robot/subsystems/intake/IntakeIO.java). [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java) currently chooses [IntakeIOTalonFX.java](../src/main/java/frc/robot/subsystems/intake/IntakeIOTalonFX.java) on the robot or [IntakeIOSim.java](../src/main/java/frc/robot/subsystems/intake/IntakeIOSim.java) on a desktop. The simulated adapter is currently a no-op, so seeing the command schedule in SIM does not demonstrate that fuel moved. This trace shows the difference between **command scheduling**, **a requested output**, and **a measured physical result**.
+
+| If your package concerns... | Read these files first | Observe this boundary |
+| --- | --- | --- |
+| Loop ownership (H1) | [Robot.java](../src/main/java/frc/robot/Robot.java), [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) | Scheduler callback versus a manual `periodic()` call |
+| Pose/heading (H2/H3) | [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [RobotState.java](../src/main/java/frc/robot/RobotState.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) | Measurement timestamp/frame versus estimator update |
+| Bindings (H4) | [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java) | Trigger, command requirement, and cancellation output |
+| Mechanisms/shooting (H5/H6) | [Turret.java](../src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [Hood.java](../src/main/java/frc/robot/subsystems/shooter/hood/Hood.java), [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java) | Physical reference, requested target, and measured readiness |
+| Cameras (H7) | [CameraIOLimelight.java](../src/main/java/frc/robot/subsystems/vision/CameraIOLimelight.java), [Vision.java](../src/main/java/frc/robot/subsystems/vision/Vision.java), [RobotState.java](../src/main/java/frc/robot/RobotState.java) | Raw camera packet, accepted observation, estimator correction |
+| Runtime wiring (H8/P3.2) | [Constants.java](../src/main/java/frc/robot/Constants.java), [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [FlywheelIO.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIO.java) | Mode selection, chosen adapter, common IO contract |
+| Style/build (H10/M6) | [build.gradle](../build.gradle), [CI workflow](../.github/workflows/build.yml), [README.md](../README.md) | Local check versus CI check; generated versus maintained files |
+
+Start with these paths, then use `rg` to follow every caller of the method you intend to change. A file's name does not prove that it is constructed or active; for example, an unused adapter can compile without ever running.
+
+Use this sequence for each assigned package:
+
+1. **Read and define the change.** Find the package ID in the delivery plan, open its linked recommendation and acceptance procedure, and write down the exact current behavior, intended behavior, affected files, and items deliberately left for another package. The file links and searches below are starting points; follow actual callers before editing.
+2. **Capture the baseline.** From the repository root, run `git status --short --branch` and `./gradlew spotlessCheck build`. Record the revision, JDK, result, and any existing failure. `build` compiles and packages this project but its `test` task currently has no test sources; a green build does not prove robot behavior. Start SIM only if the package needs it, and record what is actually modeled.
+3. **Make one narrow edit.** Preserve units, camera names, CAN IDs, telemetry keys, command requirements, and constructor order unless the assigned package specifically changes them. Use `rg` to find callers. Do not rename symbols in a behavior-repair commit. `spotlessApply` changes files; run it deliberately and inspect its diff before staging.
+4. **Run the package's checks.** Run `./gradlew spotlessCheck build` again, then the SIM/diagnostic steps in that package's acceptance section. Record the input, expected result, observed result, and where to find the output. If a procedure needs a new counter, mock IO, or asset validator, that helper is proposed work: implement it in the package or record why the check remains blocked. Do not mark a check passed because an instruction exists in this document.
+5. **Review and commit.** Remove temporary probes unless they are intentionally retained, rerun affected checks on the final diff, and have the assigned reviewer inspect both code and evidence. Commit the one package or stated substep with its ID in the message. Hardware checks require the mentor-approved bring-up procedure; until then, record `Awaiting hardware` for physical acceptance while keeping the code review result separate.
+
+Example commands for a clean student checkout (on Windows use `gradlew.bat`):
+
+```bash
+git status --short --branch
+./gradlew --version
+./gradlew spotlessCheck build
+rg -n 'periodic\(|addVisionMeasurement\(' src/main/java/frc/robot
+git diff --check
+git diff --stat
+```
+
+Use the WPILib 2026 Java 17 toolchain for this checkout; confirm the Java version reported by Gradle before diagnosing a compile failure. The [README](../README.md) explains the optional local hook. CI checks formatting and build even when a student has not enabled that hook. `./gradlew simulateJava` starts the desktop program; the simulation GUI is disabled by default in [build.gradle](../build.gradle), so use the team's WPILib simulation launch configuration when a procedure needs Driver Station inputs. Stop a running desktop simulation normally before changing runtime mode or launching another instance. [WPILib simulation GUI instructions](https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/simulation-gui.html).
+
+Two first changes illustrate the required scope:
+
+- **P3.1 / H1:** [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) currently overrides `periodic()` only to call `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()`. Remove that override, leaving the child `SubsystemBase` objects to receive their own scheduler callbacks. Keep `Shooter` itself a `SubsystemBase` in this commit: existing command factories use it as a requirement. Then run H1's per-cycle counters; compilation alone cannot show that each callback ran once.
+- **P5.2 / H7's small uncertainty repair:** [RobotState.java](../src/main/java/frc/robot/RobotState.java) currently calls `poseEstimator.addVisionMeasurement(measurement.visionPose(), measurement.timestamp())`. The existing `VisionMeasurement` record also has `stdDevs()`. The focused change is to call the three-argument overload, passing `measurement.stdDevs()` as the third argument. [WPILib's 2026 estimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html) defines that overload. Use H7's controlled low/high-uncertainty comparison to verify effect; parser hardening and camera calibration remain separate work.
+
+For the H7 example, the proposed call in `RobotState.addVisionMeasurement()` is:
+
+```java
+poseEstimator.addVisionMeasurement(
+    measurement.visionPose(), measurement.timestamp(), measurement.stdDevs());
+```
+
+These are examples of *scope*, not claims that the fixes or their acceptance checks have already been completed. After the first change, update the Technical Guide's description of the old behavior as part of the same package review. A software-only result can be accepted for a software-only package; a feature that depends on physical referencing, camera geometry, or measured shot performance cannot be declared robot-ready from desktop evidence.
 
 ## Scope and priority definitions
 
@@ -119,11 +174,23 @@ The procedures below describe verification to perform **after implementing the c
 | REPLAY | Recorded measurements processed by the updated robot logic | Repeatable behavior against known input; requires completed replay wiring |
 | ROBOT | Controlled execution on the physical machine | Wiring, sensor frames, referencing, actual response, and calibration |
 
+**While the robot is being modified:** treat ROBOT checks as unavailable, not failed or waived. Finish source review, build/style checks, controlled-input diagnostics, and the SIM checks that the current models support. Record each result against the exact revision and mark any required physical row `Awaiting hardware`; a package can pass its software review with that row still open. An IO stub can prove a requested output or state transition, but cannot prove motor direction, mechanism travel, sensor mounting, wiring, or shot performance. If a separate test bench becomes available, record its device/configuration and the specific behavior it verifies; it does not automatically satisfy a check that needs the assembled robot.
+
+Before resuming ROBOT checks, the mechanical/electrical leads identify the current hardware revision, wiring, sensor orientation, reference procedure, and safe limits. The software owner then reconciles the REAL configuration with those facts and reruns affected desktop checks. Use the mentor-approved, disabled-startup and one-mechanism-at-a-time procedures for physical verification. Recheck any affected package after later hardware or configuration changes; earlier simulation evidence remains useful for software behavior but does not certify the changed machine.
+
 Run Gradle commands from the repository root; on Windows use `gradlew.bat` instead of `./gradlew`. `./gradlew simulateJava` starts the desktop application, but the current build disables the simulation GUI by default. Enable the needed GUI/Driver Station extensions through the team's launch configuration when implementing these checks. Select the intended desktop mode before launching. `checkstyleMain` is a **future** task until H10 installs it; do not treat “task not found” as a successful style check.
 
 Existing telemetry includes `RobotState/EstimatedPose`, `Drive/Gyro`, `SwerveChassisSpeeds/Measured`, and mechanism inputs. Open the relevant live NetworkTables data or saved log in the team's viewer, such as AdvantageScope. Signals prefixed with `Acceptance/`, cycle counters, rejection reasons, solution IDs, and command-owner diagnostics below are **proposed instrumentation**, not promises that those dashboard entries already exist. Add them temporarily or as useful permanent diagnostics during implementation. Record where each signal appears.
 
 For invalid sensor values, short camera arrays, or configuration failures, prefer a desktop diagnostic input or an IO stub that supplies controlled values. A small diagnostic runner is sufficient; these procedures do not require a JUnit suite. Do not unplug energized CAN devices or force a mechanism past a stop to reproduce a software condition. Physical runs follow the team's normal mechanism bring-up procedure; exercise one mechanism at a time before combined actions.
+
+When an acceptance step asks for data that the current SIM cannot produce, build the smallest diagnostic seam for that package:
+
+1. **Mechanism or gyro input:** implement the existing `*IO` interface in a temporary diagnostic adapter. Have `updateInputs()` supply a known value and have output methods record requests. Pass it to the existing subsystem constructor in a desktop-only diagnostic path. For H4's no-op intake/indexer, capture requested output; an unchanged simulated sensor does not show whether a command stopped. Never select this adapter in the REAL construction path.
+2. **Camera parsing:** feed controlled raw arrays to the same parser used by `CameraIOLimelight`; a fake `CameraIO` that starts after parsing cannot test malformed-array handling. If the parser is inseparable from NetworkTables, extracting a small parsing function is part of H7's *hardening* package, not the small uncertainty-forwarding repair. Test empty, short, malformed, then valid input to show recovery.
+3. **Timing or scheduler ownership:** add a temporary cycle/sample counter or requested-output log at the relevant update points. Compare snapshots from the **same completed cycle**; two writes to one log key may hide a duplicate call. Keep a diagnostic helper only if the team will maintain it, otherwise remove it and rerun a short final-version smoke check.
+
+Write the diagnostic's setup, exact injected values, and observed outputs into the acceptance record. A diagnostic that supplies ideal sensor data can verify a software branch; it cannot establish sensor mounting, CAN connectivity, mechanism travel, or calibration on the actual robot.
 
 ### Pass criteria and evidence
 
@@ -149,6 +216,22 @@ Temporary instrumentation removed or intentionally retained:
 Use `BLOCKED` when required robot access, a prerequisite, or a numeric criterion is missing. `NOT APPLICABLE` requires a documented decision to exclude the feature from the supported foundation; it cannot stand in for an untested supported feature. Save failing observations as well as successful reruns. A reviewer should be able to repeat the check from the record without asking which button, goal, or coordinate convention was used.
 
 For temporary negative checks, save the starting diff and remove only the deliberate probe afterward. Keep unrelated work intact. Capture before/after Git status for tooling checks; perform checks requiring an empty working tree in a dedicated clean checkout. Restore the normal desktop mode and approved runtime configuration when finishing diagnostics.
+
+### Decisions that code cannot supply
+
+Students can implement and verify many software steps from this guide. They cannot infer the robot's safe travel, wiring, calibrated shooting range, or the team's desired operator policy from source alone. Record these decisions **before** the associated physical check or behavior change. The student owner prepares the options and evidence; the named reviewer/mentor decides the operating contract. If a required decision is missing, leave that acceptance row `BLOCKED` or `Awaiting hardware` and continue independent software work.
+
+| Work | Decision to record | Who must supply or approve it |
+| --- | --- | --- |
+| H2/H3 pose and heading | Field origin, gyro mounting offset, reset meaning, driver perspective, and acceptable measured error | Drive/controls lead with mentor review after a marked-field check |
+| H4 command transitions | Which actions may run in disabled, autonomous, teleop, and test; whether a cancelled goal holds or stops; what autonomous owns | Driver/operator lead and software mentor; operators confirm controls |
+| H5 mechanism limits | Physical zero/reference, travel signs and bounds, inward recovery, current/output limits, and stopping margin | Mechanical/electrical mentor with mechanism lead, using the actual robot |
+| H6 shooting | Calibrated distance range, settling/readiness thresholds, feed override, and shot-repeatability criterion | Shooter lead and mentor after controlled calibration |
+| H7 vision | Camera mounting/field layout, acceptable timestamp window and pose error, and MegaTag stream policy | Vision/drive lead with mentor review and measured camera evidence |
+| H8/P3.2 runtime modes | Which SIM devices are modeled or no-op, and whether REPLAY is supported or clearly unavailable | Software lead and mentor; do not claim a no-op is a physics model |
+| H9/H10 migration | 2027 hardware identity/toolchain and the team-owned naming/checker policy | Mentor and student lead before hardware release or full naming migration |
+
+Use the acceptance sections' concrete inputs as diagnostics, not as universal safe limits. For example, H6's 2400 RPM calculation is a unit-conversion check, **not** authorization to spin an unverified 2027 flywheel at that speed. No document can substitute for the team's controlled physical bring-up and measured criteria.
 
 ## High-priority recommendations
 
@@ -347,20 +430,31 @@ For the small uncertainty repair, use steps 3 and 4's matrix/heading checks with
 
 **Recommended action:** use explicit construction for every advertised mode. For replay, construct real subsystem logic with appropriate no-op IO and let recorded inputs populate it. If replay is deferred, fail clearly at startup or remove it as a selectable supported mode. Do not advertise a partially initialized mode as operational.
 
+Make REAL/SIM selection easier to read through a small wiring boundary rather than changing the existing subsystem/IO pattern. `RobotContainer` should select wiring, construct the same subsystems, and configure the same bindings; mode-specific wiring should create concrete IO adapters on request. Preserve construction order, including the point when `Drive` starts the Phoenix odometry thread. Keep the REAL-only LED singleton and absent SIM vision explicit until those capabilities have their own reviewed support. The [Phase 3 wiring package](#p32-separate-real-and-simulation-wiring-in-small-commits) gives the commit sequence and checks.
+
 For simulation, correct units and introduce explicit stopped/open-loop/closed-loop state where necessary. Ensure stop cannot be overwritten by a stale closed-loop target, and verify disabled behavior. Implement only the simulation fidelity needed for the team's workflow: a simple model or clearly named no-op is preferable to a misleading physical model. Complete gyro behavior through a chassis model or documented kinematic fallback. Reconcile mechanism reductions against the real hardware.
+
+**P3.3 flywheel correction:** keep the existing `Flywheel.setVelocity(velocityRPM)` conversion to RPS and the `FlywheelIO` RPS contract. Change the simulator's PID feedback to RPS before calling `calculate`, for example:
+
+```java
+double measuredRps = sim.getAngularVelocityRPM() / 60.0;
+double requestedVolts = pid.calculate(measuredRps);
+```
+
+The current `pid.calculate(sim.getAngularVelocityRPM())` compares RPM feedback with an RPS setpoint. This example fixes only that numeric mismatch; it is not a complete `FlywheelIOSim` replacement. In the same P3.3 package, track stopped, open-loop, and velocity modes explicitly so `updateInputs()` does not overwrite an open-loop request or reapply an old PID target after `stop()`. Confirm what shaft the simulated speed and real Talon FX feedback represent before using their values to choose gearing or gains. Do not alter the REAL adapter or the subsystem's public RPM API merely to make this simulator pass.
 
 #### Acceptance H8
 
 **Environment and prerequisites:** desktop for SIM/REPLAY, ROBOT for real-device initialization. Split this work: simulation units/output modes are prerequisites for mechanism simulation acceptance; complete replay can follow M4's saved logging. H1 establishes model timing. Record which mechanisms/modes are supported, modeled, intentionally no-op, or excluded.
 
 1. Launch each supported desktop mode from a fresh process and inspect startup logs and constructors. Confirm every required subsystem has an implementation, bindings configure without null dereferences, and SIM/REPLAY do not instantiate real motor adapters. A deliberately unsupported mode must produce the declared clear startup rejection, not fail later in binding code.
-2. In SIM, record requested control mode, target units, applied voltage, model speed, and accumulated model time. Exercise velocity control, open-loop output, stop, then velocity control again. For the flywheel, inspect the RPM-to-RPS conversion and the controller's feedback units. Verify model gearing and limits come from documented simulation configuration.
+2. In SIM, record requested control mode, target units, applied voltage, model speed, and accumulated model time. Exercise velocity control, open-loop output, stop, then velocity control again. For a diagnostic 2400 RPM flywheel request, confirm `Flywheel` passes 40 RPS to IO and `FlywheelIOSim` gives its PID measured RPS (`getAngularVelocityRPM() / 60.0`), not raw RPM. Log the model speed in rad/s and convert it back to RPM to check the input field; do not require the model to reach 2400 RPM until shaft meaning and gearing are reconciled. Verify model gearing and limits come from documented simulation configuration.
 3. Keep a previous nonzero PID target, issue stop, and advance several cycles. Applied output must obey stopped mode; a physically coasting model may retain speed, but the controller must not reapply the stale target. Disable/re-enable and repeat. Run H1's timing check and H2's simulated rotation check on this corrected model.
 4. Exercise intake/indexer commands. If modeled, inspect changing state; if intentionally no-op, verify output capture and visible unsupported status. Do not accept “the program starts” as evidence of functioning ball/mechanism physics.
 5. If REPLAY is retained, use a saved compatible run containing known command/sensor transitions. Reproduce logged inputs and compare derived outputs for identified timestamps. An intentional code fix can legitimately change derived outputs; explain the expected difference instead of demanding equality with a buggy baseline. Confirm no hardware construction and that replay output does not overwrite the input log.
 6. On the robot, check real-mode adapter selection and configuration/connection reports. Run only the mechanism checks already cleared for hardware execution; desktop construction checks cannot verify wiring.
 
-**Pass:** every declared supported mode initializes and honors the same IO contracts. Stop/disabled policy persists across cycles, simulation units/time are consistent, and unsupported coverage is explicit. REPLAY may be accepted as intentionally excluded, but an advertised incomplete mode fails.
+**Pass:** every declared supported mode initializes and honors the same IO contracts. The flywheel PID compares RPS with RPS; open-loop output and stop are not replaced by a stale velocity request on subsequent cycles. Stop/disabled policy persists across cycles, simulation units/time are consistent, and unsupported coverage is explicit. REPLAY may be accepted as intentionally excluded, but an advertised incomplete mode fails.
 
 **Evidence:** mode/coverage matrix, startup output, mode-transition plots, and replay input/output filenames and timestamps. Restore the normal desktop selection after checking alternate modes.
 
@@ -473,6 +567,17 @@ Keep the implementation small: constructor parameters and clear ownership are su
 The local [Spark helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/spark_swerve/src/main/java/frc/robot/util/SparkUtil.java) and [Phoenix helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/talonfx_swerve/src/main/java/frc/robot/util/PhoenixUtil.java) match AdvantageKit `v26.0.1`. Hood and turret each reset the REV scratch flag at the start of `updateInputs()` and consume it before returning. Their sequential main-thread calls do not demonstrate cross-device fault leakage. Clearer status handling is a maintainability/diagnostics recommendation, not a correction to a known upstream defect.
 
 **Recommended action:** name interfaces by physical quantity: `setVoltage`, `setDutyCycle`, `setVelocityRpm`, or `setVelocityRadiansPerSecond`. Select one unit at each boundary and convert once. Use WPILib typed quantities at important boundaries where they improve clarity; explicit suffixes are sufficient for many scalar fields and logged payloads.
+
+Use the active flywheel as the first contract example before changing its simulator. This table describes **current code**, including its defect; it is not a proposed setpoint for the robot:
+
+| Call or value | Current unit/meaning | Check in source |
+| --- | --- | --- |
+| `Flywheel.setVelocity(velocityRPM)` | Caller labels the request as flywheel RPM | Divides by 60 before calling IO |
+| `FlywheelIO.setVelocity(velocity)` | Documented rotations per second at the IO boundary | Real Talon FX receives this numeric value; `FlywheelIOSim` stores it as a PID setpoint. The physical wheel-versus-motor gearing needs verification. |
+| `FlywheelIOInputs.velocityRadPerSec` | Measured radians per second | Both adapters publish this field; `Flywheel` converts it to RPM for display/readiness |
+| `FlywheelIO.setOpenLoop(output)` | Duty-cycle fraction in the mechanism API | Real adapter uses `motor.set(output)`; SIM multiplies by 12 V but currently overwrites it on the next update |
+
+A student can trace a hypothetical 2400 RPM request as the number 40 at the RPS-labelled IO boundary; 40 RPS would be about 251.33 rad/s in the logged measurement unit **if both refer to the same shaft**. The real gearing/feedback interpretation has not been established by that arithmetic. The simulator currently compares the 40 RPS setpoint with an RPM reading, so its response is **not** valid evidence for real tuning. Record the desired contract and compare both adapters before implementing P3.3; repeat the exercise for drive open-loop voltage and any mechanism whose method name does not reveal its unit.
 
 Make configuration retries return success/failure or a status and raise a useful alert naming the device/bus when exhausted. Keep connection, configuration, and measurement-validity conditions distinct. Define each mechanism's response to stale/disconnected feedback; do not assume every motor should receive the same response. Keep failed readings from making “at goal” appear valid.
 
@@ -882,24 +987,26 @@ Use the following work packages to assign the preseason effort and review progre
 | --- | --- | --- | --- | --- |
 | 1. Baseline and scope | Reuse inventory, configuration provenance, evidence template, known baseline | None | Helpful for baseline; absence must be recorded | Mentor and student lead record scope and measurement needs |
 | 2. Coding-standard tooling | Explicit formatter, focused checker, scoped exclusions, CI reports | Phase 1 ownership boundaries | None | Positive/negative tooling checks work; existing naming debt inventoried |
-| 3. Runtime foundations | Single lifecycle, usable sim contracts, coherent pose/heading, command ownership, diagnostics | Phase 1 scope; current build workflow is sufficient to begin | Drive hardware for physical pose/heading gate | Core software checks pass; physical checks separately signed off |
+| 3. Runtime foundations | Single lifecycle, clear REAL/SIM wiring, usable sim contracts, coherent pose/heading, command ownership, diagnostics | Phase 1 scope; current build workflow is sufficient to begin | Disabled startup checks for wiring; drive hardware for physical pose/heading gate | Core software checks pass; physical checks separately signed off |
 | 4. Naming migration | Consistent maintained Java APIs and regenerated IO references | Phase 2 rules; coordinate files with runtime work | Usually none; runtime smoke checks use desktop | Full style gate passes; no unexplained behavior/string/value changes |
 | 5. Mechanisms and vision | Valid references/limits, coherent shooting/readiness, robust vision | Phase 3 relevant checks | Required for retained mechanisms/cameras/calibration | Per-feature physical acceptance meets preselected criteria |
 | 6. Reusable release | Season/config separation, supported modes/autos, retained utilities, reproducible release evidence | Relevant Phase 3/5 gates; supported season toolchain for 2027 release | Required for final hardware-supported release | All retained high-priority checks pass or feature is explicitly excluded |
 
-Phases are review checkpoints, not a demand to leave people idle. While hardware verification is blocked, tooling, documentation, configuration review, parser diagnostics, and utility cleanup can proceed independently. Do not use that parallel progress to mark an unmet physical criterion passed.
+Phases are review checkpoints, not a demand to leave people idle. With the robot unavailable, complete and review the desktop portions of Phases 1–4, P5.2's uncertainty/parser work, and the software portions of other packages whose prerequisites are met. Phase 5's physical reference, vision, and shooting checks and Phase 6's robot release gate stay open. Record `Awaiting hardware` on those specific checks; do not hold up unrelated commits or mark an unmet physical criterion passed. Confirm the hardware configuration and repeat affected checks when the robot returns.
 
-**Begin with small runtime repairs.** After recording the baseline, assign separate changes for H1 duplicate callbacks, H4 missing hood requirements, H7 uncertainty forwarding, and H8 flywheel simulation units/control modes. Use the applicable acceptance steps for each change; complete the wider mode, mechanism, and localization checks as their prerequisites become available. None of these repairs depends on renaming constants, changing `IO` casing, or installing Checkstyle. Tooling and naming can proceed alongside them with coordinated file ownership.
+**Begin with small runtime repairs.** After recording the baseline, assign separate changes for H1 duplicate callbacks, H4 missing hood requirements, H7 uncertainty forwarding, and H8 flywheel simulation units/control modes. Place the short REAL/SIM wiring sequence after the baseline and H1, before changing simulation models; this gives newer programmers one clear construction path to follow. Use the applicable acceptance steps for each change; complete the wider mode, mechanism, and localization checks as their prerequisites become available. None of these repairs depends on renaming constants, changing `IO` casing, or installing Checkstyle. Tooling and naming can proceed alongside them with coordinated file ownership.
 
 ### Phase 1 — establish the baseline and reuse scope
 
 | Package | Deliverable and work | Recommendations / acceptance |
 | --- | --- | --- |
 | P1.1 | Record the baseline revision and working changes; preserve the 2026 application; inventory reusable, robot-specific, season-specific, and excluded code | H9; [inventory/provenance steps](#acceptance-h9) |
-| P1.2 | Define supported modes/mechanisms, current defects, verification environments, evidence locations, and required hardware access | H8; [coverage matrix](#acceptance-h8), [evidence protocol](#how-to-run-and-record-acceptance-checks) |
+| P1.2 | Define supported modes/mechanisms, current defects, verification environments, evidence locations, and required hardware access; record the current REAL/SIM constructor map and order | H8; [coverage matrix](#acceptance-h8), [evidence protocol](#how-to-run-and-record-acceptance-checks) |
 | P1.3 | Record current configuration sources and collect available baseline telemetry; assign who will choose physical limits and reference procedures | H5/H6/M4; [reference criteria](#acceptance-h5), [shot criteria](#acceptance-h6), [logging procedure](#acceptance-m4) |
 
 Record known failures in the baseline so the team can demonstrate what improves after a fix. If persistent logging is unavailable, preserve a documented live capture/screenshot or mark the baseline capture pending; M4 implementation follows in Phase 3. Do not change gains while collecting the baseline solely to make it appear healthy.
+
+For the wiring baseline, record the module order (front left, front right, back left, back right), camera names/order, real-only LEDs and vision, command bindings, and autonomous entry point. REAL currently constructs `GyroIOPigeon2`, four `ModuleIOTalonFX` adapters, `IndexerIOTalonFX`, `IntakeIOTalonFX`, `TurretIOSparkMax`, `HoodIOSparkMax`, `FlywheelIOTalonFX`, `Leds`, and Limelights `limelight-front` and `limelight-one`. SIM constructs an empty `GyroIO`, four `ModuleIOSim` adapters, `IndexerIOSim`, `IntakeIOSim`, `TurretIOSim`, `HoodIOSim`, and `FlywheelIOSim`; it constructs no vision or LEDs. REPLAY has logger setup but no container construction case. Confirm this inventory against the revision being changed, and record existing startup/build failures separately.
 
 **Exit:** a reviewer can identify what will be reused, what will be excluded, what is currently unverified, and which measurements require the robot. Owners of physical criteria are assigned even if values must await measurements. No source behavior changes are required to complete this phase.
 
@@ -919,16 +1026,48 @@ Keep tool installation and generated-code boundary changes separate from broad s
 | Package | Deliverable and work | Recommendations / acceptance |
 | --- | --- | --- |
 | P3.1 | Remove duplicate callbacks; define update/output ownership and shared loop timing | H1; [cycle-count procedure](#acceptance-h1) |
-| P3.2 | Correct simulation timing/units/control modes; add known input/output capture and declared gyro simulation/fallback support | H8/M3, initial subset; [sim contracts](#acceptance-h8), [IO conversion checks](#acceptance-m3) |
-| P3.3 | Implement one odometry/velocity path and deliberate heading/reset semantics; handle queue/lock lifecycle if retained | H2/H3; [sample pipeline](#acceptance-h2), [heading matrix](#acceptance-h3) |
-| P3.4 | Correct requirements, mode gating, interruption/stop behavior; expose device/configuration validity and command diagnostics | H4/M3; [control matrix](#acceptance-h4), [fault diagnostics](#acceptance-m3) |
-| P3.5 | Enable reliable persistent recording, metadata, and event/readiness diagnostics; retrieve a representative run | M4; [recording acceptance](#acceptance-m4) |
+| P3.2 | Separate REAL/SIM IO selection in individually buildable commits; declare REPLAY policy; keep subsystem construction order | H8/M2; [mode matrix](#acceptance-h8), [ownership](#acceptance-m2), [commit steps](#p32-separate-real-and-simulation-wiring-in-small-commits) |
+| P3.3 | Document IO units/modes; correct simulation timing/units/control modes; add known input/output capture and declared gyro simulation/fallback support | H8/M3, initial subset; [sim contracts](#acceptance-h8), [IO conversion checks](#acceptance-m3), [SIM-to-REAL guardrails](#guardrails-for-carrying-sim-behavior-to-the-robot) |
+| P3.4 | Implement one odometry/velocity path and deliberate heading/reset semantics; handle queue/lock lifecycle if retained | H2/H3; [sample pipeline](#acceptance-h2), [heading matrix](#acceptance-h3) |
+| P3.5 | Correct requirements, mode gating, interruption/stop behavior; expose device/configuration validity and command diagnostics | H4/M3; [control matrix](#acceptance-h4), [fault diagnostics](#acceptance-m3) |
+| P3.6 | Enable reliable persistent recording, metadata, and event/readiness diagnostics; retrieve a representative run | M4; [recording acceptance](#acceptance-m4) |
 
-Start with P3.1, then P3.2's basic model/output contracts. Develop P3.3's heading and odometry changes together as needed: controlled samples establish ordering/frames before joint physical drive checks. A kinematic gyro fallback may require the H2 and H8 changes in the same reviewed package. Avoid circular acceptance by distinguishing these software prerequisites from the final integrated motion checks.
+Start with P3.1, then P3.2's wiring commits, then P3.3's basic IO contracts and model/output fixes. Develop P3.4's heading and odometry changes together as needed: controlled samples establish ordering/frames before joint physical drive checks. A kinematic gyro fallback may require the H2 and H8 changes in the same reviewed package. Avoid circular acceptance by distinguishing these software prerequisites from the final integrated motion checks.
 
-P3.4's small hood-requirement repair can start alongside P3.1; use the lifecycle fix before its integrated acceptance. The broader ownership work can use output-capturing IO before physical mechanisms are cleared in Phase 5. Its physical mechanism rows remain pending until referencing/limits are verified; drivetrain checks use the team's existing controlled drive bring-up. P3.5 should be ready before Phase 5 calibration sessions so evidence is saved. Use early live captures for P3.1–P3.4 if persistent recording is still being completed.
+P3.5's small hood-requirement repair can start alongside P3.1; use the lifecycle fix before its integrated acceptance. The broader ownership work can use output-capturing IO before physical mechanisms are cleared in Phase 5. Its physical mechanism rows remain pending until referencing/limits are verified; drivetrain checks use the team's existing controlled drive bring-up. P3.6 should be ready before Phase 5 calibration sessions so evidence is saved. Use early live captures for P3.1–P3.5 if persistent recording is still being completed.
 
-**Exit:** H1 and the software parts of H2/H3/H4/H8/M3 pass on a named revision. Perform the physical drive/heading checks and record them separately; if unavailable, the core can be marked software-verified but not hardware-verified. No mechanism may inherit physical approval merely because its command scheduling passed with a stub.
+#### P3.2: separate REAL and simulation wiring in small commits
+
+Keep `Robot` responsible for lifecycle and its logging-mode switch. Keep `RobotContainer` responsible for subsystem construction, bindings, and autonomous composition. Put concrete device choices in small `RealRobotWiring` and `SimRobotWiring` classes whose methods create IO adapters **when called**. An eager bundle would change the present construction order: `Drive` starts `PhoenixOdometryThread` during its constructor, before later mechanisms are built. The same subsystem logic should continue to receive the same IO interfaces in either mode. This is a readability change, not a simulator-accuracy fix. [WPILib project structure](https://docs.wpilib.org/en/stable/docs/software/commandbased/structuring-command-based-project.html), [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
+
+For example, the **proposed** `createFrontLeftModule()` method would return `new ModuleIOSim(TunerConstants.FrontLeft)` in `SimRobotWiring` and `new ModuleIOTalonFX(TunerConstants.FrontLeft)` in `RealRobotWiring`. `RobotContainer` would call `wiring.createFrontLeftModule()` at the existing front-left argument position of `new Drive(...)`. Repeat this pattern for the other active adapters, retaining their order and current configuration values. These methods/classes do not exist yet; this example explains the change to implement, rather than describing current code. `RobotContainer` continues to create the `Drive` subsystem and install its commands.
+
+Use one code commit per row. Complete the desktop checks and record any pending physical check before starting the next row. Do not mix these commits with renames, gain changes, command fixes, or simulator physics repairs.
+
+| Commit | Small change | Gate before the next commit |
+| --- | --- | --- |
+| P3.2a — SIM selection | Introduce a narrow `RobotWiring` interface with creator methods for gyro, named module positions, indexer, intake, shooter components, and cameras. Add `SimRobotWiring`; use it only in the existing SIM branch and call each creator at the existing construction point. Keep absent SIM vision/LEDs absent. | `spotlessCheck`, `build`, desktop SIM startup, and a source comparison with the P1.2 mode map. SIM must create no real motor/camera/LED adapter; the four modules keep their order. Existing no-op models remain known limitations. |
+| P3.2b — REAL selection | Add `RealRobotWiring` and use it only in the existing REAL branch. Keep adapter IDs and construction order, both Limelight names/order, the vision consumer's pose/timestamp/uncertainty forwarding, and REAL-only `Leds.getInstance()` unchanged. | Build/formatting and SIM startup pass. Compare each REAL constructor with the baseline. Start the robot disabled and inspect device configuration/connection reports, camera observations, and LED startup before calling this robot-verified. If hardware is unavailable, record that gate as pending. |
+| P3.2c — REPLAY policy | Reject the currently incomplete REPLAY mode clearly before replay-source setup or container construction. Keep full no-op IO construction and known-log verification in P6.2 if the team later chooses to support replay. Do not silently use simulated sensors for replay. | REAL/SIM results remain unchanged. Explicitly selected REPLAY gives the declared startup message, never reaches bindings with null subsystems, and constructs no real hardware. Restore the normal desktop mode afterward. |
+| P3.2d — common construction | Select wiring once in `RobotContainer`; construct `Drive`, `Indexer`, `Intake`, and `Shooter` once, calling creators in the original order. Keep LED creation after intake on the REAL path and construct `Vision` only when cameras are present, after the shooter. Configure bindings once. | Build, SIM startup, and a source comparison of the REAL/SIM subsystem graph, constructor order, camera/LED presence, bindings, autonomous command, and telemetry keys pass. Repeat disabled robot startup because the common constructor path changed; record physical verification as pending if unavailable. |
+
+For each row, record the base and resulting revision, checks actually run, environment, observed results, and pending hardware evidence using the [acceptance record](#how-to-run-and-record-acceptance-checks). `./gradlew simulateJava` starts the desktop program, but the current build does not enable the simulation GUI by default; configure the Driver Station extension when testing controller bindings. A build or SIM startup cannot prove a physical device is wired or configured correctly. If a row fails, repair or revert that row before continuing. Each commit must be buildable on its own.
+
+After P3.2, document the IO contract before changing flywheel SIM units in P3.3: method, units/range, sensor frame, stop semantics, and whether the adapter models physics or is intentionally no-op. `IntakeIOSim` and `IndexerIOSim` currently do not model fuel/mechanism behavior. Update the Technical Guide's construction path once P3.2d is accepted. In P3.4, separately review `Drive`'s global-mode check for the missing-gyro alert and its unconditional Phoenix thread start; coordinate any thread move with the odometry queue/lock work and require real timestamp checks. Keep broader naming migration in Phase 4 and any 2027 hardware configuration changes in Phase 6.
+
+**Exit:** P3.2's wiring gates, H1, and the software parts of H2/H3/H4/H8/M3 pass on a named revision. Perform the physical startup and drive/heading checks and record them separately; if unavailable, the core can be marked software-verified but not hardware-verified. No mechanism may inherit physical approval merely because its command scheduling passed with a stub.
+
+#### Guardrails for carrying SIM behavior to the robot
+
+Implement these alongside P3.2–P3.5, before treating SIM results as useful evidence for a retained feature. They are small checks at existing boundaries, not a second command implementation for REAL. The same command, subsystem, state transition, and stop logic should run in both modes; only `*IO` construction and device-specific behavior differ. If a command needs a mode check to work in SIM, first identify the missing sensor or output contract and fix that boundary. Document any deliberate mode exception.
+
+1. **Reject an unintended mode before constructing devices.** P3.2's wiring selection must choose exactly one adapter family. REAL must never be selected by a desktop diagnostic, SIM must never be selected on a roboRIO, and unfinished REPLAY must exit clearly before bindings are created. Compare the selected mode with `RobotBase.isReal()` at startup and fail with a readable message for an impossible combination. After selection, keep the adapter constructors lazy so SIM startup creates no real CTRE/REV device, Limelight adapter, or LED hardware object. Inspect the constructor map in each P3.2 commit; do not claim this check proves physical wiring.
+2. **Make every IO boundary explicit.** For each retained device, record output method, units/range, control mode, sensor frame, connection/validity meaning, and stop behavior. Use names or typed quantities that expose units. For the flywheel, trace a 2400 RPM caller request to 40 RPS at `FlywheelIO.setVelocity()` and compare it with the measured `velocityRadPerSec` only after converting to the same shaft and unit. Repair `FlywheelIOSim`'s RPM/RPS comparison and its overwritten open-loop/stop requests in P3.3; otherwise a passing SIM flywheel run does not predict the REAL request. Define a neutral-output response and diagnostic for a non-finite runtime target; select and document either rejection or clamping for an out-of-range duty-cycle request before it reaches either adapter. Choose physical mechanism limits from hardware evidence in P5.1, not from simulator behavior.
+3. **Do not let missing sensors look ready.** Where a command depends on feedback, readiness must require a current connected measurement, any applicable valid reference, and a small numeric error. A disconnected or no-op adapter must report its real status instead of manufacturing success. `IntakeIOSim` and `IndexerIOSim` currently do not model mechanism motion: use output-capturing IO to check command requests and interruption/stop behavior, and label fuel movement or position feedback `Awaiting hardware` until a model or real measurement can support it. Never equate a scheduled command with a completed physical action.
+4. **Compare requests and observations using the same scenario.** For each retained behavior, save a short desktop trace with the requested target, applied/clamped target, control mode, measured value, validity flag, and stop/interruption result. Include a known input, expected output, observed output, and revision. Run the scenario through the shared subsystem with SIM or controlled-input IO; review the REAL adapter's corresponding unit conversion and device request in source. When hardware returns, replay the procedure at approved low-risk settings and compare the *meaning* and direction of signals before tuning gains or increasing output. A desktop diagnostic cannot establish encoder polarity, physical stops, or response time.
+5. **Keep configuration changes visible.** Put robot-specific IDs/buses, gear ratios, inversion, camera names, and mechanism limits in reviewed configuration with recorded provenance. Check for missing values and duplicate device addresses on the same bus before enabling affected hardware; preserve named module and camera order from P1.2. A hardware revision invalidates the affected physical evidence and triggers a REAL configuration review plus the corresponding desktop/robot checks. Do not change shared commands simply to compensate for an unverified device direction or ratio.
+
+The software acceptance for these guardrails is a clean build/style check, mode-startup check, reviewed REAL/SIM constructor map, IO contract table, and saved controlled-input traces for the affected feature. Add small automated contract or startup checks only where they catch a real regression reliably; a broad unit-test suite is not required. Hardware acceptance remains separate until a stable robot or suitable device bench is available, with bench scope stated explicitly.
 
 ### Phase 4 — migrate names without changing behavior
 
@@ -950,7 +1089,7 @@ Use a small series of changes grouped by subsystem or API family. Prioritize mis
 | P5.2 | First repair discarded uncertainty; separately add adopted camera hardening and establish live pose quality | H7; [separate repair/hardening acceptance](#acceptance-h7) |
 | P5.3 | Consolidate shot solution/readiness/feed policy; recalibrate stationary shooting, then separately validate any moving-shot support | H6; [solution and shot procedure](#acceptance-h6) |
 
-P5.1 depends on command ownership and trustworthy IO. P5.2's uncertainty-forwarding repair and controlled estimator comparison can start during the first runtime fixes; parser hardening can also proceed independently. Live fusion acceptance depends on the Phase 3 pose pipeline. P5.3 can use a controlled known pose while vision work proceeds; camera-driven shooting acceptance requires the relevant P5.2 checks to pass. Preserve the distinction between no-ball control checks and actual fuel-shot calibration.
+P5.1 depends on command ownership and trustworthy IO. Prepare its software boundary/recovery logic and planned physical procedure while the robot is unavailable, but do not invent a reference position or safe travel limit from code. P5.2's uncertainty-forwarding repair and controlled estimator comparison can start during the first runtime fixes; parser hardening can also proceed independently. Live fusion acceptance depends on the Phase 3 pose pipeline and physical camera evidence. P5.3 can use a controlled known pose while vision work proceeds; camera-driven shooting acceptance requires the relevant P5.2 checks to pass. Preserve the distinction between no-ball control checks and actual fuel-shot calibration.
 
 Schedule hardware sessions around explicit cases: referencing/limits first, control transitions second, then shot calibration. Set physical tolerances and success criteria before recording pass/fail. A blocked session should leave its cases pending and allow independent desktop work to continue. Do not choose new pass thresholds after seeing a failed result without documenting a reviewed requirement change and rerunning.
 
@@ -965,7 +1104,7 @@ Schedule hardware sessions around explicit cases: referencing/limits first, cont
 | P6.3 | Repair or remove retained helpers; complete optional utility/LED/calibration/comment cleanup | M8/L1–L4; [helpers](#acceptance-m8), [LEDs](#acceptance-l1), [geometry](#acceptance-l2), [characterization](#acceptance-l3), [comments/performance](#acceptance-l4) |
 | P6.4 | Build with the supported season toolchain, confirm configuration provenance, and rerun affected acceptance on the release revision and actual robot | H9 and retained feature checks; [season acceptance](#acceptance-h9), [release checklist](#release-checklist) |
 
-P6.1 inventory work starts in Phase 1; extraction uses corrected components rather than moving unreviewed code wholesale. P6.2 replay depends on a compatible saved log from P3.5. Auto loading/reference checks are independent of physical route validation; routes need accepted drive, field, and mechanism behavior. P6.3 work can proceed during hardware waits, but optional cleanup must not delay resolution of retained high-priority failures. Promote calibration-helper verification before using that helper to derive production values.
+P6.1 inventory work starts in Phase 1; extraction uses corrected components rather than moving unreviewed code wholesale. P6.2 replay depends on a compatible saved log from P3.6. Auto loading/reference checks are independent of physical route validation; routes need accepted drive, field, and mechanism behavior. P6.3 work can proceed during hardware waits, but optional cleanup must not delay resolution of retained high-priority failures. Promote calibration-helper verification before using that helper to derive production values.
 
 Do not wait for 2027 hardware to organize the core, but do wait for the actual supported toolchain and measurements before calling it a validated 2027 robot release. Porting to a new template or changing library versions can invalidate earlier evidence; rerun relevant lifecycle, mode, IO, and integration checks on the final combination. Results from the 2026 robot support the port but do not certify new mechanisms.
 
@@ -994,6 +1133,8 @@ Mentor hardware/release acceptance, when required:
 ```
 
 Suggested statuses are `Not started`, `In progress`, `Ready for review`, `Awaiting hardware`, `Blocked`, and `Accepted`. Use `Excluded from scope` only with the feature-disposition decision. An accepted implementation review and accepted runtime behavior are different checkpoints; retain both results. Dates and time estimates belong on these entries once an owner and prerequisites are known.
+
+For example, an owner starting P3.1 would write: **scope** = remove `Shooter.periodic()`'s calls to registered child subsystems; **out of scope** = shooter readiness and SIM motor tuning; **prerequisite** = P1.2 baseline recorded; **desktop gate** = H1's 100-cycle counts plus `spotlessCheck build`; **hardware gate** = none for this lifecycle correction; **status** = `In progress` until evidence exists. This is an example work card, not a completed result. The owner replaces the example text with the actual revision, observations, and reviewer decision.
 
 ### Review, regression, and rollback
 
