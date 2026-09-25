@@ -5,6 +5,7 @@ This records progress against the [2027 Mentor Recommendations](REUSE_RECOMMENDA
 | Package / finding | Status | Change | Evidence | Next step |
 | --- | --- | --- | --- | --- |
 | [P3.1](DELIVERY_PLAN_2027.md#phase-3--repair-runtime-foundations-and-verification-infrastructure) / [H1](REUSE_RECOMMENDATIONS_2027.md#acceptance-h1) | Ready for review | Removed duplicate shooter-child `periodic()` calls from [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java). | Four SIM scenarios passed the 100-cycle count check; the final probe-free run showed `OPEN_LOOP` → `CLOSED_LOOP` → `OPEN_LOOP`; `spotlessCheck build` passed. [Run results](shooter-sim-lifecycle/RESULTS_2026-09-25.md). | Mentor reviews the code and evidence. Physical robot behavior awaits hardware. |
+| [H8 flywheel SIM units and modes](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) | Ready for review | Compare RPS target with RPS feedback; keep velocity, open-loop, and stopped outputs distinct in `FlywheelIOSim`. | A temporary desktop diagnostic confirmed a 2 RPS target against 1 RPS feedback requested 1 V; open-loop requested −3 V; stop held 0 V for five cycles; velocity control resumed; output clamped at 12 V. The diagnostic was removed. `spotlessCheck build` passed. | Mentor reviews this SIM-only change. Gearing and real-robot behavior remain unverified; other H8 work remains open. |
 
 `Ready for review` means the change and evidence are available, not that they are approved. Only a reviewer can mark a package `Accepted`.
 
