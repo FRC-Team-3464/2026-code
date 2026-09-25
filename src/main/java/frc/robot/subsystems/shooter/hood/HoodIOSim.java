@@ -9,6 +9,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 
 public class HoodIOSim implements HoodIO {
+  // Use the Neo550 motor simulation class
   private final DCMotor gearbox = DCMotor.getNeo550(1);
   private final SingleJointedArmSim sim;
 
@@ -17,6 +18,8 @@ public class HoodIOSim implements HoodIO {
   private double appliedVolts = 0.0;
 
   public HoodIOSim() {
+    // The hood behaves somewhat like an arm, so we can use the arm class to get a more accurate
+    // simulation
     sim =
         new SingleJointedArmSim(
             gearbox,
@@ -31,11 +34,13 @@ public class HoodIOSim implements HoodIO {
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
+    // Limit the amount of voltage applied to the motor
     double volts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
 
     sim.setInputVoltage(volts);
-    sim.update(0.02);
+    sim.update(0.02); // Move the simulation forward by 20ms
 
+    // Update inputs
     inputs.connected = true;
     inputs.positionRad = sim.getAngleRads();
     inputs.velocityRadPerSec = sim.getVelocityRadPerSec();
@@ -45,8 +50,10 @@ public class HoodIOSim implements HoodIO {
 
   @Override
   public void setAngle(double angle) {
+    // Make sure we don't try to go to an impossible angle
     angle = MathUtil.clamp(angle, HoodConstants.kMinAngleRad, HoodConstants.kMaxAngleRad);
 
+    // Use the PID controller to calculate how much voltage we need to apply to get to the target
     appliedVolts = pid.calculate(sim.getAngleRads(), angle);
   }
 

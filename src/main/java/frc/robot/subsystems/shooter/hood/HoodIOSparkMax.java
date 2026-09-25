@@ -22,18 +22,24 @@ import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
 import java.util.function.DoubleSupplier;
 
 public class HoodIOSparkMax implements HoodIO {
+  // A NEO motor is represented by the SparkMax class
   private final SparkMax motor;
+  // Encoder object built in to the motor
   private final RelativeEncoder encoder;
+  // PID controller built into the SparkMax (higher refresh rate than WPILib PID controller)
   private final SparkClosedLoopController motorController;
-  private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+  // Debouncer to make sure we're at the right hood angle for long enough
+  private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kRising);
 
   public HoodIOSparkMax() {
     motor = new SparkMax(DeviceIDs.kTurretHood, MotorType.kBrushless);
+    // Get the built-in encoder
     encoder = motor.getEncoder();
     motorController = motor.getClosedLoopController();
 
     SparkMaxConfig config = new SparkMaxConfig();
 
+    // When we're not actively running the motor, just let it rest
     config.idleMode(IdleMode.kCoast);
 
     config
@@ -42,8 +48,9 @@ public class HoodIOSparkMax implements HoodIO {
         .velocityConversionFactor(2 * Math.PI / HoodConstants.kGearRatio / 60.0);
 
     // TODO: Tune
-    config.closedLoop.feedForward.kS(0.015 * 12);
-    config.closedLoop.p(1);
+    config.closedLoop.feedForward.kS(
+        0.015 * 12); // Static gain, or what is always applied to stay at the target
+    config.closedLoop.p(1); // Corrects error
 
     config.closedLoop.allowedClosedLoopError(HoodConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
 
@@ -71,9 +78,11 @@ public class HoodIOSparkMax implements HoodIO {
 
   @Override
   public void setAngle(double angle) {
+    // Make sure we don't go to an impossible angle
     double clampedPosition =
         MathUtil.clamp(angle, HoodConstants.kMinAngleRad, HoodConstants.kMaxAngleRad);
 
+    // Tell the motor to go to the specified angle
     motorController.setSetpoint(clampedPosition, ControlType.kPosition);
   }
 

@@ -24,5 +24,6 @@ public interface HoodIO {
   /** Run motor at the specified open loop value. */
   public default void setOpenLoop(double output) {}
 
+  /** Stop the hood motor. */
   default void stop() {}
 }

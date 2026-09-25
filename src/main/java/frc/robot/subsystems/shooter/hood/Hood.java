@@ -19,14 +19,16 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Hood extends SubsystemBase {
+  // IO representation + inputs for the hood
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
   private double targetAngleRad = 0.0;
   private boolean closedLoop = false;
 
+  // Boolean representing if the hood is at its target RPM
   private boolean atGoal = false;
-  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kFalling);
+  private Debouncer atGoalDebouncer = new Debouncer(0.2, DebounceType.kRising);
 
   /** Creates a new Hood. */
   public Hood(HoodIO io) {
@@ -35,29 +37,42 @@ public class Hood extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Typical IO input cycle
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
 
-    RobotVisualizer.getInstance().setTurretHoodAngle(inputs.positionRad);
-
+    if (!closedLoop) {
+      // Uses the debouncer to determine if the hood has been at the goal angle for enough time
+      atGoal =
+          atGoalDebouncer.calculate(
+              Math.abs(targetAngleRad - inputs.positionRad) < HoodConstants.kAngleTolerance);
+    }
     if (closedLoop) {
       io.setAngle(targetAngleRad);
     }
+
+    // Log the exact mechanism position for visualization in AdvantageScope
+    RobotVisualizer.getInstance().setTurretHoodAngle(inputs.positionRad);
   }
 
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
-
+    // Run command: Continuously repeats until command ends
     return Commands.run(
         () -> {
+          // Get the current target (typically the hub)
           Translation2d target = targetSupplier.get();
+          // Get the current robot pose
           Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+          // Use the lookup table to get the goal angle based on distance to the target
           setAngle(TrajectoryCalculator.calculateHoodAngle(target, robotPose));
+          // Record the target angle and difference between positions
           Logger.recordOutput("Hood target angle", targetAngleRad);
           Logger.recordOutput("Hood target difference", targetAngleRad - inputs.positionRad);
         },
-        this);
+        this); // Reference to current subsystem
   }
 
+  /** Move the hood all the way down. */
   public Command down() {
     return Commands.run(() -> setAngle(0), this);
   }
@@ -69,12 +84,10 @@ public class Hood extends SubsystemBase {
    */
   public void setAngle(double angle) {
     closedLoop = true;
-    atGoal =
-        atGoalDebouncer.calculate(
-            Math.abs(angle - inputs.positionRad) < HoodConstants.kAngleTolerance);
     targetAngleRad = angle;
   }
 
+  /** Run the hood motor at the specified open loop value. */
   public void setOpenLoop(double output) {
     closedLoop = false;
     io.setOpenLoop(output);
