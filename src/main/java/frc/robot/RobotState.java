@@ -81,7 +81,8 @@ public class RobotState {
    */
   public void addVisionMeasurement(VisionMeasurement measurement) {
     // Sends a vision-only measurement to the PoseEstimator object
-    poseEstimator.addVisionMeasurement(measurement.visionPose(), measurement.timestamp());
+    poseEstimator.addVisionMeasurement(
+        measurement.visionPose(), measurement.timestamp(), measurement.stdDevs());
 
     // Log updated estimated poses with AdvantageKit
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
