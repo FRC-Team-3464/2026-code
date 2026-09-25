@@ -11,6 +11,8 @@ For a detailed explanation of the architecture, robotics concepts, subsystems, c
 
 For mentor recommendations and team expectations before reusing this code, including Java naming, analysis tools, and detailed acceptance procedures, read the [2027 Mentor Recommendations](docs/REUSE_RECOMMENDATIONS_2027.md). For proposed staffing, week-by-week work, and hardware-dependent review gates, read the [2027 Delivery Plan](docs/DELIVERY_PLAN_2027.md).
 
+Track implementation progress and verification separately in the [2027 Implementation Tracker](docs/IMPLEMENTATION_TRACKER_2027.md); the original recommendations remain unchanged.
+
 The [Phase 1 Record](docs/PHASE_1_BASELINE_2027.md) separates facts checked against the current source and desktop run from decisions and robot measurements still needed before reuse.
 
 For a separate assessment of how the design follows WPILib and AdvantageKit guidance, and which changes are team design choices, read the [Architecture Review](docs/ARCHITECTURE_REVIEW.md).

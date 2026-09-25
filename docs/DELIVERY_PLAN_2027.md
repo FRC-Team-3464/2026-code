@@ -1,12 +1,6 @@
 # 2027 robot software: mentor delivery proposal
 
-**For the mentor group, September 2026.** This is a proposal for a small student team to prepare the reusable software before the physical robot is available. The [2027 Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) remain the source of truth for the technical findings and acceptance procedures; this document owns schedule, staffing, and review decisions. The [Technical Guide](TECHNICAL_GUIDE.md) explains the existing code to students learning robotics.
-
-## The decision we need from mentors
-
-**End of November is not a credible completion date for this work.** If meetings begin the week of September 28, there are eight ordinary meeting weeks through November 20. The robot is expected only near the end of November, so physical acceptance cannot finish by then. Even the minimum software foundation below has more work than eight weeks of this team's available time. I propose a **November 20 progress and scope review**, followed by a forecast based on actual completed packages. If the first meeting starts later, move the review rather than compressing checks.
-
-For planning, expect **roughly 15–25 active meeting weeks for the minimum software foundation**, including learning, review, and repair time. This range uses the already-recorded [Phase 1 source inventory](PHASE_1_BASELINE_2027.md) instead of asking students to repeat that inventory. Test the estimate after Weeks 2 and 5; it is not a promised completion date. School breaks, lost meetings, a difficult H2/H3 repair, or shifting students to robot bring-up extend calendar time. The full recommendation backlog, 2027 toolchain port, and physical calibration are additional work. A green Gradle build and SIM run cannot substitute for the missing robot.
+## Planning decisions
 
 | Mentor decision | Proposed answer for this block | Needed by |
 | --- | --- | --- |
@@ -38,7 +32,7 @@ The following is an **initial effort estimate**, not measured team velocity. It 
 | Integration, regression checks, review, and repair | 20–30 | Changes to shared loop/state code invalidate earlier observations |
 | **Estimated total** | **171–269** | **Before absences and unplanned hardware/software defects** |
 
-At 13.5 focused hours per active week, this estimate is about **13–20 weeks of work before schedule allowance**. Reserving time for absences, onboarding, and failed acceptance checks gives the **15–25 active-week planning band** above. Through November 20, the team has at most about 108 focused hours under perfect attendance: below even the optimistic 171-hour estimate. Parallel students help, but P3.2 must be reviewed before its shared construction path is used for P3.3, and H2/H3 needs trustworthy measurements. After Weeks 2 and 5, replace these estimates with the team's measured completed-package rate and remaining work.
+At 13.5 focused hours per active week, this estimate is about **13–20 weeks of work before schedule allowance**. Reserving time for absences, onboarding, and failed acceptance checks gives a **15–25 active-week planning range**. Through November 20, the team has at most about 108 focused hours under perfect attendance: below even the optimistic 171-hour estimate. Parallel students help, but P3.2 must be reviewed before its shared construction path is used for P3.3, and H2/H3 needs trustworthy measurements. After Weeks 2 and 5, replace these estimates with the team's measured completed-package rate and remaining work.
 
 Fifteen uninterrupted meeting weeks from September 28 would reach January 2027; school breaks and any robot sessions using the same students push the calendar later. The upper end of the band reaches into spring. Give mentors this range rather than a fabricated February promise. If physical testing starts before the software foundation is finished, reallocate student hours and publish a new forecast instead of pretending both tracks have full staffing.
 
@@ -53,7 +47,7 @@ Dates are **weeks beginning**, not assumed meeting days. The week of November 23
 | Week | First three-hour session | Second three-hour session | Lead and review gate |
 | --- | --- | --- | --- |
 | **1 · Sep 28** | Kickoff. A/B compare the current source and REAL/SIM constructor order with the [Phase 1 record](PHASE_1_BASELINE_2027.md); C reviews the recorded configuration locations and open information needs. | Reuse the recorded inventory, resolve retained modes/features, name reviewers/hardware decision owners, and list any changed or missing baseline facts. | **C:** confirmed inventory, scope decision, and package list. **Gate:** mentors approve the narrow initial scope; physical rows remain open. |
-| **2 · Oct 5** | A adds H1 cycle counters and removes duplicate registered-child `periodic()` calls; B maps flywheel IO units and no-op SIM devices; C drafts H10 naming/checker policy. | Demonstrate H1's one-update-per-loop counts. Record physical questions for H5/H6/H7 and measure actual package throughput against the estimate. | **A:** P3.1/H1 evidence and reviewed fix. **C:** P2.1 policy draft. **Forecast check 1:** adjust the remaining dates if H1/P1 consumed more than planned. |
+| **2 · Oct 5** | A presents the completed H1 SIM evidence for mentor review and begins the H4 hood-ownership repair; B maps flywheel IO units and no-op SIM devices; C drafts H10 naming/checker policy. | Record the H1 review decision, check H4's current command requirements, and measure actual package throughput against the estimate. | **A:** H1 review decision and H4 scope. **C:** P2.1 policy draft. **Forecast check 1:** update remaining dates from observed effort. |
 | **3 · Oct 12** | A fixes the narrow H4 manual-hood requirement issue; B fixes H7's discarded uncertainty in a separate change; C sets up a focused Checkstyle draft. | Review command ownership and controlled low/high-uncertainty estimator output; run checker positive/negative probes. | **A/B:** narrow H4/H7 commits if their desktop checks pass. **C:** P2.2 initial evidence; no full naming claim. |
 | **4 · Oct 19** | B implements P3.2a SIM wiring at existing constructor positions; A reviews module order; C finishes checker/CI setup or records its remaining blocker. | Run build, SIM startup, bindings, and constructor comparison before the P3.2a commit. | **B:** buildable SIM-selection commit. **Gate:** no real device constructed in SIM; no simulator-physics change hidden in the wiring diff. |
 | **5 · Oct 26** | B implements P3.2b REAL wiring; A compares IDs, camera names, LEDs, and construction order with baseline; C records pending disabled robot startup. | Review desktop gates and commit P3.2b only if the graph matches. Measure P3.2 effort and update the end-to-end forecast. | **B:** buildable REAL-selection commit or a concrete discrepancy. **Forecast check 2:** extend wiring instead of borrowing time from its verification. |
@@ -61,7 +55,7 @@ Dates are **weeks beginning**, not assumed meeting days. The week of November 23
 | **7 · Nov 9** | B implements P3.2d common subsystem construction; A reviews the exact call order and begins an H2 timestamp/gyro map; C checks mode startup and telemetry keys. | Run final SIM startup/bindings and constructor-map comparison; commit P3.2d if the software gate passes. | **B:** P3.2 software gate; physical REAL startup remains `Awaiting hardware`. H2 work is analysis, not a claimed repair. |
 | **8 · Nov 16** | Repair any P3.2 gate failures; C confirms tooling check and baseline log availability; A/B prepare P3.3 IO contracts and H2/H3 dependency notes. | Mentor review of exact accepted revisions, failed/pending rows, observed hours per package, and the next four weeks of work. | **C:** **Nov 20 progress report**, not a foundation-complete sign-off. Accept only demonstrated software rows and reforecast the remaining work. |
 
-This is still an ambitious first block. If H1, checker setup, or wiring runs long, the Week 8 output may be fewer accepted packages. Do not combine unreviewed P3.2 commits to recover the calendar. H2/H3, complete flywheel SIM behavior, broad H4 transitions, and persistent logging are deliberately placed in the following block because they need additional diagnostic and review time.
+If checker setup or wiring runs long, the Week 8 output may be fewer accepted packages. H2/H3, complete flywheel SIM behavior, broad H4 transitions, and persistent logging follow because they need additional diagnostic and review time.
 
 ## After November: sequence work by gates, not a guessed finish date
 
@@ -92,15 +86,9 @@ Start **R1** only when the physical robot is available in a stable configuration
 
 R3 and R4 are placeholders for **at least** the required mechanism sessions, not a guarantee that every mechanism can be cleared in two weeks. School breaks, missing field space, hardware rework, and failed checks extend this block. Do not schedule a robot-ready sign-off date before R1 confirms the machine's configuration. The team's existing 2026 code can be a software reference, but a 2027 toolchain/robot port requires a separate compatible build and affected rechecks.
 
-## Mentor checkpoints and change control
-
-At the end of Weeks 1, 4, 7, and 8, circulate a short status sheet: accepted revisions/packages, desktop evidence, `Awaiting hardware` rows, failures, next two sessions' owners, and decisions needed. Reforecast effort explicitly after Weeks 2 and 5 using actual package duration. The software mentor resolves scope and architecture decisions; the mechanical/electrical mentors own actual safe limits and hardware readiness. If one student misses two weeks, a dependency slips, or H2/H3 needs more work, reforecast at the next checkpoint. Do not compress acceptance to preserve the calendar.
-
-The mentor group can approve this proposal by naming the three students, software reviewer/decision owner, hardware contact, retained features, and Week 1 meeting dates. The November checkpoint and physical acceptance are separate decisions. The detailed package catalog below remains available when mentors authorize the follow-on work.
-
 ## Phase-based work packages
 
-The catalog below is the **full reuse backlog**, not the promise for November 20. The weekly table above identifies which portions fit the eight-week software block and which need later work or physical access. Use these package IDs to assign work and review progress. Priority remains unchanged: some medium-priority work, such as IO diagnostics, happens early because it helps verify high-priority fixes. Set follow-on dates from team availability, robot access, and toolchain availability. Review blocked work at each programming meeting.
+The first-eight-weeks table covers the November checkpoint; the catalog below covers later work as well. Assign dates for later packages after the checkpoint using actual progress and robot availability.
 
 **Status at the reviewed baseline:** P2.1 is partially implemented: explicit formatting, scoped targets, formatter pinning, and the CI/hook changes are present. Naming rules, checker installation, migration, and broader M6 decisions remain open. Other implementation packages have no recorded completion here; owner and reviewer are **unassigned**. The package owner supplies the implementation and results; the assigned reviewer records acceptance. A software package may be merged with hardware verification pending, but the affected capability must not be labelled robot-ready or enabled as an accepted feature until its required checks pass.
 
@@ -117,7 +105,7 @@ The catalog below is the **full reuse backlog**, not the promise for November 20
 
 Phases are review checkpoints, not a demand to leave people idle. With the robot unavailable, complete and review the desktop portions of Phases 1–4, P5.2's uncertainty/parser work, and the software portions of other packages whose prerequisites are met. Phase 5's physical reference, vision, and shooting checks and Phase 6's robot release gate stay open. Record `Awaiting hardware` on those specific checks; do not hold up unrelated commits or mark an unmet physical criterion passed. Confirm the hardware configuration and repeat affected checks when the robot returns.
 
-**Begin with small runtime repairs.** After confirming the [Phase 1 record](PHASE_1_BASELINE_2027.md) against the current construction path, assign separate changes for H1 duplicate callbacks, H4 missing hood requirements, H7 uncertainty forwarding, and H8 flywheel simulation units/control modes. Place the short REAL/SIM wiring sequence after that check and H1, before changing simulation models; this gives newer programmers one clear construction path to follow. Use the applicable acceptance steps for each change; complete the wider mode, mechanism, and localization checks as their prerequisites become available. None of these repairs depends on renaming constants, changing `IO` casing, or installing Checkstyle. Tooling and naming can proceed alongside them with coordinated file ownership.
+**Begin with small runtime repairs.** H1's duplicate-callback change has SIM evidence and awaits mentor review in the [Implementation Tracker](IMPLEMENTATION_TRACKER_2027.md). Assign H4 hood requirements, H7 uncertainty forwarding, and H8 flywheel simulation units/control modes as separate changes. Follow with the REAL/SIM wiring sequence before changing simulation models. Tooling and naming can proceed alongside these repairs with coordinated file ownership.
 
 ### Phase 1 — establish the baseline and reuse scope
 
@@ -235,29 +223,18 @@ Do not wait for 2027 hardware to organize the core, but do wait for the actual s
 
 ### Tracking each work package
 
-Create an issue or checklist entry from this template when work starts; no project-management service is required.
+Record each package in the [Implementation Tracker](IMPLEMENTATION_TRACKER_2027.md) or a team issue:
 
 ```text
-Package ID / title:
-Recommendation IDs and acceptance links:
-Owner: Unassigned
-Reviewer/verifier: Unassigned
-Status: Not started
-Deliverable and explicit exclusions:
-Predecessor packages / acceptance prerequisites:
-Required robot/equipment access:
-Implementation change/commit:
-Desktop result and evidence:
-Simulation/replay result and evidence, if applicable:
-Hardware result and evidence, if applicable:
-Open measurements, failures, or follow-up work:
-Final reviewer decision and date:
-Mentor hardware/release acceptance, when required:
+Package and finding:
+Owner / reviewer / status:
+Change and exclusions:
+Checks run and observed results:
+Open checks or blockers, including hardware:
+Reviewer decision:
 ```
 
-Suggested statuses are `Not started`, `In progress`, `Ready for review`, `Awaiting hardware`, `Blocked`, and `Accepted`. Use `Excluded from scope` only with the feature-disposition decision. An accepted implementation review and accepted runtime behavior are different checkpoints; retain both results. Dates and time estimates belong on these entries once an owner and prerequisites are known.
-
-For example, an owner starting P3.1 would write: **scope** = remove `Shooter.periodic()`'s calls to registered child subsystems; **out of scope** = shooter readiness and SIM motor tuning; **prerequisite** = P1.2 baseline recorded; **desktop gate** = H1's 100-cycle counts plus `spotlessCheck build`; **hardware gate** = none for this lifecycle correction; **status** = `In progress` until evidence exists. This is an example work card, not a completed result. The owner replaces the example text with the actual revision, observations, and reviewer decision.
+Use `Not started`, `In progress`, `Ready for review`, `Awaiting hardware`, `Blocked`, or `Accepted`. Keep a software review result separate from physical-robot acceptance.
 
 ### Review, regression, and rollback
 

@@ -1,16 +1,6 @@
 # Architecture review: preparing the robot software for 2027
 
-Original review: September 23, 2026. Revalidated: September 24, 2026.
-
-**Source baseline:** `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51). Descriptions of current behavior refer to that revision; proposed changes are labelled as recommendations.
-
-**Assessment:** the project uses a suitable architectural foundation for an FRC robot: WPILib commands and subsystems, constructor-supplied IO implementations, WPILib geometry and estimation, and AdvantageKit logging. Keep that foundation. Several implementation details undermine its intended behavior, so the current code should receive the high-priority corrections before reuse.
-
-For a mentor deciding how much redesign to require, the recommendation is **focused repair and simplification**. A replacement framework would add substantial teaching and migration work without directly resolving the observed problems.
-
-This assessment compares the source with primary WPILib and AdvantageKit documentation, the installed WPILib `2026.2.1` sources, and the AdvantageKit `v26.0.1` templates. No simulator run, replay, or hardware trial was performed for this review. Documentation checks do not establish robot behavior. Online documentation can describe newer releases; check exact APIs against the selected dependencies during implementation. Nothing here certifies compatibility with a future 2027 release.
-
-The [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) contain the detailed changes and acceptance procedures. The separate [2027 Delivery Plan](DELIVERY_PLAN_2027.md) proposes staffing, weekly work, and release gates. The [Technical Guide](TECHNICAL_GUIDE.md) explains the current code for readers learning robotics.
+The project has a sound FRC foundation: WPILib commands and subsystems, replaceable IO adapters, WPILib geometry and estimation, and AdvantageKit logging. Keep it and repair the specific timing, ownership, and data-flow problems below. This is a source review of the 2026 code, not a physical-robot validation. [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) give the acceptance checks.
 
 ## What “following best practices” means here
 
@@ -46,7 +36,7 @@ An upstream example is a useful starting point, not proof of suitability for eve
 | --- | --- | --- |
 | Application structure | Aligned overall | `Robot` handles lifecycle and scheduling; `RobotContainer` constructs mechanisms and configures bindings. Move its runtime odometry submission to the drive/estimator owner. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2) |
 | Commands and composition | Aligned approach; ownership needs correction | Command factories, `sequence`, `parallel`, and `alongWith` are appropriate. Manual hood bindings omit requirements. [H4](REUSE_RECOMMENDATIONS_2027.md#acceptance-h4) |
-| Subsystem lifecycle | Needs correction | `Shooter.periodic()` manually updates children already registered with the scheduler. [H1](REUSE_RECOMMENDATIONS_2027.md#acceptance-h1) |
+| Subsystem lifecycle | Fix ready for review | Duplicate shooter-child callbacks were removed; [H1 SIM evidence](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle) awaits mentor review. |
 | Hardware abstraction | Strong foundation; contracts need correction | `FlywheelIO`, `ModuleIO`, and camera interfaces isolate hardware. Units and stop semantics differ between some adapters. [M3](REUSE_RECOMMENDATIONS_2027.md#acceptance-m3), [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
 | Pose estimation | Appropriate library; incomplete integration | Uses `SwerveDrivePoseEstimator`; submits cached measurements before refresh and discards supplied vision uncertainty. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2), [H7](REUSE_RECOMMENDATIONS_2027.md#acceptance-h7) |
 | Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`; heading resets and RPM/RPS boundaries need repair. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
@@ -89,11 +79,11 @@ Using WPILib geometry, swerve kinematics, and a swerve pose estimator is appropr
 
 WPILib runs registered subsystem `periodic()` callbacks before polling triggers and executing scheduled commands. `SubsystemBase` registers itself. [Scheduler sequence](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html), [subsystem registration](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
-[Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) also calls `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()`. Those children already participate in the scheduler. Their input and simulation update paths therefore execute twice per main loop. Remove the additional calls. The plain `Module` helper objects in `Drive` have a different ownership model and still need their owner's explicit updates.
+Previously, [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) called `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()` even though those children were already registered with the scheduler. The extra calls have been removed and checked in SIM; see the [H1 tracker entry](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle). The plain `Module` helper objects in `Drive` still need their owner's explicit updates.
 
 A related issue appears in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java): the manual hood `StartEndCommand` objects declare no hood requirement, while the default command also controls the hood. The scheduler arbitrates declared resources; it cannot infer ownership by inspecting a lambda. Read-only access to a measurement does not by itself require taking control of the mechanism. [WPILib subsystem resource management](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
-**Mentor recommendation:** keep the hood, turret, and flywheel as separately owned subsystems and make the shooter coordinator compose their commands. Each action must reserve the resources it actually controls. Do not assume that requiring the coordinator automatically reserves its children. Verify release, interruption, mode changes, and deliberate hold/stop behavior through H1 and H4.
+**Mentor recommendation:** keep the hood, turret, and flywheel as separately owned subsystems and make the shooter coordinator compose their commands. Each action must reserve the resources it actually controls. Do not assume that requiring the coordinator automatically reserves its children. Verify release, interruption, mode changes, and deliberate hold/stop behavior through H4.
 
 ### Estimation needs a coherent measurement path
 
@@ -172,19 +162,7 @@ flowchart TD
     S -->|Current readiness| C
 ```
 
-Use this map to answer five questions in review:
-
-| Question | Expected owner |
-| --- | --- |
-| What runs when the operator presses this button? | Controller binding and its command |
-| Which code may control this motor? | Its subsystem, with command requirements governing competing actions |
-| Where is the robot, and how fresh is that estimate? | One estimation owner with timestamped measurements |
-| Which goal are we trying to reach? | The active command/coordinator and its explicit solution |
-| How is that request translated to the installed hardware? | The selected IO adapter and robot-specific configuration |
-
 For the initial 2027 foundation, prefer small classes and constructor parameters. Introduce a dedicated state machine only where mechanism transitions need one, such as unreferenced, homing, ready, and fault states. A full state-machine framework is unnecessary for a simple intake action. Retain high-frequency odometry only with synchronized samples and a measured benefit; a correct main-loop pipeline is a reasonable intermediate step.
-
-The same review principles apply beyond FRC: isolate devices, make state transitions observable, define timing, and keep physical quantities explicit. WPILib supplies useful geometry and Java unit types. Its robot frame uses forward +X, left +Y, and up +Z; define transformations deliberately at sensor and field boundaries. [WPILib coordinate system](https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html), [Java units library](https://docs.wpilib.org/en/stable/docs/software/basic-programming/java-units.html).
 
 ## Which recommendations are team preferences?
 
@@ -210,8 +188,4 @@ Import rules need the same distinction. WPILib recommends `import static edu.wpi
 
 ## Recommended decision for the mentor
 
-Keep the current **architectural direction** as the starting point for preseason work. Begin with small fixes for duplicate shooter updates, missing manual hood requirements, discarded vision uncertainty, and flywheel simulation units/control modes. These repairs can proceed before broad renaming. The H1–H8 sections contain both confirmed defects and proposed operating policies; use their stated scope and acceptance checks to decide what each retained capability needs. Complete H9 reuse boundaries and the adopted H10 team tooling policy through the [2027 Delivery Plan](DELIVERY_PLAN_2027.md). Keep IO diagnostics and logging work alongside the fixes that depend on them.
-
-When preparing the actual season application, compare carried code with the matching upstream templates and document deliberate differences. AdvantageKit publishes swerve and vision templates relevant to this project. Use the version appropriate to the selected season dependencies. [AdvantageKit templates](https://docs.advantagekit.org/getting-started/template-projects/).
-
-The release decision should be based on demonstrations the team can repeat: one update per cycle, correct command ownership, consistent units and frames, deliberate stop/fault behavior, usable logs, and measured physical results. All remain subject to the linked acceptance procedures and the actual robot configuration.
+Keep the present architecture and make focused repairs before broad renaming or a season port. Demonstrate the repaired timing, command ownership, units, frames, stop behavior, and physical response using the [acceptance checks](REUSE_RECOMMENDATIONS_2027.md). Compare the carried code with the [matching AdvantageKit templates](https://docs.advantagekit.org/getting-started/template-projects/) when selecting the 2027 toolchain.

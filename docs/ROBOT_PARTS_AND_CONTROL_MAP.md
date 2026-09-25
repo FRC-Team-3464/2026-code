@@ -1,12 +1,8 @@
 # Robot parts and control map
 
-For an illustrated, interactive tour, open the [HTML version](ROBOT_PARTS_AND_CONTROL_MAP.html) in a browser. The HTML embeds its illustration and interaction code, so you can share that one file without the rest of the repository. On a phone, open the file in Safari or Chrome rather than an email or document preview that may disable JavaScript. Source-code links in the HTML require a copy of this repository.
+The [self-contained HTML tour](ROBOT_PARTS_AND_CONTROL_MAP.html) adds an interactive illustration. The [swerve diagrams](SWERVE_DRIVE_DIAGRAMS.md) explain the drivetrain in more detail.
 
-For a closer look at the drivetrain code, see the [swerve-drive class and sequence diagrams](SWERVE_DRIVE_DIAGRAMS.md).
-
-This is a tour of **the software currently wired in this repository**, written for someone who has not worked on an FRC robot. It is a map of the 2026 code that the team is considering for 2027 reuse, **not a verified inventory of the robot under modification**. A name, motor ID, or setting in Java tells us what the program expects; it does not prove that the part is installed, wired, calibrated, or safe to move. The [Phase 1 record](PHASE_1_BASELINE_2027.md) lists the information still needed from the hardware team.
-
-Start with the two journeys below. A piece of fuel travels through the intake, then the indexer, then the shooter. A control signal travels from a gamepad (or autonomous command) through WPILib commands and subsystem code to a motor controller. Sensors report back so the program can estimate what happened.
+This map describes parts selected by the 2026 **software**, not a verified inventory of the robot under modification. Fuel travels through the intake, indexer, and shooter; commands travel from a gamepad or autonomous routine through a subsystem and IO adapter to a motor controller. Sensors report measurements back.
 
 ```mermaid
 flowchart LR
@@ -144,12 +140,6 @@ This is an **intended data flow, not a certified aiming system**. The current `D
 
 The installed dependency versions are recorded in [vendordeps](../vendordeps/) and [build.gradle](../build.gradle). A dependency's presence does not mean its hardware is installed or its API is called by the active path. For controller terminology, see the official [WPILib trigger bindings](https://docs.wpilib.org/en/stable/docs/software/commandbased/binding-commands-to-triggers.html); for REV position control, see [REVLib closed-loop control](https://docs.revrobotics.com/revlib/spark/closed-loop/closed-loop-control-getting-started).
 
-## A useful way to explore this with the team
+## Explore one control path
 
-1. Have a mechanical/electrical mentor point to each **physical** part in the first table, and record differences from the software map. Do this before choosing 2027 device IDs or limits.
-2. In the code, follow **one input**: `DriverControls` → `Intake.intake()` → `IntakeIO` → `IntakeIOTalonFX`. Then follow **one sensor reading back** through `updateInputs()` → `Logger.processInputs()`.
-3. Follow a drive stick request through `DefaultControls` → `DriveCommands.joystickDrive()` → `Drive.runVelocity()` → `Module` → `ModuleIOTalonFX`. Explain why there are four speed/angle requests.
-4. Compare the REAL and SIM columns in `RobotContainer`. Identify which SIM adapters are models and which are placeholders. Do not infer physical readiness from desktop motion.
-5. Read [TECHNICAL_GUIDE.md](TECHNICAL_GUIDE.md) for the calculations and [DELIVERY_PLAN_2027.md](DELIVERY_PLAN_2027.md) for the proposed change order. Any test with moving hardware needs the team's approved bring-up procedure and measured physical limits.
-
-If a student can trace both the **control request** and the **measurement back**, they have the big picture needed to start a small software change. The remaining unknowns belong in the hardware record and acceptance work, not in guesses about this code.
+Trace the operator's intake button through `DriverControls` → `Intake.intake()` → `IntakeIO` → `IntakeIOTalonFX`, then follow a sensor value back through `updateInputs()`. Compare the REAL and SIM adapters in `RobotContainer` to see which desktop behaviors are modeled. Before testing hardware, compare this software map with the actual robot and its approved bring-up procedure.

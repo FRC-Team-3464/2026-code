@@ -1,6 +1,6 @@
 # Swerve drive: class and sequence diagrams
 
-These diagrams describe the **current 2026 source**, as it stands before the proposed 2027 repairs. They are for understanding control flow, not proof that the modified physical robot drives or estimates its field position correctly. Start with the [Robot Parts and Control Map](ROBOT_PARTS_AND_CONTROL_MAP.md) if terms such as *module*, *gyro*, or *encoder* are new. The [Technical Guide](TECHNICAL_GUIDE.md#7-swerve-drive) explains the drive calculations in more depth.
+These diagrams show the current software path. For part names, see the [Robot Parts and Control Map](ROBOT_PARTS_AND_CONTROL_MAP.md); for drive calculations, see the [Technical Guide](TECHNICAL_GUIDE.md#7-swerve-drive). They do not validate physical drive or field-position accuracy.
 
 **The physical idea:** each of four swerve modules has a drive wheel and a steering axis. The driver asks for whole-robot translation and rotation. Software computes a speed and steering angle for each module. Encoders and a gyro report what happened; the program uses those readings to estimate position.
 
@@ -183,5 +183,3 @@ sequenceDiagram
 ## A related control: heading reset
 
 The driver X-button binding schedules an estimator reset alongside `Drive.zeroYaw()`. That drive method returns a command; **calling `zeroYaw()` in the `Drive` constructor only creates a command and does not schedule it**. `GyroIOPigeon2.setYaw()` also transforms the requested angle by 180 degrees before sending it to the Pigeon 2. These are current code facts, not a recommended heading convention. The [2027 Recommendations](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3) require the team to define and verify one heading/reset convention before relying on field-relative behavior. [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
-
-For a first code-reading exercise, trace one `joystickDrive` call from the gamepad to the four `setDriveVelocity()` calls, then trace one `ModuleIOInputs.drivePositionRad` reading back into `RobotState`. If the second journey seems indirect, that is the architecture issue the third diagram exposes; do not silently redraw the commented-out high-rate update as if it were working.

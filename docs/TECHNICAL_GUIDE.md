@@ -1,12 +1,6 @@
 # Technical guide to the Sim-City 2026 robot code
 
-This guide explains the software in this repository for someone with basic robotics knowledge. It starts with the physical robot, follows the software from startup to motor commands, and then explains the calculations and development tools.
-
-The repository identifies itself as **FRC Team 3464, Sim-City, for the 2026 REBUILT season**. FRC means FIRST Robotics Competition. The robot collects balls called *fuel* and launches them toward a field target called the *hub*.
-
-**Scope:** originally reviewed September 23, 2026; revalidated September 24 against `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51), including the merged formatting/CI changes. Descriptions of active behavior follow executable code, including where it differs from comments. Hardware dimensions and tuning values below are configured values, not independently measured specifications. No robot deployment, physical testing, or simulation run was performed for this document.
-
-Use this guide to learn what the code currently does. The [Architecture Review](ARCHITECTURE_REVIEW.md) compares that design with WPILib and AdvantageKit guidance; the [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) distinguish repairs, hardening, and team choices for future work.
+This guide explains the 2026 Sim-City robot code for readers new to robotics. In the 2026 game, balls are called *fuel* and the scoring target is a *hub*. The guide follows controls and sensor readings through the software. Configured dimensions and tuning values are not independently measured robot specifications.
 
 ## Contents
 
@@ -220,7 +214,7 @@ The scheduler runs registered subsystem `periodic()` methods, polls triggers, ex
 Two project-specific details are easy to miss:
 
 - `RobotContainer.robotPeriodic()` runs **before** `Drive.periodic()` refreshes inputs. For example, at the start of a loop it submits the module positions saved by the previous loop, but attaches the current time. Only afterward does `Drive.periodic()` read the newer positions. The nominal age difference is roughly one main-loop period.
-- `Shooter.periodic()` manually calls `periodic()` on the hood, turret, and flywheel. Those children also inherit from registered subsystem classes, so the scheduler calls them too. In a nominal 20 ms robot cycle, their simulated models each receive two 20 ms updates: 40 ms of simulated motion for one robot cycle. This is why counting actual update calls matters when checking simulation results.
+- `Shooter` coordinates its hood, turret, and flywheel without calling their `periodic()` methods. Each child is a registered subsystem, so the scheduler owns its input update. This shared code change applies in REAL and SIM. [The implementation tracker](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle) records the completed SIM callback counts, the remaining software review step, and the separate hardware bring-up check.
 
 `FullSubsystem` adds an output stage after command execution. Only the turret currently extends it. The flywheel writes its velocity request to IO inside its setter. The hood's angle setter stores a target, and `Hood.periodic()` sends that target to IO; a target chosen during command execution therefore takes effect on the next periodic update. Hood open-loop requests call IO immediately. Keep these different timings in mind when reading a command trace.
 
@@ -689,15 +683,15 @@ Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), 
 | Gyro | Empty `GyroIO` | No simulated yaw update |
 | Intake | `IntakeIOSim` | Entire implementation body is commented out |
 | Indexer | `IndexerIOSim` | Methods delegate to no-op defaults |
-| Turret | `DCMotorSim` with PID | Double periodic update and behavior differs from real limits |
-| Hood | `SingleJointedArmSim` with gravity and PID | Double periodic update |
+| Turret | `DCMotorSim` with PID | Simulated behavior differs from real limits |
+| Hood | `SingleJointedArmSim` with gravity and PID | Physical calibration still required |
 | Flywheel | `DCMotorSim` with PID | Unit and output-mode issues described below |
 | Vision | No instance constructed in `SIM` | PhotonVision simulation class exists but is unused |
 | LEDs | No instance constructed in `SIM` | No active LED simulation wiring |
 
 There is no implemented end-to-end fuel trajectory, ball transport, scoring, or contact/obstacle simulation. Desktop simulation can expose control flow and some mechanism behavior, but it cannot currently demonstrate an accurate full match.
 
-For example, in `SIM` the operator's right trigger can schedule `indexer.index()`, but `IndexerIOSim` does not model fuel moving through the robot. The flywheel and hood have simulated motors, subject to the timing and unit problems described here. A simulated button press can help explain the command path; it cannot by itself show that fuel reached the hub.
+For example, in `SIM` the operator's right trigger can schedule `indexer.index()`, but `IndexerIOSim` does not model fuel moving through the robot. The flywheel and hood have simulated motors; the flywheel unit and mode issues below still limit comparison with REAL.
 
 ### Flywheel simulation mismatch
 
@@ -770,122 +764,23 @@ Sources: [RobotVisualizer.java](../src/main/java/frc/robot/RobotVisualizer.java)
 
 ## 15. Building and developing the project
 
-### Toolchain and commands
-
-The project targets Java 17 and the 2026 WPILib toolchain. Use the repository's Gradle wrapper so commands use its pinned Gradle version. Dependencies may need to be downloaded on the first build.
-
-From the repository root on macOS/Linux, the relevant commands are:
+Use Java 17 and the repository's Gradle wrapper (`gradlew.bat` on Windows). The [README](../README.md) has local setup and hook instructions. From the repository root:
 
 ```bash
-./gradlew build
-./gradlew test
-./gradlew spotlessCheck
-./gradlew spotlessApply
-./gradlew simulateJava
+./gradlew spotlessCheck build   # Check formatting and compile/package
+./gradlew spotlessApply         # Change formatting; review the diff afterward
+./gradlew simulateJava          # Start desktop simulation
 ```
 
-On Windows, use `gradlew.bat` in place of `./gradlew`.
+The `test` task currently has no test sources. Spotless checks formatting, not Java naming or robot behavior; Checkstyle is proposed but not installed. The simulation GUI is disabled by default in [build.gradle](../build.gradle), so controller-driven checks need the WPILib simulation launch configuration.
 
-`build` compiles and packages the program and runs configured checks; `test` invokes the configured JUnit platform, but this checkout contains no test sources. `spotlessCheck` checks formatting and `spotlessApply` changes formatting. `simulateJava` launches the desktop program with the configured simulation support.
+Deployment uses `./gradlew deploy` for team 3464. On branch names beginning with `event`, the `eventDeploy` task also stages all changes and creates a timestamped commit; inspect the working tree before deploying. The [CI workflow](../.github/workflows/build.yml) runs formatting and build checks without changing source. Gradle also generates `BuildConstants.java` and AdvantageKit `*AutoLogged` input classes; edit their source definitions rather than generated output.
 
-The simulation GUI is **disabled by default** in `build.gradle`, while Driver Station simulation support is added. If a visual simulator interface is desired, enable the GUI extension through the WPILib simulation launch options or adjust that build setting. A running desktop process by itself does not prove all mechanisms are simulated correctly.
-
-These command descriptions come from the repository configuration. Documentation validation is separate from the simulator and hardware acceptance procedures in the recommendations; it does not establish working robot behavior.
-
-### Build side effects
-
-At the reviewed revision, `compileJava` no longer depends on `spotlessApply`. Formatting is an explicit developer action. `spotlessCheck` reports differences without repairing them, and `build` includes Spotless checks through Gradle's verification lifecycle. Generated build outputs are still expected.
-
-The formatter's scope is explicit:
-
-| Format | Current targets |
-| --- | --- |
-| Java | `src/**/*.java`, excluding generated `BuildConstants.java` |
-| Gradle | `*.gradle`, `gradle/**/*.gradle` |
-| JSON | `src/**/*.json`, `vendordeps/**/*.json` |
-| Markdown and whitespace | `*.md`, `docs/**/*.md`, `.gitignore` |
-
-These targets keep root simulator state and build output outside formatting. Recursive targets with exclusions are also a valid strategy, used in the matching AdvantageKit template. The narrower selection is a team workflow choice. Markdown checks here normalize whitespace and final newlines; they do not verify technical claims or links.
-
-Spotless does not enforce Java naming conventions. Checkstyle is proposed in the recommendations but is not installed, so `checkstyleMain` is not currently an available task. The google-java-format `1.21.0` pin records the team's chosen formatter; Java 17 alone does not require downgrading from `1.22.0`, whose [build configuration includes a Java 17 profile](https://github.com/google/google-java-format/blob/v1.22.0/core/pom.xml).
-
-The build also generates `BuildConstants.java` with Git revision, branch, dirty status, and build date. AdvantageKit records those values so telemetry can be associated with a code revision. Auto-logged input classes are generated by annotation processing; missing generated classes in an editor can indicate that the Gradle project has not been built or imported correctly.
-
-### Deployment
-
-The configured deployment command is:
-
-```bash
-./gradlew deploy
-```
-
-It targets team **3464**, packages application classes and dependencies into a runnable JAR, and copies `src/main/deploy` to `/home/lvuser/deploy` on the roboRIO. `deleteOldFiles = false` means removed local deployment files are not automatically deleted from that robot directory.
-
-There is a notable Git side effect: the `eventDeploy` task checks whether the requested task names include “deploy.” On branches starting with `event`, it runs `git add -A` and creates a timestamped commit. This stages all working changes. On other branches, that automatic commit is skipped.
-
-That task follows the [AdvantageKit `v26.0.1` build template](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/template/build.gradle), which also includes compile-time formatting and recursive formatting targets. Event commits can help preserve the code used at an event; the team should decide deliberately whether staging every working change fits its deployment workflow.
-
-### Continuous integration
-
-The GitHub workflow runs on pushes and pull requests in `wpilib/roborio-cross-ubuntu:2024-22.04`. It installs Temurin Java 17, sets up Gradle caching, runs `./gradlew spotlessCheck`, and then runs `./gradlew build`. A failed formatting step stops the job before the build. There is no `spotlessApply` step. Workflow configuration was reviewed; a successful GitHub-hosted run was not verified for this document.
-
-Check the container against the supported toolchain, rather than judging compatibility by its year alone. WPILib's current CI example uses the 2025 container for 2026 and explains why it remains suitable. That does not establish compatibility of this repository's 2024 image. [WPILib CI guidance](https://docs.wpilib.org/en/stable/docs/software/advanced-gradlerio/robot-code-ci.html).
-
-### Local pre-commit check
-
-The versioned [pre-commit hook](../git-hooks/pre-commit) runs `git diff --cached --check` on staged changes, then `./gradlew spotlessCheck` on files in the working tree. It exits with a failure if either check fails. It never formats or stages files; fix formatting explicitly, review the diff, and stage the intended changes again.
-
-Git does not activate that hook automatically after cloning. Follow the [README setup instructions](../README.md) to configure it in each checkout, preserving any existing custom hook configuration. The hook is local feedback; CI checks the committed snapshot even when a developer has not installed it. With partially staged files, the hook's working-tree check is not proof that the staged snapshot is formatted correctly.
-
-### Where to make common changes
-
-| Intended change | Start here |
-| --- | --- |
-| Remap a controller button | `control/DriverControls.java` |
-| Change normal driving or idle mechanism behavior | `control/DefaultControls.java` |
-| Change joystick feel or crab speed | `commands/DriveCommands.java` |
-| Change hardware IDs | `Constants.DeviceIDs`; drivetrain IDs originate in `DriveConstants.TunerConstants` |
-| Change swerve geometry or encoder offsets | `subsystems/drive/DriveConstants.java` |
-| Change motor gains | Relevant constants and real IO class; some gains are configured directly in IO |
-| Change shot calibration | `subsystems/shooter/TrajectoryCalculator.java` |
-| Change aiming target | `RobotState.getShooterTarget()` |
-| Change camera names | Real-mode constructors in `RobotContainer.java` |
-| Change vision filters | `subsystems/vision/VisionConstants.java` and `Vision.java` |
-| Change actual autonomous behavior | `RobotContainer.getAutonomousCommand()` |
-| Complete simulation | Relevant `*IOSim` classes and the `SIM` construction branch |
-
-For a new behavior, follow one complete chain: binding → command → subsystem → IO → measurement/logging. If a mechanism needs to run concurrently with another, examine its command requirements as well as its motor code.
-
-Sources: [build.gradle](../build.gradle), [settings.gradle](../settings.gradle), [CI workflow](../.github/workflows/build.yml), [.gitignore](../.gitignore).
+For a new behavior, follow the binding → command → subsystem → IO → measurement chain. Hardware IDs begin in [Constants.java](../src/main/java/frc/robot/Constants.java); swerve geometry and offsets are in [DriveConstants.java](../src/main/java/frc/robot/subsystems/drive/DriveConstants.java); shot calibration is in [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java). The [Robot Parts and Control Map](ROBOT_PARTS_AND_CONTROL_MAP.md) points to other mechanisms.
 
 ## 16. Implementation issues to understand
 
-These are findings from static source review, not results of physical testing. They explain why comments, class names, or stored assets can suggest more capability than the active configuration provides.
-
-| Finding | Evidence | Consequence |
-| --- | --- | --- |
-| Child shooter periodic methods run twice | `Shooter.periodic()` calls registered child subsystems | Duplicate reads and logging; simulated shooter models advance twice per loop |
-| Pose update precedes sensor refresh | Container runs before scheduler | Previous-cycle data receives a current timestamp |
-| High-rate odometry fusion disabled | Update call in `Drive.periodic()` is commented | Fast samples are not used to improve pose estimation |
-| Gyro fallback disabled | Kinematic heading update is commented | Alert text overstates fallback capability; simulation heading stays zero |
-| Gyro reset includes a 180° adjustment | `GyroIOPigeon2.setYaw()` | Heading-reset behavior needs frame-aware interpretation |
-| Vision uncertainty dropped | Estimator call omits record's `stdDevs` | Calculated per-observation confidence is unused |
-| Robot velocity never supplied | Setter exists with no active calls | Shot motion compensation has zero velocity input |
-| Different shooter calculation paths | Hood/turret tracking bypass full calculator angles | Aiming components do not share one consistent compensated solution |
-| Manual feeding has no readiness gate | Right trigger directly binds `indexer.index()` | Feed may run regardless of shot alignment or wheel speed |
-| Auto readiness is one-time, flywheel-only | `waitUntil(flywheelAtGoal)` then index | No continuous readiness enforcement and no turret aiming |
-| Hood manual commands lack requirements | D-pad `StartEndCommand`s omit hood | Defaults or tracking may override manual output |
-| Intake actions share one requirement | Roller and pivot commands require `Intake` | Those commands interrupt each other |
-| Position intake control unfinished | Zero gains and untuned extension target | Existing methods are not ready-made position deployment |
-| Replay construction missing | No `REPLAY` branch in container | Selecting replay alone leaves required subsystems null |
-| Simulation incomplete | No-op intake/indexer, absent gyro/vision | Cannot treat desktop behavior as a complete physical model |
-| Flywheel simulation has unit/mode mismatch | RPS setpoint versus RPM feedback; unconditional PID update | Incorrect simulated velocity and stopping behavior |
-| Turret limits differ by control mode | Hardware soft limits disabled; software checks/clamps differ | Open-loop recovery and closed-loop range need review |
-| Path assets not integrated | AutoBuilder/chooser disabled; named-action mismatches | Stored autonomous plans do not represent runnable current behavior |
-| Local persistent logging disabled | Real-mode writer commented out | Live publication does not imply a saved replay file |
-| No automated test sources found | `src` inventory | Build success alone would not establish behavior correctness |
-
-These observations suggest useful future engineering tasks, but this documentation change does not alter robot behavior. Resolving the timing, units, state propagation, and command-ownership issues would make later simulator-based validation more meaningful.
+The [2027 Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md#priority-overview) track defects, proposed repairs, and acceptance checks. Use that list for current work status rather than treating a source walkthrough as an implementation tracker. In particular, a working desktop simulation does not establish physical motor behavior, accurate field pose, or a calibrated shot.
 
 ## 17. Suggested source-reading order
 

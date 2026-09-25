@@ -6,13 +6,7 @@ Original review: September 23, 2026. Revalidated: September 24, 2026.
 
 **Direction for preseason work:** keep the command-based structure, subsystem/IO separation, and structured logging. Correct the update timing, position estimation, and command ownership before carrying the affected code into the next robot. Adopt one Java naming standard and enforce it with **Spotless plus Checkstyle**.
 
-Our goal is software that the next group of students can understand, operate, and maintain. A student should be able to follow a button press through a command to the motor request, explain which measurements it uses, and show what happens when the command stops. These recommendations focus on making that explanation reliable.
-
-This is a preseason work proposal for mentor and student-lead adoption. The priorities and acceptance checks describe the technical work expected before reuse; the separate [2027 Delivery Plan](DELIVERY_PLAN_2027.md) assigns its sequence and mentor review points. Each assigned task needs an owner, a reviewer, and a demonstration that its acceptance criteria have been met. Completed build configuration is identified below; acceptance of the broader recommendations remains pending unless a separate record documents completion.
-
-A broad unit-test suite is not required for this plan. We will rely primarily on builds, automated style checks, recorded measurements, simulation, and controlled robot checks. A few small calculation checks are recommended where they would prevent difficult-to-diagnose mistakes.
-
-The separate [Architecture Review](ARCHITECTURE_REVIEW.md) explains which parts follow WPILib and AdvantageKit guidance, which need correction, and which are team design choices. Use it when discussing the technical reasons for this plan.
+The [Delivery Plan](DELIVERY_PLAN_2027.md) sequences the work; the [Implementation Tracker](IMPLEMENTATION_TRACKER_2027.md) records progress. Acceptance relies on builds, style checks, SIM diagnostics, and controlled robot checks where required. A broad unit-test suite is not required.
 
 ## Contents
 
@@ -45,56 +39,14 @@ Review the priority overview together, then assign individual work packages. Eac
 
 ## Start here: a student's route through one change
 
-This document is an acceptance guide, not a set of edits to apply all at once. A student implementing one package needs its row in the [2027 Delivery Plan](DELIVERY_PLAN_2027.md#phase-based-work-packages), its linked H/M/L recommendation, and the relevant part of the [Technical Guide](TECHNICAL_GUIDE.md). Read the Technical Guide's [control-loop explanation](TECHNICAL_GUIDE.md#4-startup-and-the-repeating-control-loop) and [command/IO explanation](TECHNICAL_GUIDE.md#5-commands-subsystems-and-hardware-interfaces) before editing runtime code; use its [glossary](TECHNICAL_GUIDE.md#18-glossary) for unfamiliar robotics terms. `Robot` runs the loop; `RobotContainer` constructs subsystems and bindings; each subsystem applies behavior through an IO interface; the REAL or SIM adapter reads sensors and sends device requests.
+Choose one work package in the [Delivery Plan](DELIVERY_PLAN_2027.md#phase-based-work-packages), then read its recommendation and acceptance steps below. The [Robot Parts and Control Map](ROBOT_PARTS_AND_CONTROL_MAP.md) introduces the mechanisms; the [Technical Guide](TECHNICAL_GUIDE.md) explains the code paths and units.
 
-For a concrete trace, the operator's left bumper, while the left trigger is released, schedules `intake.intake()` in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java). The command belongs to [Intake.java](../src/main/java/frc/robot/subsystems/intake/Intake.java), which sends a duty-cycle request through [IntakeIO.java](../src/main/java/frc/robot/subsystems/intake/IntakeIO.java). [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java) currently chooses [IntakeIOTalonFX.java](../src/main/java/frc/robot/subsystems/intake/IntakeIOTalonFX.java) on the robot or [IntakeIOSim.java](../src/main/java/frc/robot/subsystems/intake/IntakeIOSim.java) on a desktop. The simulated adapter is currently a no-op, so seeing the command schedule in SIM does not demonstrate that fuel moved. This trace shows the difference between **command scheduling**, **a requested output**, and **a measured physical result**.
+1. Trace the active path from binding or autonomous command through subsystem, IO adapter, and measurement. Check callers with `rg`; a class can exist without being constructed.
+2. Make one scoped change. Preserve hardware IDs, units, telemetry keys, command requirements, and constructor order unless that package calls for changing them.
+3. Run `./gradlew spotlessCheck build` and the package-specific desktop or SIM checks. Record the actual input and observed result. Build success alone does not prove robot behavior.
+4. Remove temporary probes, review the final diff, and repeat affected checks. Record physical checks as `Awaiting hardware` until the robot and approved procedure are available.
 
-| If your package concerns... | Read these files first | Observe this boundary |
-| --- | --- | --- |
-| Loop ownership (H1) | [Robot.java](../src/main/java/frc/robot/Robot.java), [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) | Scheduler callback versus a manual `periodic()` call |
-| Pose/heading (H2/H3) | [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [RobotState.java](../src/main/java/frc/robot/RobotState.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) | Measurement timestamp/frame versus estimator update |
-| Bindings (H4) | [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java) | Trigger, command requirement, and cancellation output |
-| Mechanisms/shooting (H5/H6) | [Turret.java](../src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [Hood.java](../src/main/java/frc/robot/subsystems/shooter/hood/Hood.java), [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java) | Physical reference, requested target, and measured readiness |
-| Cameras (H7) | [CameraIOLimelight.java](../src/main/java/frc/robot/subsystems/vision/CameraIOLimelight.java), [Vision.java](../src/main/java/frc/robot/subsystems/vision/Vision.java), [RobotState.java](../src/main/java/frc/robot/RobotState.java) | Raw camera packet, accepted observation, estimator correction |
-| Runtime wiring (H8/P3.2) | [Constants.java](../src/main/java/frc/robot/Constants.java), [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [FlywheelIO.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIO.java) | Mode selection, chosen adapter, common IO contract |
-| Style/build (H10/M6) | [build.gradle](../build.gradle), [CI workflow](../.github/workflows/build.yml), [README.md](../README.md) | Local check versus CI check; generated versus maintained files |
-
-Start with these paths, then use `rg` to follow every caller of the method you intend to change. A file's name does not prove that it is constructed or active; for example, an unused adapter can compile without ever running.
-
-Use this sequence for each assigned package:
-
-1. **Read and define the change.** Find the package ID in the delivery plan, open its linked recommendation and acceptance procedure, and write down the exact current behavior, intended behavior, affected files, and items deliberately left for another package. The file links and searches below are starting points; follow actual callers before editing.
-2. **Capture the baseline.** From the repository root, run `git status --short --branch` and `./gradlew spotlessCheck build`. Record the revision, JDK, result, and any existing failure. `build` compiles and packages this project but its `test` task currently has no test sources; a green build does not prove robot behavior. Start SIM only if the package needs it, and record what is actually modeled.
-3. **Make one narrow edit.** Preserve units, camera names, CAN IDs, telemetry keys, command requirements, and constructor order unless the assigned package specifically changes them. Use `rg` to find callers. Do not rename symbols in a behavior-repair commit. `spotlessApply` changes files; run it deliberately and inspect its diff before staging.
-4. **Run the package's checks.** Run `./gradlew spotlessCheck build` again, then the SIM/diagnostic steps in that package's acceptance section. Record the input, expected result, observed result, and where to find the output. If a procedure needs a new counter, mock IO, or asset validator, that helper is proposed work: implement it in the package or record why the check remains blocked. Do not mark a check passed because an instruction exists in this document.
-5. **Review and commit.** Remove temporary probes unless they are intentionally retained, rerun affected checks on the final diff, and have the assigned reviewer inspect both code and evidence. Commit the one package or stated substep with its ID in the message. Hardware checks require the mentor-approved bring-up procedure; until then, record `Awaiting hardware` for physical acceptance while keeping the code review result separate.
-
-Example commands for a clean student checkout (on Windows use `gradlew.bat`):
-
-```bash
-git status --short --branch
-./gradlew --version
-./gradlew spotlessCheck build
-rg -n 'periodic\(|addVisionMeasurement\(' src/main/java/frc/robot
-git diff --check
-git diff --stat
-```
-
-Use the WPILib 2026 Java 17 toolchain for this checkout; confirm the Java version reported by Gradle before diagnosing a compile failure. The [README](../README.md) explains the optional local hook. CI checks formatting and build even when a student has not enabled that hook. `./gradlew simulateJava` starts the desktop program; the simulation GUI is disabled by default in [build.gradle](../build.gradle), so use the team's WPILib simulation launch configuration when a procedure needs Driver Station inputs. Stop a running desktop simulation normally before changing runtime mode or launching another instance. [WPILib simulation GUI instructions](https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/simulation-gui.html).
-
-Two first changes illustrate the required scope:
-
-- **P3.1 / H1:** [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) currently overrides `periodic()` only to call `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()`. Remove that override, leaving the child `SubsystemBase` objects to receive their own scheduler callbacks. Keep `Shooter` itself a `SubsystemBase` in this commit: existing command factories use it as a requirement. Then run H1's per-cycle counters; compilation alone cannot show that each callback ran once.
-- **P5.2 / H7's small uncertainty repair:** [RobotState.java](../src/main/java/frc/robot/RobotState.java) currently calls `poseEstimator.addVisionMeasurement(measurement.visionPose(), measurement.timestamp())`. The existing `VisionMeasurement` record also has `stdDevs()`. The focused change is to call the three-argument overload, passing `measurement.stdDevs()` as the third argument. [WPILib's 2026 estimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html) defines that overload. Use H7's controlled low/high-uncertainty comparison to verify effect; parser hardening and camera calibration remain separate work.
-
-For the H7 example, the proposed call in `RobotState.addVisionMeasurement()` is:
-
-```java
-poseEstimator.addVisionMeasurement(
-    measurement.visionPose(), measurement.timestamp(), measurement.stdDevs());
-```
-
-These are examples of *scope*, not claims that the fixes or their acceptance checks have already been completed. After the first change, update the Technical Guide's description of the old behavior as part of the same package review. A software-only result can be accepted for a software-only package; a feature that depends on physical referencing, camera geometry, or measured shot performance cannot be declared robot-ready from desktop evidence.
+The [Implementation Tracker](IMPLEMENTATION_TRACKER_2027.md) holds progress; the detailed acceptance criteria remain in this document.
 
 ## Scope and priority definitions
 
@@ -943,34 +895,6 @@ Remaining tooling work adds Checkstyle configuration and integrates its reports/
 
 ## Verification without a unit-test program
 
-I do not recommend making a large JUnit suite, coverage percentage, mock hardware framework, or tests for getters/setters a requirement for this team. For this preseason effort, require repeatable acceptance checks and saved results for the work being changed.
+A broad JUnit suite or coverage target is not required. Use each recommendation's acceptance steps, recording inputs, observed outputs, and any checks deferred until hardware is available. SIM results count only for behavior the SIM adapter actually models.
 
-### Minimum acceptance process
-
-| Change type | Verification | Evidence to keep |
-| --- | --- | --- |
-| Naming-only refactor | Compile, formatting/naming checks, inspect diff for numeric/string changes | Clean checks and focused diff |
-| IO/control-loop change | Known command, measured response, stop/restart, one-update counter | Short telemetry capture |
-| Controller binding | Press/hold/release and overlap/mode transitions | Completed control checklist |
-| Heading/odometry | Four orientations, reset, translation, rotation, square drive | Pose/gyro/module log and measured references |
-| Mechanism bounds | Referencing, near-limit behavior, invalid target, recovery | Recorded setpoint/actual/output traces |
-| Shooter | Stationary calibration points, new goal, RPM dip, cancellation, invalid input | Shot observations and readiness log |
-| Vision | Tag visibility changes, bad/outdated observations, disconnection | Accepted/rejected measurements and estimator trace |
-| Runtime mode | Startup and stop behavior in each supported mode | Mode-specific smoke-check record |
-| Autonomous assets | JSON/reference validation plus controlled execution of exposed autos | Validation report and execution notes |
-| Tooling | Known deliberate violations fail; normal code passes | CI result with reports |
-
-Run simulator checks after correcting simulator timing and unit defects. Until then, a simulation pass can be misleading. Hardware checks should use the team's normal controlled bring-up procedure, with one mechanism or behavior changed at a time.
-
-Persistent logs are particularly valuable in this workflow, because they make a field observation inspectable after the robot is unavailable. Manual checks must record what was exercised and what passed; “it seemed fine” is hard to reuse next season.
-
-### Small calculation checks worth keeping
-
-None is a reason to block the initial naming/tooling work. If the team retains and substantially rewrites advanced aiming or geometry, a tiny set of pure calculations has unusually high value:
-
-1. **Unit boundaries:** a known 2400 RPM request corresponds to 40 RPS and about 251.33 rad/s. The current simulator contains exactly this class of mismatch.
-2. **Limited-travel turret target selection:** representative targets around angle wrapping and both mechanical bounds. These cases are easy to miss by pointing at one target.
-3. **Field/alliance transforms and shot interpolation:** known poses, a repeated alliance transform returning the original pose, interpolation midpoint, and out-of-range behavior.
-4. **Camera parser input validation:** empty, short, malformed, non-finite, and valid payloads. These cases are awkward to reproduce reliably with a physical camera.
-
-These can be small deterministic checks with no motors, HAL initialization, or vendor mocks. The mentor and student lead should select a practical way to retain these cases, either as small automated checks or as documented diagnostic procedures. Keep bounded-turret and unit-conversion cases whenever those algorithms remain in our reusable code. Static style tools cannot verify those behaviors.
+Small deterministic checks are valuable where a calculation could silently produce a plausible but wrong answer: RPM/RPS conversion, turret angle wrapping and travel bounds, alliance/field transforms, shot-table interpolation, and malformed camera payloads. Keep them as focused automated checks or repeatable diagnostic procedures when those algorithms are retained. Style tools and compilation cannot verify these behaviors.
