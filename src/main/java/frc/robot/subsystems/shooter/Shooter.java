@@ -30,15 +30,6 @@ public class Shooter extends SubsystemBase {
     this.flywheel = new Flywheel(flywheelIO);
   }
 
-  @Override
-  public void periodic() {
-    hood.periodic();
-    if (turret != null) {
-      turret.periodic();
-    }
-    flywheel.periodic();
-  }
-
   public boolean readyToShoot() {
     return turret.atGoal() && hood.atGoal() && flywheel.atGoal();
   }
