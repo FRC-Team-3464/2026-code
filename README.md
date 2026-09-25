@@ -3,9 +3,15 @@ This repository contains all the robot code used by Team 3464 "Sim-City" during 
 <br> <br>
 The code has been extensively documented to be used as reference in training and for future seasons.
 
+If you are new to robotics, start with the [illustrated, interactive Robot Parts and Control Map](docs/ROBOT_PARTS_AND_CONTROL_MAP.html), or read its [text version](docs/ROBOT_PARTS_AND_CONTROL_MAP.md). It shows what each mechanism does, which Java classes and libraries control it, and how driver input reaches the hardware or simulation.
+
+For the swerve drivetrain specifically, see the [class and sequence diagrams](docs/SWERVE_DRIVE_DIAGRAMS.md).
+
 For a detailed explanation of the architecture, robotics concepts, subsystems, controls, and current implementation limitations, read the [Technical Guide](docs/TECHNICAL_GUIDE.md).
 
-For mentor recommendations and team expectations before reusing this code, including Java naming, analysis tools, detailed acceptance procedures, and a phased delivery plan, read the [2027 Mentor Recommendations](docs/REUSE_RECOMMENDATIONS_2027.md).
+For mentor recommendations and team expectations before reusing this code, including Java naming, analysis tools, and detailed acceptance procedures, read the [2027 Mentor Recommendations](docs/REUSE_RECOMMENDATIONS_2027.md). For proposed staffing, week-by-week work, and hardware-dependent review gates, read the [2027 Delivery Plan](docs/DELIVERY_PLAN_2027.md).
+
+The [Phase 1 Record](docs/PHASE_1_BASELINE_2027.md) separates facts checked against the current source and desktop run from decisions and robot measurements still needed before reuse.
 
 For a separate assessment of how the design follows WPILib and AdvantageKit guidance, and which changes are team design choices, read the [Architecture Review](docs/ARCHITECTURE_REVIEW.md).
 

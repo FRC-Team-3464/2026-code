@@ -10,7 +10,7 @@ For a mentor deciding how much redesign to require, the recommendation is **focu
 
 This assessment compares the source with primary WPILib and AdvantageKit documentation, the installed WPILib `2026.2.1` sources, and the AdvantageKit `v26.0.1` templates. No simulator run, replay, or hardware trial was performed for this review. Documentation checks do not establish robot behavior. Online documentation can describe newer releases; check exact APIs against the selected dependencies during implementation. Nothing here certifies compatibility with a future 2027 release.
 
-The [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) contain the detailed changes, acceptance procedures, and delivery plan. The [Technical Guide](TECHNICAL_GUIDE.md) explains the current code for readers learning robotics.
+The [Mentor Recommendations](REUSE_RECOMMENDATIONS_2027.md) contain the detailed changes and acceptance procedures. The separate [2027 Delivery Plan](DELIVERY_PLAN_2027.md) proposes staffing, weekly work, and release gates. The [Technical Guide](TECHNICAL_GUIDE.md) explains the current code for readers learning robotics.
 
 ## What “following best practices” means here
 
@@ -210,7 +210,7 @@ Import rules need the same distinction. WPILib recommends `import static edu.wpi
 
 ## Recommended decision for the mentor
 
-Keep the current **architectural direction** as the starting point for preseason work. Begin with small fixes for duplicate shooter updates, missing manual hood requirements, discarded vision uncertainty, and flywheel simulation units/control modes. These repairs can proceed before broad renaming. The H1–H8 sections contain both confirmed defects and proposed operating policies; use their stated scope and acceptance checks to decide what each retained capability needs. Complete H9 reuse boundaries and the adopted H10 team tooling policy through the delivery plan. Keep IO diagnostics and logging work alongside the fixes that depend on them.
+Keep the current **architectural direction** as the starting point for preseason work. Begin with small fixes for duplicate shooter updates, missing manual hood requirements, discarded vision uncertainty, and flywheel simulation units/control modes. These repairs can proceed before broad renaming. The H1–H8 sections contain both confirmed defects and proposed operating policies; use their stated scope and acceptance checks to decide what each retained capability needs. Complete H9 reuse boundaries and the adopted H10 team tooling policy through the [2027 Delivery Plan](DELIVERY_PLAN_2027.md). Keep IO diagnostics and logging work alongside the fixes that depend on them.
 
 When preparing the actual season application, compare carried code with the matching upstream templates and document deliberate differences. AdvantageKit publishes swerve and vision templates relevant to this project. Use the version appropriate to the selected season dependencies. [AdvantageKit templates](https://docs.advantagekit.org/getting-started/template-projects/).
 
