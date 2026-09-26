@@ -79,6 +79,18 @@ public class Hood extends SubsystemBase {
   }
 
   /**
+   * Moves the hood manually while a signed output is requested, then holds its last measured angle.
+   *
+   * <p>The command requires this subsystem, so it cleanly interrupts any automatic hood command.
+   * {@link #setManualOutput(double)} applies the configured travel limits on every scheduler cycle.
+   *
+   * @param output signed motor duty cycle, from -1.0 to 1.0
+   */
+  public Command manualControl(double output) {
+    return Commands.runEnd(() -> setManualOutput(output), this::holdCurrentPosition, this);
+  }
+
+  /**
    * Sets the hood to the target angle.
    *
    * @param angle The target angle (in radians).

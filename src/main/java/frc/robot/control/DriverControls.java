@@ -5,7 +5,6 @@ import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManua
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
@@ -13,9 +12,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.util.Direction;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class DriverControls implements Configurable {
@@ -110,6 +107,14 @@ public class DriverControls implements Configurable {
         .and(DriverStation::isTeleopEnabled)
         .whileTrue(shooter.trackTargetFlywheel(targetSupplier));
 
+    // Remember that the operator chose a manual hood angle while tracking. Keeping this controller
+    // state here prevents Hood from depending on RB or D-pad inputs.
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .and(operator.dPadUp().or(operator.dPadDown()))
+        .onTrue(Commands.runOnce(() -> manualHoodOverrideActive = true));
+
     // Clear the latch when RB is released or teleop ends. This may run while disabled so an old
     // manual angle cannot survive a mode change and suppress automatic aiming later.
     operator
@@ -122,11 +127,11 @@ public class DriverControls implements Configurable {
     operator
         .dPadUp()
         .and(DriverStation::isTeleopEnabled)
-        .whileTrue(manualHood(kManualDutyCycle, operator.rightBumper()));
+        .whileTrue(shooter.getHood().manualControl(kManualDutyCycle));
     operator
         .dPadDown()
         .and(DriverStation::isTeleopEnabled)
-        .whileTrue(manualHood(-kManualDutyCycle, operator.rightBumper()));
+        .whileTrue(shooter.getHood().manualControl(-kManualDutyCycle));
 
     operator.aCross().whileTrue(intake.outtake());
     operator.xSquare().whileTrue(intake.deployOpenLoop());
@@ -154,38 +159,6 @@ public class DriverControls implements Configurable {
     // operator.aCross().whileTrue(shooter.shootAtTargetNoRotation(() ->
     // RobotState.getInstance().getTurretTarget()));
     // operator.aCross().and(shooter::readyToShoot).whileTrue(indexer.index());
-  }
-
-  /**
-   * Moves the hood manually while a D-pad direction is held.
-   *
-   * <p>The command requires the hood, so it cleanly interrupts automatic hood tracking instead of
-   * allowing two commands to write different hood outputs in the same robot loop. The action runs
-   * every scheduler cycle so {@link Hood#setManualOutput(double)} can stop motion when a configured
-   * travel limit is reached. When the D-pad is released, the hood changes to closed-loop control at
-   * its latest measured position.
-   *
-   * @param output signed manual motor output
-   * @param trackingRequested whether RB is currently held
-   */
-  private Command manualHood(double output, BooleanSupplier trackingRequested) {
-    Hood hood = shooter.getHood();
-    return Commands.runEnd(
-        () -> {
-          // Set the latch before the D-pad is released so automatic aiming cannot briefly resume
-          // between the manual command ending and its next trigger evaluation.
-          manualHoodOverrideActive =
-              DriverStation.isTeleopEnabled() && trackingRequested.getAsBoolean();
-          hood.setManualOutput(output);
-        },
-        () -> {
-          hood.holdCurrentPosition();
-          // Preserve the manually selected angle only if RB remains held in teleop. Otherwise the
-          // hood's default command returns it to the starting angle.
-          manualHoodOverrideActive =
-              DriverStation.isTeleopEnabled() && trackingRequested.getAsBoolean();
-        },
-        hood);
   }
 
   private void configureSingleController() {
