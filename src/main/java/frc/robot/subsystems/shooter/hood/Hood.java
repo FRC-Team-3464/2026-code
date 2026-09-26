@@ -41,12 +41,13 @@ public class Hood extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
 
-    if (!closedLoop) {
-      // Uses the debouncer to determine if the hood has been at the goal angle for enough time
-      atGoal =
-          atGoalDebouncer.calculate(
-              Math.abs(targetAngleRad - inputs.positionRad) < HoodConstants.kAngleTolerance);
-    }
+    // Readiness requires a valid position while actively controlling to a target. Passing false
+    // during manual control or a sensor fault clears any previously true, stale result.
+    atGoal =
+        atGoalDebouncer.calculate(
+            inputs.connected
+                && closedLoop
+                && Math.abs(targetAngleRad - inputs.positionRad) < HoodConstants.kAngleTolerance);
     if (closedLoop) {
       io.setAngle(targetAngleRad);
     }
@@ -87,10 +88,49 @@ public class Hood extends SubsystemBase {
     targetAngleRad = angle;
   }
 
-  /** Run the hood motor at the specified open loop value. */
+  /** Run the hood motor at the specified open-loop value without position-limit checking. */
   public void setOpenLoop(double output) {
     closedLoop = false;
     io.setOpenLoop(output);
+  }
+
+  /**
+   * Runs manual hood movement while preventing commands farther beyond the configured travel range.
+   *
+   * <p>This guard uses the relative encoder position, so it is valid only after the hood has been
+   * placed at a known startup reference. If the hood is already outside a limit, this method still
+   * permits movement back toward the allowed range.
+   */
+  public void setManualOutput(double output) {
+    // Position limits are only meaningful when the latest encoder reading is valid. Stop instead of
+    // moving from a stale or default position if the IO layer reports a disconnected sensor.
+    if (!inputs.connected) {
+      setOpenLoop(0.0);
+      return;
+    }
+
+    boolean movingPastMaximum = output > 0.0 && inputs.positionRad >= HoodConstants.kMaxAngleRad;
+    boolean movingPastMinimum = output < 0.0 && inputs.positionRad <= HoodConstants.kMinAngleRad;
+    setOpenLoop(movingPastMaximum || movingPastMinimum ? 0.0 : output);
+  }
+
+  /**
+   * Stops manual output and holds the most recently sampled hood angle.
+   *
+   * <p>The position was sampled by {@link #periodic()} near the beginning of the current robot
+   * loop. Actual stopping accuracy still depends on motor braking, mechanism inertia, and
+   * controller tuning, so it must be confirmed on the physical mechanism.
+   */
+  public void holdCurrentPosition() {
+    // Do not turn a stale position into a closed-loop target. Remaining stopped is the only safe
+    // behavior until position feedback becomes valid again.
+    if (!inputs.connected) {
+      setOpenLoop(0.0);
+      return;
+    }
+
+    setOpenLoop(0);
+    setAngle(inputs.positionRad);
   }
 
   public double getPosition() {
