@@ -1,11 +1,12 @@
 package frc.robot.control;
 
+import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManualDutyCycle;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -14,11 +15,10 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.util.Direction;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class DriverControls implements Configurable {
-  private static final double MANUAL_HOOD_DUTY_CYCLE = 0.05;
-
   private final DriverController driver;
   private final DriverController operator;
   private final Drive drive;
@@ -90,31 +90,43 @@ public class DriverControls implements Configurable {
     operator.leftBumper().and(operator.leftTrigger().negate()).whileTrue(intake.intake());
 
     Supplier<Translation2d> targetSupplier = () -> RobotState.getInstance().getShooterTarget();
-    Trigger rightBumper = operator.rightBumper();
-    Trigger trackingRequested = rightBumper.and(DriverStation::isTeleopEnabled);
-    Trigger dPadUp = operator.dPadUp().and(DriverStation::isTeleopEnabled);
-    Trigger dPadDown = operator.dPadDown().and(DriverStation::isTeleopEnabled);
-    Trigger manualHoodInputInactive = dPadUp.or(dPadDown).negate();
-    Trigger automaticHood =
-        trackingRequested.and(manualHoodInputInactive.and(() -> !manualHoodOverrideActive));
 
     // RB controls the three shooter mechanisms independently. Therefore, a D-pad command can take
-    // ownership of the hood without cancelling the turret or flywheel commands. All three triggers
-    // include isTeleopEnabled so held controls cannot compete with autonomous commands.
-    trackingRequested.whileTrue(shooter.trackTargetTurret(targetSupplier));
-    automaticHood.whileTrue(shooter.trackTargetHood(targetSupplier));
-    trackingRequested.whileTrue(shooter.trackTargetFlywheel(targetSupplier));
+    // ownership of the hood without cancelling the turret or flywheel commands. Controller
+    // triggers are still polled during autonomous, so these teleop guards prevent held controls
+    // from competing with autonomous shooter commands.
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(shooter.trackTargetTurret(targetSupplier));
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .and(operator.dPadUp().or(operator.dPadDown()).negate())
+        .and(() -> !manualHoodOverrideActive)
+        .whileTrue(shooter.trackTargetHood(targetSupplier));
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(shooter.trackTargetFlywheel(targetSupplier));
 
     // Clear the latch when RB is released or teleop ends. This may run while disabled so an old
     // manual angle cannot survive a mode change and suppress automatic aiming later.
-    trackingRequested.onFalse(
-        Commands.runOnce(() -> manualHoodOverrideActive = false).ignoringDisable(true));
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .onFalse(Commands.runOnce(() -> manualHoodOverrideActive = false).ignoringDisable(true));
 
     operator.rightTrigger().whileTrue(indexer.index());
 
-    dPadUp.whileTrue(manualHood(MANUAL_HOOD_DUTY_CYCLE, trackingRequested));
-
-    dPadDown.whileTrue(manualHood(-MANUAL_HOOD_DUTY_CYCLE, trackingRequested));
+    operator
+        .dPadUp()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(manualHood(kManualDutyCycle, operator.rightBumper()));
+    operator
+        .dPadDown()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(manualHood(-kManualDutyCycle, operator.rightBumper()));
 
     operator.aCross().whileTrue(intake.outtake());
     operator.xSquare().whileTrue(intake.deployOpenLoop());
@@ -154,21 +166,24 @@ public class DriverControls implements Configurable {
    * its latest measured position.
    *
    * @param output signed manual motor output
-   * @param trackingRequested true only while RB is held during enabled teleop
+   * @param trackingRequested whether RB is currently held
    */
-  private Command manualHood(double output, Trigger trackingRequested) {
+  private Command manualHood(double output, BooleanSupplier trackingRequested) {
     Hood hood = shooter.getHood();
     return Commands.runEnd(
         () -> {
-          // If RB is held, preserve the manually selected angle after the D-pad is released.
-          manualHoodOverrideActive = trackingRequested.getAsBoolean();
+          // Set the latch before the D-pad is released so automatic aiming cannot briefly resume
+          // between the manual command ending and its next trigger evaluation.
+          manualHoodOverrideActive =
+              DriverStation.isTeleopEnabled() && trackingRequested.getAsBoolean();
           hood.setManualOutput(output);
         },
         () -> {
           hood.holdCurrentPosition();
-          // A disable or autonomous transition makes trackingRequested false, so the latch cannot
-          // carry a teleop-only override into another robot mode.
-          manualHoodOverrideActive = trackingRequested.getAsBoolean();
+          // Preserve the manually selected angle only if RB remains held in teleop. Otherwise the
+          // hood's default command returns it to the starting angle.
+          manualHoodOverrideActive =
+              DriverStation.isTeleopEnabled() && trackingRequested.getAsBoolean();
         },
         hood);
   }

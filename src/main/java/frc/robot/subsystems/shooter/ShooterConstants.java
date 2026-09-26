@@ -34,6 +34,7 @@ public final class ShooterConstants {
   public static final class HoodConstants {
     public static final double kTurretToHoodInches = 1.878;
     public static final double kGearRatio = 16 / 1;
+    public static final double kManualDutyCycle = 0.05;
 
     public static final double kAngleTolerance = Units.degreesToRadians(1);
 
