@@ -21,12 +21,15 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.RobotState;
+import frc.robot.RobotState.OdometryObservation;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -53,13 +56,6 @@ public class Drive extends SubsystemBase {
 
   private Rotation2d
       rawGyroRotation; // Stores the drivetrain's current heading (may not be completely accurate)
-  private SwerveModulePosition[] lastModulePositions = // For delta (change in position) tracking
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
 
   public Drive(
       GyroIO gyroIO,
@@ -100,18 +96,33 @@ public class Drive extends SubsystemBase {
 
   @Override
   public void periodic() {
-    odometryLock.lock(); // Prevents odometry updates while reading data
-    gyroIO.updateInputs(gyroInputs); // Get new measurements from the gyro
-    Logger.processInputs("Drive/Gyro", gyroInputs); // Log gyro values
-    rawGyroRotation =
-        gyroInputs.yawPosition; // Sets the local heading to the measured gyro rotation
+    // Refresh the gyro and all four modules while preventing the odometry sampling thread from
+    // modifying their queues. The hardware reads occur sequentially rather than simultaneously, so
+    // this is one protected refresh batch. Always release the lock if an IO adapter throws.
+    odometryLock.lock();
+    try {
+      gyroIO.updateInputs(gyroInputs);
+      Logger.processInputs("Drive/Gyro", gyroInputs);
+      rawGyroRotation = gyroInputs.yawPosition;
 
-    // Runs the periodic() function for each module (they aren't subsystems so we have to do this
-    // manually)
-    for (var module : modules) {
-      module.periodic();
+      // Modules are plain helper objects rather than registered subsystems, so Drive owns their
+      // periodic input refresh.
+      for (var module : modules) {
+        module.periodic();
+      }
+    } finally {
+      odometryLock.unlock();
     }
-    odometryLock.unlock(); // Odometry can update now
+
+    // Publish the freshly read drivetrain snapshot before commands execute. CommandScheduler calls
+    // subsystem periodic methods before command execute methods, so commands now consume state from
+    // this cycle instead of the previous cycle. This intentionally remains a simple 50 Hz path;
+    // completing the unfinished high-frequency sample pipeline is separate follow-up work.
+    SwerveModulePosition[] modulePositions = getModulePositions();
+    RobotState.getInstance()
+        .addOdometryObservation(
+            new OdometryObservation(Timer.getTimestamp(), modulePositions, rawGyroRotation));
+    Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
 
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
@@ -124,45 +135,6 @@ public class Drive extends SubsystemBase {
     if (DriverStation.isDisabled()) {
       Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
       Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
-    }
-
-    // Update odometry
-    double[] sampleTimestamps =
-        modules[0].getOdometryTimestamps(); // All signals are sampled together
-    int sampleCount = sampleTimestamps.length;
-    for (int i = 0; i < sampleCount; i++) {
-      // Read wheel positions and deltas from each module
-      SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
-      for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
-        modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
-        moduleDeltas[moduleIndex] =
-            new SwerveModulePosition(
-                modulePositions[moduleIndex].distanceMeters
-                    - lastModulePositions[moduleIndex].distanceMeters,
-                modulePositions[moduleIndex].angle);
-        lastModulePositions[moduleIndex] =
-            new SwerveModulePosition(
-                modulePositions[moduleIndex].distanceMeters, modulePositions[moduleIndex].angle);
-      }
-
-      // // Update gyro angle
-      // if (gyroInputs.connected) {
-      //   // Use the real gyro angle
-      //   rawGyroRotation = gyroInputs.yawPosition;
-      // } else {
-      //   // Use the angle delta from the kinematics and module deltas
-      //   Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-      //   rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-      // }
-
-      // Apply update (doesn't work)
-      // RobotState.getInstance()
-      //     .addOdometryObservation(
-      //         new OdometryObservation(sampleTimestamps[i], modulePositions, rawGyroRotation));
-
-      // Log the measured module positions (angle and distance)
-      Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
     }
 
     // Update gyro alert

@@ -23,7 +23,7 @@ classDiagram
     }
     class RobotContainer {
         -Drive drive
-        +robotPeriodic()
+        +updateDashboard()
     }
     class DefaultControls {
         +configure()
@@ -82,11 +82,12 @@ classDiagram
     Robot *-- RobotContainer
     RobotContainer *-- Drive
     RobotContainer ..> DefaultControls : installs bindings
-    RobotContainer ..> RobotState : sends observations
+    RobotContainer ..> RobotState : reads pose for dashboard
     DefaultControls ..> DriveCommands : creates default command
     DriveCommands ..> Drive : requests robot motion
     Drive *-- "4" Module : FL FR BL BR
     Drive --> GyroIO : reads yaw
+    Drive ..> RobotState : sends 50 Hz odometry
     Drive ..> PhoenixOdometryThread : calls start
     Module --> ModuleIO : reads and commands
     ModuleIOTalonFX ..|> ModuleIO : REAL
@@ -98,7 +99,7 @@ classDiagram
 
 `RobotContainer` selects the **REAL** implementations (`GyroIOPigeon2` and four `ModuleIOTalonFX` objects) or the **SIM** implementations (an empty `GyroIO` and four `ModuleIOSim` objects). It passes them to one `Drive` constructor in front-left, front-right, back-left, back-right order. `Drive` wraps each module adapter in a `Module` object. `ModuleIO` and `GyroIO` are team-owned interfaces; Talon FX, CANcoder, Pigeon 2, `DCMotorSim`, kinematics, and the pose estimator are third-party APIs. [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java).
 
-The class diagram shows dependencies, **not call order**. It also simplifies generated `@AutoLog` input classes, logging, and the other robot subsystems so the drive relationships remain readable. In SIM, the empty `GyroIO` has default no-op methods, not a simulated Pigeon 2. `RobotState` receives drive data through `RobotContainer`; it does not directly call `Drive`.
+The class diagram shows dependencies, **not call order**. It also simplifies generated `@AutoLog` input classes, logging, and the other robot subsystems so the drive relationships remain readable. In SIM, the empty `GyroIO` has default no-op methods, not a simulated Pigeon 2. `Drive` sends its refreshed 50 Hz position reading to `RobotState`; `RobotContainer` reads the resulting pose only for dashboard display.
 
 ## 2. Sequence diagram: moving the driver sticks
 
@@ -137,7 +138,7 @@ The driver requests **robot movement**, not four individual motor outputs. The c
 
 ## 3. Sequence diagram: sensor readings and estimated position
 
-There are **two relevant time paths**. On REAL, `PhoenixOdometryThread` samples registered motor/gyro signals into bounded queues at the configured odometry frequency. Separately, the ordinary robot loop runs nominally every 20 ms. The diagram deliberately shows the method order in [Robot.java](../src/main/java/frc/robot/Robot.java): `RobotContainer.robotPeriodic()` runs **before** `CommandScheduler.run()`, which invokes `Drive.periodic()`. [PhoenixOdometryThread.java](../src/main/java/frc/robot/subsystems/drive/PhoenixOdometryThread.java), [ModuleIOTalonFX.java](../src/main/java/frc/robot/subsystems/drive/ModuleIOTalonFX.java), [RobotState.java](../src/main/java/frc/robot/RobotState.java).
+There are **two relevant time paths**. On REAL, `PhoenixOdometryThread` samples registered motor/gyro signals into bounded queues at the configured odometry frequency. Separately, the ordinary robot loop runs nominally every 20 ms. `CommandScheduler.run()` calls `Drive.periodic()` before executing commands, so `Drive` can refresh the inputs and update `RobotState` before a command reads the pose. Dashboard publication happens after the scheduler. [PhoenixOdometryThread.java](../src/main/java/frc/robot/subsystems/drive/PhoenixOdometryThread.java), [ModuleIOTalonFX.java](../src/main/java/frc/robot/subsystems/drive/ModuleIOTalonFX.java), [RobotState.java](../src/main/java/frc/robot/RobotState.java).
 
 ```mermaid
 sequenceDiagram
@@ -151,15 +152,11 @@ sequenceDiagram
     participant Gyro as GyroIO
     participant Module as Module (each of 4)
     participant IO as ModuleIO
+    participant Command as Drive or aiming command
 
     opt REAL background sampling
         Thread->>Queues: Add timestamp, wheel, steering, gyro samples
     end
-    Robot->>Container: robotPeriodic()
-    Container->>Drive: getModulePositions(), getRawGyroRotation()
-    Drive-->>Container: Values cached from earlier Drive.periodic()
-    Container->>State: addOdometryObservation(current timestamp, positions, heading)
-    Note over State: Pose estimator updates from this loop observation
     Robot->>Scheduler: run()
     Scheduler->>Drive: periodic()
     Drive->>Gyro: updateInputs(gyroInputs)
@@ -174,11 +171,14 @@ sequenceDiagram
         IO-->>Module: Current signals and sample arrays
         Note over Module: Convert sampled wheel radians to meters
     end
-    Note over Drive: Assemble and log high-rate module positions
-    Note over Drive: High-rate addOdometryObservation call is commented out
+    Drive->>State: addOdometryObservation(current timestamp, current positions, yaw)
+    Note over State: Pose estimator updates from the refreshed 50 Hz reading
+    Scheduler->>Command: execute() using updated state
+    Robot->>Container: updateDashboard()
+    Container->>State: getEstimatedPose()
 ```
 
-**Important boundary:** `Drive.periodic()` consumes and logs the queued high-rate module positions, but its call to `RobotState.addOdometryObservation(...)` inside that high-rate loop is commented out. The active pose update happens in `RobotContainer.robotPeriodic()` using the ordinary `Drive.getModulePositions()` and `Drive.getRawGyroRotation()` values. Because the container call precedes the scheduler call, it uses the last measurements read by `Drive.periodic()`, paired with a new `Timer.getTimestamp()`. The diagram does not imply these data were captured simultaneously. In SIM, `ModuleIOSim.updateInputs()` advances each module model during the scheduler loop; the empty gyro IO and lack of registered REAL queues mean the REAL background-sampling path does not apply. The code's high-rate gyro queue is registered on REAL, but copying it into `GyroIOInputs` is commented out in `GyroIOPigeon2`.
+**Important boundary:** the active estimator path is intentionally 50 Hz. `Drive.periodic()` refreshes the ordinary gyro and module fields sequentially under the odometry lock, then submits those current fields with a new `Timer.getTimestamp()`. The lock prevents the background thread from changing its queues during the refresh; it does not make the hardware measurements simultaneous. REAL module adapters still drain their high-rate queues, but those queued arrays are not submitted to `RobotState`. The high-rate gyro queue is registered on REAL, while copying and clearing it in `GyroIOPigeon2` remains commented out. In SIM, `ModuleIOSim.updateInputs()` advances each module model during this scheduler stage, and the empty gyro IO leaves yaw at zero.
 
 ## A related control: heading reset
 

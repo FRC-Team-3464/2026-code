@@ -34,11 +34,11 @@ An upstream example is a useful starting point, not proof of suitability for eve
 
 | Area | Assessment | Local evidence and next step |
 | --- | --- | --- |
-| Application structure | Aligned overall | `Robot` handles lifecycle and scheduling; `RobotContainer` constructs mechanisms and configures bindings. Move its runtime odometry submission to the drive/estimator owner. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2) |
+| Application structure | Aligned overall | `Robot` handles lifecycle and scheduling; `RobotContainer` constructs mechanisms and configures bindings. The 50 Hz odometry submission now belongs to `Drive`; higher-rate integration remains open. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2) |
 | Commands and composition | Aligned approach; manual hood ownership repaired | Command factories, `sequence`, `parallel`, and `alongWith` are appropriate. Manual hood commands now require the hood; physical acceptance remains open. [H4](REUSE_RECOMMENDATIONS_2027.md#acceptance-h4) |
 | Subsystem lifecycle | Fix ready for review | Duplicate shooter-child callbacks were removed; [H1 SIM evidence](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle) awaits mentor review. |
 | Hardware abstraction | Strong foundation; contracts need correction | `FlywheelIO`, `ModuleIO`, and camera interfaces isolate hardware. Units and stop semantics differ between some adapters. [M3](REUSE_RECOMMENDATIONS_2027.md#acceptance-m3), [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
-| Pose estimation | Appropriate library; incomplete integration | Uses `SwerveDrivePoseEstimator`; still submits cached measurements before refresh; the vision-uncertainty handoff has been repaired. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2), [H7](REUSE_RECOMMENDATIONS_2027.md#acceptance-h7) |
+| Pose estimation | Appropriate library; incomplete integration | Uses `SwerveDrivePoseEstimator`; the 50 Hz update ordering and per-measurement vision uncertainty handoff are ready for review. High-rate odometry and remaining vision validation stay open. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2), [H7](REUSE_RECOMMENDATIONS_2027.md#acceptance-h7) |
 | Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`; heading resets and RPM/RPS boundaries need repair. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
 | Shared state and dependencies | Useful intent; responsibilities need separation | `RobotState` holds an estimator, mutable velocity, and season target selection. [M2](REUSE_RECOMMENDATIONS_2027.md#acceptance-m2), [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 | Mechanism coordination | Needs correction | Shooter parts use different calculation paths; readiness can describe an old request. [H5](REUSE_RECOMMENDATIONS_2027.md#acceptance-h5), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
@@ -91,17 +91,16 @@ The current call order is:
 
 ```text
 Robot.robotPeriodic()
-  RobotContainer.robotPeriodic()
-    submit previously cached drive measurements with the current time
   CommandScheduler.run()
-    Drive.periodic() refreshes drive measurements
+    Drive.periodic() refreshes drive measurements and updates RobotState
     triggers and commands run
+  RobotContainer.updateDashboard() publishes the resulting pose
   FullSubsystem applies staged outputs
 ```
 
-The cached values describe an earlier observation than the timestamp attached to them. Meanwhile, the higher-frequency update path in [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) is commented out. Moving the container call after the scheduler would still leave commands consuming an older estimate.
+This 50 Hz ordering repair ensures commands can consume the pose updated from the current loop's ordinary drive inputs. The higher-frequency queue path in [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) remains incomplete and is not part of this accepted subset.
 
-**Mentor recommendation:** give drive measurement refresh and odometry submission one owner. Preserve measurement timestamps, update measured chassis velocity, and expose the resulting state before dependent commands run. Do not rely on incidental registration order between unrelated subsystems. If vision/drive ordering needs coordination, define how timestamped observations are queued and incorporated.
+**Remaining mentor recommendation:** preserve original timestamps when completing high-frequency odometry, update measured chassis velocity only with reviewed shooting behavior, and avoid relying on incidental registration order between unrelated subsystems. If vision/drive ordering needs coordination, define how timestamped observations are queued and incorporated.
 
 [RobotState.java](../src/main/java/frc/robot/RobotState.java) now passes the `stdDevs` field of each vision measurement to the estimator. Desktop checks confirmed its effect on pose weighting and heading suppression; physical camera accuracy remains unverified. [WPILib PoseEstimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html).
 
