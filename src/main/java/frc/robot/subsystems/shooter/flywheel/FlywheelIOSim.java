@@ -9,6 +9,13 @@ import frc.robot.Constants;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
 public class FlywheelIOSim implements FlywheelIO {
+  // Only the selected mode may request voltage. A saved PID target must not undo stop or open loop.
+  private enum ControlMode {
+    STOPPED,
+    OPEN_LOOP,
+    VELOCITY
+  }
+
   // DCMotor object representing a KrakenX44 (what's used for the flywheel)
   private final DCMotor gearbox = DCMotor.getKrakenX44(1);
   private final DCMotorSim sim;
@@ -16,6 +23,8 @@ public class FlywheelIOSim implements FlywheelIO {
   // PID gains for the simulation
   private final PIDController pid = new PIDController(1, 0, 0, Constants.kLoopPeriodSeconds);
 
+  private ControlMode controlMode = ControlMode.STOPPED;
+  private double openLoopVolts = 0.0;
   private double appliedVolts = 0.0;
 
   public FlywheelIOSim() {
@@ -27,13 +36,18 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
-    // Calculate the amount of power to apply using the PID controller
-    double currentOutput = pid.calculate(sim.getAngularVelocityRPM());
-    // Make sure that we don't send more than 12 volts to the motors
-    appliedVolts = MathUtil.clamp(currentOutput, -12.0, 12.0);
+    // FlywheelIO targets are RPS; DCMotorSim reports RPM, so convert feedback before PID.
+    double requestedVolts =
+        switch (controlMode) {
+          case STOPPED -> 0.0;
+          case OPEN_LOOP -> openLoopVolts;
+          case VELOCITY -> pid.calculate(sim.getAngularVelocityRPM() / 60.0);
+        };
+    appliedVolts = MathUtil.clamp(requestedVolts, -12.0, 12.0);
 
+    // Advance the motor model once per robot loop using the same period as the controller.
     sim.setInputVoltage(appliedVolts);
-    sim.update(0.02);
+    sim.update(Constants.kLoopPeriodSeconds);
 
     // Update IO input values
     inputs.connected = true;
@@ -45,17 +59,20 @@ public class FlywheelIOSim implements FlywheelIO {
   @Override
   public void setVelocity(double velocity) {
     pid.setSetpoint(velocity);
+    controlMode = ControlMode.VELOCITY;
   }
 
   @Override
   public void setOpenLoop(double output) {
-    // If the maximum is 12 volts, and the absolute value of speed is <=1, then multiply by 12 to
-    // get the percentage of max voltage
-    appliedVolts = 12.0 * output;
+    // Open-loop output is a fraction of full voltage, not a velocity target.
+    openLoopVolts = 12.0 * output;
+    controlMode = ControlMode.OPEN_LOOP;
   }
 
   @Override
   public void stop() {
+    // The model can coast, but subsequent steps must receive zero volts until a new request.
+    controlMode = ControlMode.STOPPED;
     appliedVolts = 0.0;
   }
 }
