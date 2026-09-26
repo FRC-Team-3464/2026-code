@@ -197,23 +197,21 @@ The main loop targets 50 iterations per second. Its order matters:
 
 ```mermaid
 flowchart TD
-    A[Robot.robotPeriodic] --> B[RobotContainer.robotPeriodic]
-    B --> C[Update RobotState using cached drive measurements]
-    C --> D[Update dashboard field displays]
-    D --> E[CommandScheduler.run]
-    E --> F[Subsystem periodic: read sensors and log inputs]
-    F --> G[Poll bindings and execute commands]
-    G --> H[Schedule available default commands]
-    H --> I[FullSubsystem: apply turret outputs]
-    I --> J[Invalidate CachedSupplier values]
-    J --> K[Log mechanism visualization]
+    A[Robot.robotPeriodic] --> B[CommandScheduler.run]
+    B --> C[Subsystem periodic methods, including Drive refresh and RobotState update]
+    C --> D[Poll bindings and execute commands]
+    D --> E[Schedule available default commands]
+    E --> F[RobotContainer.updateDashboard]
+    F --> G[FullSubsystem: apply turret outputs]
+    G --> H[Invalidate CachedSupplier values]
+    H --> I[Log mechanism visualization]
 ```
 
 The scheduler runs registered subsystem `periodic()` methods, polls triggers, executes and finishes commands, then schedules available defaults. This is why most mechanism activity does not appear in `teleopPeriodic()`. See the [WPILib scheduler sequence](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html).
 
 Two project-specific details are easy to miss:
 
-- `RobotContainer.robotPeriodic()` runs **before** `Drive.periodic()` refreshes inputs. For example, at the start of a loop it submits the module positions saved by the previous loop, but attaches the current time. Only afterward does `Drive.periodic()` read the newer positions. The nominal age difference is roughly one main-loop period.
+- `Drive.periodic()` refreshes the gyro and modules and submits the 50 Hz position reading to `RobotState` before commands execute. `RobotContainer.updateDashboard()` then publishes the resulting pose after the scheduler finishes.
 - `Shooter` coordinates its hood, turret, and flywheel without calling their `periodic()` methods. Each child is a registered subsystem, so the scheduler owns its input update. This shared code change applies in REAL and SIM. [The implementation tracker](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle) records the completed SIM callback counts, the remaining software review step, and the separate hardware bring-up check.
 
 `FullSubsystem` adds an output stage after command execution. Only the turret currently extends it. The flywheel writes its velocity request to IO inside its setter. The hood's angle setter stores a target, and `Hood.periodic()` sends that target to IO; a target chosen during command execution therefore takes effect on the next periodic update. Hood open-loop requests call IO immediately. Keep these different timings in mind when reading a command trace.
@@ -400,7 +398,7 @@ Angle-holding drive, turn-to-point, feedforward characterization, wheel-radius c
 
 `PhoenixOdometryThread` collects timestamped sensor samples into bounded queues. The configured rate is 250 Hz on CAN FD or 100 Hz otherwise, with locks protecting shared data.
 
-However, the calls that would feed these high-rate samples into `RobotState` are commented out in `Drive.periodic()`. Current pose updates come from the container's 50 Hz snapshot. The gyro's queued-array extraction and clearing are also commented out.
+The active estimator path is 50 Hz: `Drive.periodic()` refreshes the ordinary gyro and module fields, then submits those fields to `RobotState` before commands execute. REAL module adapters still drain and convert their high-rate queued arrays, but the arrays are not submitted to the estimator. The gyro's queued-array extraction and clearing are also commented out.
 
 The disconnected-gyro alert says that kinematics provides a fallback, but the wheel-based heading fallback is commented out. In the current simulator, the empty gyro interface therefore leaves raw heading at zero even when wheel motion requests rotation.
 
@@ -412,13 +410,13 @@ Sources: [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.
 
 **Odometry** estimates movement from wheel travel and heading. It is useful over short intervals, but wheel slip and calibration errors accumulate. Cameras can recognize **AprilTags**, known visual markers on the field, to provide location measurements that help correct that estimate.
 
-In this program, `Drive` supplies four wheel-position readings and a gyro angle; `RobotContainer.robotPeriodic()` submits them to `RobotState`. Imagine the wheels report forward travel while the gyro reports a turn: the pose estimator combines both to update where the robot is facing and where it has moved. A Limelight can separately report a field pose from visible AprilTags. `RobotState` combines the camera observation with wheel/gyro history; the camera is another measurement, not a replacement for the wheel sensors.
+In this program, `Drive.periodic()` refreshes four wheel-position readings and a gyro angle, then submits them to `RobotState`. Imagine the wheels report forward travel while the gyro reports a turn: the pose estimator combines both to update where the robot is facing and where it has moved. A Limelight can separately report a field pose from visible AprilTags. `RobotState` combines the camera observation with wheel/gyro history; the camera is another measurement, not a replacement for the wheel sensors.
 
 `RobotState` owns a single `SwerveDrivePoseEstimator` and makes its result available throughout the program.
 
 ```mermaid
 flowchart LR
-    Wheels[Wheel distances and steering angles] --> Odom[Container odometry observation]
+    Wheels[Wheel distances and steering angles] --> Odom[Drive 50 Hz odometry observation]
     Gyro[Pigeon heading] --> Odom
     Odom --> Estimator[RobotState pose estimator]
     Cameras[Two Limelights] --> Filter[Vision filtering]

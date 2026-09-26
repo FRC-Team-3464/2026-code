@@ -11,13 +11,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotState.OdometryObservation;
 import frc.robot.RobotState.VisionMeasurement;
 import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
@@ -156,16 +154,8 @@ public class RobotContainer {
         .forEach(Configurable::configure);
   }
 
-  /** This is called every 20ms. */
-  public void robotPeriodic() {
-    // Gets the current measured robot heading (rotation) from the drive subsystem and sends it to
-    // the RobotState class
-    RobotState.getInstance()
-        .addOdometryObservation(
-            new OdometryObservation(
-                Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation()));
-
-    // Update the SmartDashboard visualizations
+  /** Publishes the current target and estimated robot pose after the scheduler updates state. */
+  public void updateDashboard() {
     targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getShooterTarget()));
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
   }

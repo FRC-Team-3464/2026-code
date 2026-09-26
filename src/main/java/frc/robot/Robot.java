@@ -84,10 +84,9 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
-    // Cals all periodic functions
-    robotContainer.robotPeriodic();
     CommandScheduler.getInstance().run();
-    // Subsystems with IO implementations
+    robotContainer.updateDashboard();
+    // Apply outputs that must use the commands calculated during this scheduler cycle.
     FullSubsystem.runAllPeriodicAfterScheduler();
     CachedSupplier.invalidateAll();
 
