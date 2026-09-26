@@ -1,8 +1,11 @@
 package frc.robot.control;
 
+import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManualDutyCycle;
+
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -10,6 +13,7 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.Direction;
+import java.util.function.Supplier;
 
 public class DriverControls implements Configurable {
   private final DriverController driver;
@@ -18,6 +22,10 @@ public class DriverControls implements Configurable {
   private final Shooter shooter;
   private final Intake intake;
   private final Indexer indexer;
+  // This latch remembers that the operator manually positioned the hood while holding RB. It keeps
+  // automatic aiming from immediately replacing that position when the D-pad is released. Releasing
+  // RB clears the latch so the next RB press can start automatic hood aiming again.
+  private boolean manualHoodOverrideActive;
 
   public DriverControls(
       DriverController driver,
@@ -78,35 +86,52 @@ public class DriverControls implements Configurable {
   private void configureOperatorControls() {
     operator.leftBumper().and(operator.leftTrigger().negate()).whileTrue(intake.intake());
 
+    Supplier<Translation2d> targetSupplier = () -> RobotState.getInstance().getShooterTarget();
+
+    // RB controls the three shooter mechanisms independently. Therefore, a D-pad command can take
+    // ownership of the hood without cancelling the turret or flywheel commands. Controller
+    // triggers are still polled during autonomous, so these teleop guards prevent held controls
+    // from competing with autonomous shooter commands.
     operator
         .rightBumper()
-        .whileTrue(
-            shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
-                () -> RobotState.getInstance().getShooterTarget()));
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(shooter.trackTargetTurret(targetSupplier));
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .and(operator.dPadUp().or(operator.dPadDown()).negate())
+        .and(() -> !manualHoodOverrideActive)
+        .whileTrue(shooter.trackTargetHood(targetSupplier));
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(shooter.trackTargetFlywheel(targetSupplier));
+
+    // Remember that the operator chose a manual hood angle while tracking. Keeping this controller
+    // state here prevents Hood from depending on RB or D-pad inputs.
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .and(operator.dPadUp().or(operator.dPadDown()))
+        .onTrue(Commands.runOnce(() -> manualHoodOverrideActive = true));
+
+    // Clear the latch when RB is released or teleop ends. This may run while disabled so an old
+    // manual angle cannot survive a mode change and suppress automatic aiming later.
+    operator
+        .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .onFalse(Commands.runOnce(() -> manualHoodOverrideActive = false).ignoringDisable(true));
 
     operator.rightTrigger().whileTrue(indexer.index());
 
     operator
         .dPadUp()
-        .whileTrue(
-            new StartEndCommand(
-                () -> {
-                  shooter.setHoodOpenLoop(0.05);
-                },
-                () -> {
-                  shooter.setHoodOpenLoop(0);
-                }));
-
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(shooter.getHood().manualControl(kManualDutyCycle));
     operator
         .dPadDown()
-        .whileTrue(
-            new StartEndCommand(
-                () -> {
-                  shooter.setHoodOpenLoop(-0.05);
-                },
-                () -> {
-                  shooter.setHoodOpenLoop(0);
-                }));
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(shooter.getHood().manualControl(-kManualDutyCycle));
 
     operator.aCross().whileTrue(intake.outtake());
     operator.xSquare().whileTrue(intake.deployOpenLoop());

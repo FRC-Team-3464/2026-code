@@ -1,7 +1,9 @@
 package frc.robot.control;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -49,8 +51,18 @@ public class DefaultControls implements Configurable {
         .setDefaultCommand(
             new RunCommand(() -> shooter.getTurret().setOpenLoop(0), shooter.getTurret()));
 
+    Trigger operatorTracking = operator.rightBumper().and(DriverStation::isTeleopEnabled);
     shooter
         .getHood()
-        .setDefaultCommand(new RunCommand(() -> shooter.getHood().setAngle(0), shooter.getHood()));
+        .setDefaultCommand(
+            new RunCommand(
+                () -> {
+                  // A released D-pad leaves the hood holding its last measured angle. Keep that
+                  // target while teleop RB is held; otherwise return to the starting angle.
+                  if (!operatorTracking.getAsBoolean()) {
+                    shooter.getHood().setAngle(0);
+                  }
+                },
+                shooter.getHood()));
   }
 }
