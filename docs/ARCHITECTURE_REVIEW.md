@@ -39,7 +39,7 @@ An upstream example is a useful starting point, not proof of suitability for eve
 | Subsystem lifecycle | Fix ready for review | Duplicate shooter-child callbacks were removed; [H1 SIM evidence](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle) awaits mentor review. |
 | Hardware abstraction | Strong foundation; contracts need correction | `FlywheelIO`, `ModuleIO`, and camera interfaces isolate hardware. Units and stop semantics differ between some adapters. [M3](REUSE_RECOMMENDATIONS_2027.md#acceptance-m3), [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
 | Pose estimation | Appropriate library; incomplete integration | Uses `SwerveDrivePoseEstimator`; the 50 Hz update ordering and per-measurement vision uncertainty handoff are ready for review. High-rate odometry and remaining vision validation stay open. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2), [H7](REUSE_RECOMMENDATIONS_2027.md#acceptance-h7) |
-| Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`; heading resets and RPM/RPS boundaries need repair. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
+| Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`. The flywheel SIM RPM/RPS boundary is corrected; heading resets and remaining unit contracts stay open. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
 | Shared state and dependencies | Useful intent; responsibilities need separation | `RobotState` holds an estimator, mutable velocity, and season target selection. [M2](REUSE_RECOMMENDATIONS_2027.md#acceptance-m2), [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 | Mechanism coordination | Needs correction | Shooter parts use different calculation paths; readiness can describe an old request. [H5](REUSE_RECOMMENDATIONS_2027.md#acceptance-h5), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
 | Simulation and replay | Wiring separated; models incomplete | REAL and SIM select IO through separate wiring classes. REPLAY now fails clearly because replay-safe wiring is deferred. [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
@@ -73,13 +73,13 @@ The improvement is to make the factories clear and complete: name the intended a
 
 Using WPILib geometry, swerve kinematics, and a swerve pose estimator is appropriate. Pose means the robot's position and heading. The estimator combines wheel/gyro movement with delayed vision measurements; the team should correct its inputs and configuration rather than write a replacement estimator. [WPILib pose estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html).
 
-## Where the implementation breaks the intended design
+## Where the implementation needs or recently received correction
 
 ### One owner must control each lifecycle and motor resource
 
 WPILib runs registered subsystem `periodic()` callbacks before polling triggers and executing scheduled commands. `SubsystemBase` registers itself. [Scheduler sequence](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html), [subsystem registration](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
-Previously, [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) called `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()` even though those children were already registered with the scheduler. The extra calls have been removed and checked in SIM; see the [H1 tracker entry](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle). The plain `Module` helper objects in `Drive` still need their owner's explicit updates.
+Previously, [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) called `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()` even though those children were already registered with the scheduler. The extra calls have been removed and checked in SIM; see the [H1 tracker entry](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle). The plain `Module` helper objects are not registered subsystems, so `Drive.periodic()` correctly updates them explicitly.
 
 The earlier manual hood bindings in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java) omitted the hood requirement. They now use a command factory in `Hood` that declares ownership, allowing manual hood control without cancelling turret tracking or flywheel spin-up. The scheduler arbitrates declared resources; it cannot infer ownership by inspecting a lambda. Read-only access to a measurement does not by itself require taking control of the mechanism. [WPILib subsystem resource management](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
