@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
@@ -24,29 +25,16 @@ import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
 import frc.robot.control.DriverControls;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.indexer.IndexerIOSim;
-import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
-import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
-import frc.robot.subsystems.shooter.hood.HoodIOSim;
-import frc.robot.subsystems.shooter.hood.HoodIOSparkMax;
-import frc.robot.subsystems.shooter.turret.TurretIOSim;
-import frc.robot.subsystems.shooter.turret.TurretIOSparkMax;
-import frc.robot.subsystems.vision.CameraIOLimelight;
+import frc.robot.subsystems.vision.CameraIO;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import frc.robot.util.GeomUtil;
+import frc.robot.wiring.RealRobotWiring;
+import frc.robot.wiring.RobotWiring;
+import frc.robot.wiring.SimRobotWiring;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -83,56 +71,34 @@ public class RobotContainer {
     SmartDashboard.putData("TargetField", targetField2d);
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
 
-    // Changes the way that the subsystems are initialized based on if we're running the real robot
-    // or a simulation
-    // If real -> use the real hardware io implementations, if sim -> use the sim io implementations
-    switch (Constants.kCurrentMode) {
-      case REAL -> {
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-        indexer = new Indexer(new IndexerIOTalonFX());
-        intake = new Intake(new IntakeIOTalonFX());
-        leds = Leds.getInstance();
-        shooter =
-            new Shooter(new TurretIOSparkMax() {}, new HoodIOSparkMax(), new FlywheelIOTalonFX());
-        vision =
-            new Vision(
-                new VisionConsumer() {
-                  // We have to create an implementation of the accept function to tell the Vision
-                  // subsystem what to do with its measurements
-                  public void accept(
-                      Pose2d visionRobotPoseMeters,
-                      double timestampSeconds,
-                      edu.wpi.first.math.Matrix<N3, N1> visionMeasurementStdDevs) {
+    // Select the hardware family once. The subsystem construction below is shared so commands and
+    // subsystem behavior cannot accidentally drift between the real robot and simulation.
+    RobotWiring wiring =
+        switch (Constants.kCurrentMode) {
+          case REAL -> new RealRobotWiring();
+          case SIM -> new SimRobotWiring();
+          case REPLAY ->
+              throw new IllegalStateException(
+                  "REPLAY mode must be rejected before RobotContainer is constructed.");
+        };
 
-                    // Just send them to the RobotState class
-                    RobotState.getInstance()
-                        .addVisionMeasurement(
-                            new VisionMeasurement(
-                                timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
-                  }
-                  ;
-                },
-                new CameraIOLimelight("limelight-front", robotRotationSupplier),
-                new CameraIOLimelight("limelight-one", robotRotationSupplier));
-      }
-      case SIM -> {
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-        indexer = new Indexer(new IndexerIOSim());
-        intake = new Intake(new IntakeIOSim());
-        shooter = new Shooter(new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
-      }
+    drive =
+        new Drive(
+            wiring.createGyro(),
+            wiring.createFrontLeftModule(),
+            wiring.createFrontRightModule(),
+            wiring.createBackLeftModule(),
+            wiring.createBackRightModule());
+    indexer = new Indexer(wiring.createIndexer());
+    intake = new Intake(wiring.createIntake());
+
+    leds = new Leds(wiring.createLeds());
+
+    shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
+
+    CameraIO[] cameras = wiring.createCameras(robotRotationSupplier);
+    if (cameras.length > 0) {
+      vision = new Vision(this::acceptVisionMeasurement, cameras);
     }
 
     // Configures the driver controls
@@ -154,6 +120,17 @@ public class RobotContainer {
             new DefaultControls(driver, operator, drive, indexer, intake, shooter),
             new DriverControls(driver, operator, drive, shooter, intake, indexer))
         .forEach(Configurable::configure);
+  }
+
+  /** Sends an accepted camera measurement to the shared robot pose estimator. */
+  private void acceptVisionMeasurement(
+      Pose2d visionRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> visionMeasurementStdDevs) {
+    RobotState.getInstance()
+        .addVisionMeasurement(
+            new VisionMeasurement(
+                timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
   }
 
   /** This is called every 20ms. */

@@ -93,7 +93,7 @@ output = kP * error + kI * accumulated_error + kD * rate_of_error_change
 
 Here, `error` means **requested value minus measured value**. `kP` responds to the current difference, `kI` can respond to an error that persists, and `kD` responds to how the difference changes. **Feedforward** estimates output needed for the requested motion before feedback corrects the remaining error. `ShooterConstants.FlywheelConstants.kGains` supplies the real flywheel controller with `kP`, `kI`, `kD`, `kS`, `kV`, and `kA` values. Those constants configure this particular controller; the equation is a teaching model, not a claim that every motor uses all six terms. Incorrect gains or insufficient available output can still prevent the flywheel from reaching its setpoint.
 
-The real Talon FX and Spark MAX implementations generally send targets and gains to the motor controllers. The simulation implementations instead use Java controllers and simulated motor models. The current flywheel simulator has a unit mismatch, described in [Section 13](#flywheel-simulation-mismatch), so its apparent response should not be used to judge real flywheel tuning.
+The real Talon FX and Spark MAX implementations generally send targets and gains to the motor controllers. The simulation implementations instead use Java controllers and simulated motor models. The flywheel simulator now uses consistent units and separate output modes, described in [Section 13](#flywheel-simulation-units-and-output-modes). Its physical parameters still need verification before using its response to judge real flywheel tuning.
 
 ### Coordinates and units
 
@@ -185,7 +185,8 @@ Sources: [build.gradle](../build.gradle), [Gradle wrapper properties](../gradle/
 1. `Main.main()` calls `RobotBase.startRobot(Robot::new)`.
 2. `Robot`, which extends AdvantageKit's `LoggedRobot`, records build and Git metadata.
 3. It chooses telemetry receivers according to `Constants.kCurrentMode` and starts the logger.
-4. `RobotContainer` constructs hardware or simulated interfaces and their subsystems.
+4. `RobotContainer` selects `RealRobotWiring` or `SimRobotWiring`, then constructs the shared
+   subsystems from those mode-specific IO adapters.
 5. The container installs default commands and controller bindings.
 6. `Robot` resets its estimated rotation and pose to zero.
 
@@ -453,7 +454,7 @@ It also applies camera factors and MegaTag 2 factors. The MegaTag 2 angular fact
 
 For example, with the same camera and one visible tag, doubling the reported average tag distance multiplies the calculated standard deviation by four. The intended result is to trust a distant observation less. A measurement with more visible tags receives a smaller calculated standard deviation under this formula. These are properties of the calculated values, not proof of real camera accuracy.
 
-**Current implementation gap:** the `VisionMeasurement` record carries these standard deviations, but `RobotState.addVisionMeasurement()` calls the estimator overload with only pose and timestamp. The calculated per-observation uncertainty is discarded. Consequently, the intended confidence weighting, including suppressing MegaTag 2 heading influence, is not applied through this path.
+`RobotState.addVisionMeasurement()` now passes these standard deviations to the estimator along with pose and timestamp. This repairs the earlier handoff that discarded per-observation uncertainty. Desktop checks confirmed that larger uncertainty produces a smaller pose correction and that infinite heading uncertainty prevents an independent camera heading correction; live camera accuracy still requires robot testing.
 
 ### Alliance and target selection
 
@@ -685,25 +686,25 @@ Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), 
 | Indexer | `IndexerIOSim` | Methods delegate to no-op defaults |
 | Turret | `DCMotorSim` with PID | Simulated behavior differs from real limits |
 | Hood | `SingleJointedArmSim` with gravity and PID | Physical calibration still required |
-| Flywheel | `DCMotorSim` with PID | Unit and output-mode issues described below |
+| Flywheel | `DCMotorSim` with PID | RPS feedback and separate output modes; physical gearing still needs verification |
 | Vision | No instance constructed in `SIM` | PhotonVision simulation class exists but is unused |
-| LEDs | No instance constructed in `SIM` | No active LED simulation wiring |
+| LEDs | Shared pattern subsystem with `LedsIOSim` | Frames are published through WPILib's simulated addressable LED device; physical output remains unverified |
 
 There is no implemented end-to-end fuel trajectory, ball transport, scoring, or contact/obstacle simulation. Desktop simulation can expose control flow and some mechanism behavior, but it cannot currently demonstrate an accurate full match.
 
-For example, in `SIM` the operator's right trigger can schedule `indexer.index()`, but `IndexerIOSim` does not model fuel moving through the robot. The flywheel and hood have simulated motors; the flywheel unit and mode issues below still limit comparison with REAL.
+For example, in `SIM` the operator's right trigger can schedule `indexer.index()`, but `IndexerIOSim` does not model fuel moving through the robot. The flywheel and hood have simulated motors; their physical parameters still need verification before comparing their response with REAL.
 
-### Flywheel simulation mismatch
+### Flywheel simulation units and output modes
 
-`Flywheel.setVelocity()` passes RPS to IO. `FlywheelIOSim.setVelocity()` uses that number directly as a PID setpoint, but compares it with `sim.getAngularVelocityRPM()`. A 2400 RPM request becomes `40`, which the simulator treats as a 40 RPM target rather than 40 RPS.
+`Flywheel.setVelocity()` passes RPS to IO. `FlywheelIOSim` converts its RPM feedback to RPS before the PID comparison. Separate velocity, open-loop, and stopped modes prevent an old velocity target from overriding manual voltage or stop requests. These changes repair the earlier unit mismatch and unconditional PID output.
 
-The simulator also recalculates voltage from PID unconditionally in `updateInputs()`, overwriting the voltage set by open-loop or stop methods. Its configured reduction is `300`, while the real flywheel implementation does not apply that constant as a sensor-to-mechanism conversion. These differences prevent assuming equivalent simulated and real flywheel behavior.
+Its configured reduction remains `300`, while the real flywheel implementation does not apply that constant as a sensor-to-mechanism conversion. Verify gearing and physical response before assuming that simulated and real acceleration or speed match. The [Implementation Tracker](IMPLEMENTATION_TRACKER_2027.md) records the completed desktop checks.
 
-### Replay is only partially connected
+### Replay is deliberately unavailable
 
-`Robot` contains the expected replay logger setup: select a log, use `WPILOGReader`, disable real-time pacing, and write a new log with `_sim` appended.
-
-However, `RobotContainer` has no `REPLAY` construction branch. Choosing that mode leaves its subsystem fields uninitialized, and binding configuration accesses them. Replay therefore needs IO/subsystem construction completed before it can work; changing `kSimMode` alone is insufficient.
+Replay-safe subsystem wiring has not been implemented. If `REPLAY` is selected, `Robot` now stops
+with a clear error before starting the logger or constructing `RobotContainer`. Desktop users should
+select `SIM` until replay has its own reviewed wiring and known-log verification.
 
 ### Persistent logs are currently disabled on the real robot
 
