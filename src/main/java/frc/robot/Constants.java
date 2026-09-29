@@ -13,8 +13,9 @@ import frc.robot.subsystems.drive.DriveConstants;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
- * on a roboRIO. Change the value of "simMode" to switch between "sim" (physics sim) and "replay"
- * (log replay from a file). <br>
+ * on a roboRIO. Desktop operation currently supports physics simulation. The replay enum value is
+ * reserved for future replay-safe subsystem wiring and produces a clear startup error if selected.
+ * <br>
  * The child class also contains all device CANBus IDs.
  */
 public final class Constants {
@@ -30,7 +31,7 @@ public final class Constants {
     /** Running a physics simulator. */
     SIM,
 
-    /** Replaying from a log file. */
+    /** Reserved for log replay, which is currently rejected during startup. */
     REPLAY
   }
 
