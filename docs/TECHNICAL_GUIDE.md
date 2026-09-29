@@ -688,7 +688,7 @@ Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), 
 | Hood | `SingleJointedArmSim` with gravity and PID | Physical calibration still required |
 | Flywheel | `DCMotorSim` with PID | Unit and output-mode issues described below |
 | Vision | No instance constructed in `SIM` | PhotonVision simulation class exists but is unused |
-| LEDs | No instance constructed in `SIM` | No active LED simulation wiring |
+| LEDs | Shared pattern subsystem with `LedsIOSim` | Frames are published through WPILib's simulated addressable LED device; physical output remains unverified |
 
 There is no implemented end-to-end fuel trajectory, ball transport, scoring, or contact/obstacle simulation. Desktop simulation can expose control flow and some mechanism behavior, but it cannot currently demonstrate an accurate full match.
 

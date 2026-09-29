@@ -9,6 +9,7 @@ import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.leds.LedsIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.turret.TurretIO;
@@ -43,6 +44,9 @@ public interface RobotWiring {
 
   /** Returns the intake adapter for the selected runtime mode. */
   IntakeIO createIntake();
+
+  /** Returns the LED adapter for the selected runtime mode. */
+  LedsIO createLeds();
 
   /** Returns the turret adapter for the selected runtime mode. */
   TurretIO createTurret();
