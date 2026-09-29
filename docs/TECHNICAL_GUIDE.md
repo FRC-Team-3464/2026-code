@@ -185,7 +185,8 @@ Sources: [build.gradle](../build.gradle), [Gradle wrapper properties](../gradle/
 1. `Main.main()` calls `RobotBase.startRobot(Robot::new)`.
 2. `Robot`, which extends AdvantageKit's `LoggedRobot`, records build and Git metadata.
 3. It chooses telemetry receivers according to `Constants.kCurrentMode` and starts the logger.
-4. `RobotContainer` constructs hardware or simulated interfaces and their subsystems.
+4. `RobotContainer` selects `RealRobotWiring` or `SimRobotWiring`, then constructs the shared
+   subsystems from those mode-specific IO adapters.
 5. The container installs default commands and controller bindings.
 6. `Robot` resets its estimated rotation and pose to zero.
 
@@ -699,11 +700,11 @@ For example, in `SIM` the operator's right trigger can schedule `indexer.index()
 
 The simulator keeps velocity, open-loop, and stopped modes separate, so an old PID target does not overwrite an open-loop or stop request. Its motor model uses a reduction of `300`; the real adapter reports the Talon FX motor sensor speed without applying that reduction in this code. The shaft meaning and gearing still need validation before simulated speed can be treated as a prediction of real flywheel speed.
 
-### Replay is only partially connected
+### Replay is deliberately unavailable
 
-`Robot` contains the expected replay logger setup: select a log, use `WPILOGReader`, disable real-time pacing, and write a new log with `_sim` appended.
-
-However, `RobotContainer` has no `REPLAY` construction branch. Choosing that mode leaves its subsystem fields uninitialized, and binding configuration accesses them. Replay therefore needs IO/subsystem construction completed before it can work; changing `kSimMode` alone is insufficient.
+Replay-safe subsystem wiring has not been implemented. If `REPLAY` is selected, `Robot` now stops
+with a clear error before starting the logger or constructing `RobotContainer`. Desktop users should
+select `SIM` until replay has its own reviewed wiring and known-log verification.
 
 ### Persistent logs are currently disabled on the real robot
 
