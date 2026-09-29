@@ -93,7 +93,7 @@ output = kP * error + kI * accumulated_error + kD * rate_of_error_change
 
 Here, `error` means **requested value minus measured value**. `kP` responds to the current difference, `kI` can respond to an error that persists, and `kD` responds to how the difference changes. **Feedforward** estimates output needed for the requested motion before feedback corrects the remaining error. `ShooterConstants.FlywheelConstants.kGains` supplies the real flywheel controller with `kP`, `kI`, `kD`, `kS`, `kV`, and `kA` values. Those constants configure this particular controller; the equation is a teaching model, not a claim that every motor uses all six terms. Incorrect gains or insufficient available output can still prevent the flywheel from reaching its setpoint.
 
-The real Talon FX and Spark MAX implementations generally send targets and gains to the motor controllers. The simulation implementations instead use Java controllers and simulated motor models. The current flywheel simulator has a unit mismatch, described in [Section 13](#flywheel-simulation-mismatch), so its apparent response should not be used to judge real flywheel tuning.
+The real Talon FX and Spark MAX implementations generally send targets and gains to the motor controllers. The simulation implementations instead use Java controllers and simulated motor models. The flywheel simulator now uses consistent units and separate output modes, described in [Section 13](#flywheel-simulation-status). Its physical parameters still need verification before using its response to judge real flywheel tuning.
 
 ### Coordinates and units
 
@@ -454,7 +454,7 @@ It also applies camera factors and MegaTag 2 factors. The MegaTag 2 angular fact
 
 For example, with the same camera and one visible tag, doubling the reported average tag distance multiplies the calculated standard deviation by four. The intended result is to trust a distant observation less. A measurement with more visible tags receives a smaller calculated standard deviation under this formula. These are properties of the calculated values, not proof of real camera accuracy.
 
-**Current implementation gap:** the `VisionMeasurement` record carries these standard deviations, but `RobotState.addVisionMeasurement()` calls the estimator overload with only pose and timestamp. The calculated per-observation uncertainty is discarded. Consequently, the intended confidence weighting, including suppressing MegaTag 2 heading influence, is not applied through this path.
+`RobotState.addVisionMeasurement()` now passes these standard deviations to the estimator along with pose and timestamp. This repairs the earlier handoff that discarded per-observation uncertainty. Desktop checks confirmed that larger uncertainty produces a smaller pose correction and that infinite heading uncertainty prevents an independent camera heading correction; live camera accuracy still requires robot testing.
 
 ### Alliance and target selection
 
