@@ -13,6 +13,8 @@ import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOSim;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.leds.LedsIO;
+import frc.robot.subsystems.leds.LedsIOSim;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIO;
@@ -67,6 +69,12 @@ public final class SimRobotWiring implements RobotWiring {
   @Override
   public IntakeIO createIntake() {
     return new IntakeIOSim();
+  }
+
+  /** Returns the hardware-free LED simulation adapter. */
+  @Override
+  public LedsIO createLeds() {
+    return new LedsIOSim();
   }
 
   /** Returns the simulated turret adapter. */

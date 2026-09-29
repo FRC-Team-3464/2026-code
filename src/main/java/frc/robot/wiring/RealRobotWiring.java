@@ -14,6 +14,8 @@ import frc.robot.subsystems.indexer.IndexerIO;
 import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOTalonFX;
+import frc.robot.subsystems.leds.LedsIO;
+import frc.robot.subsystems.leds.LedsIOAddressable;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.shooter.hood.HoodIO;
@@ -69,6 +71,12 @@ public final class RealRobotWiring implements RobotWiring {
   @Override
   public IntakeIO createIntake() {
     return new IntakeIOTalonFX();
+  }
+
+  /** Returns the physical addressable LED adapter. */
+  @Override
+  public LedsIO createLeds() {
+    return new LedsIOAddressable();
   }
 
   /** Returns the physical Spark MAX turret adapter. */

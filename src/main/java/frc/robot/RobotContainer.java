@@ -92,10 +92,7 @@ public class RobotContainer {
     indexer = new Indexer(wiring.createIndexer());
     intake = new Intake(wiring.createIntake());
 
-    // LEDs currently access physical hardware directly, so keep them absent in desktop SIM.
-    if (Constants.kCurrentMode == Constants.Mode.REAL) {
-      leds = Leds.getInstance();
-    }
+    leds = new Leds(wiring.createLeds());
 
     shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
 

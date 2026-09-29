@@ -1,6 +1,5 @@
 package frc.robot.subsystems.leds;
 
-import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
@@ -13,17 +12,7 @@ import java.util.List;
  * thank you!
  */
 public class Leds extends SubsystemBase {
-  // Only have one instance of the LED subsystem that all subsystems access
-  private static final Leds instance = new Leds();
-
-  // Subsystems can use Leds.getInstance() to access the subsystem instead of needing to pass the
-  // LED subsystem as a parameter
-  public static Leds getInstance() {
-    return instance;
-  }
-
-  // WPILib LED objects
-  private final AddressableLED leds = new AddressableLED(LedConstants.kPort);
+  private final LedsIO io;
   private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(LedConstants.kFullLength);
 
   // Section record is used to represent specific strips of LEDs on the robot
@@ -46,12 +35,10 @@ public class Leds extends SubsystemBase {
     }
   }
 
-  private Leds() {
-    leds.setLength(buffer.getLength());
-    // Set the specific pixel values to the buffer and then apply the buffer to the AddressableLED
-    // object
-    leds.setData(buffer);
-    leds.start();
+  /** Creates the shared LED pattern subsystem using the selected runtime adapter. */
+  public Leds(LedsIO io) {
+    this.io = io;
+    io.start(buffer);
   }
 
   @Override
@@ -68,7 +55,7 @@ public class Leds extends SubsystemBase {
     // solid(LedSection.TOP_LEFT_TURRET, Color.kLimeGreen);
     // solid(LedSection.BOTTOM_LEFT_TURRET, Color.kYellow);
     // solid(LedSection.BOTTOM_RIGHT_TURRET, Color.kSkyBlue);
-    leds.setData(buffer);
+    io.setData(buffer);
   }
 
   /** Sets the given LED section to the specified color (represented by the WPILib class). */
