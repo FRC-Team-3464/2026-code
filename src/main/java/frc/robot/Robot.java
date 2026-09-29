@@ -13,12 +13,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.CachedSupplier;
 import frc.robot.util.FullSubsystem;
-import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
-import org.littletonrobotics.junction.wpilog.WPILOGReader;
-import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -64,12 +61,11 @@ public class Robot extends LoggedRobot {
         break;
 
       case REPLAY:
-        // Replaying a log, set up replay source
-        setUseTiming(false); // Run as fast as possible
-        String logPath = LogFileUtil.findReplayLog();
-        Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
-        break;
+        // RobotContainer has no replay-safe IO wiring yet. Reject this mode before starting the
+        // logger or constructing subsystems instead of continuing to a later null-pointer failure.
+        throw new IllegalStateException(
+            "REPLAY mode is not supported because replay-safe subsystem wiring is not implemented."
+                + " Use SIM mode for desktop operation.");
     }
 
     // Start AdvantageKit logger
