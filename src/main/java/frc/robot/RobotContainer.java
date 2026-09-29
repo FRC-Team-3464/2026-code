@@ -24,29 +24,16 @@ import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
 import frc.robot.control.DriverControls;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
-import frc.robot.subsystems.drive.GyroIO;
-import frc.robot.subsystems.drive.GyroIOPigeon2;
-import frc.robot.subsystems.drive.ModuleIOSim;
-import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.indexer.IndexerIOSim;
-import frc.robot.subsystems.indexer.IndexerIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOTalonFX;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
-import frc.robot.subsystems.shooter.flywheel.FlywheelIOTalonFX;
-import frc.robot.subsystems.shooter.hood.HoodIOSim;
-import frc.robot.subsystems.shooter.hood.HoodIOSparkMax;
-import frc.robot.subsystems.shooter.turret.TurretIOSim;
-import frc.robot.subsystems.shooter.turret.TurretIOSparkMax;
-import frc.robot.subsystems.vision.CameraIOLimelight;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import frc.robot.util.GeomUtil;
+import frc.robot.wiring.RealRobotWiring;
+import frc.robot.wiring.RobotWiring;
+import frc.robot.wiring.SimRobotWiring;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -88,18 +75,18 @@ public class RobotContainer {
     // If real -> use the real hardware io implementations, if sim -> use the sim io implementations
     switch (Constants.kCurrentMode) {
       case REAL -> {
+        RobotWiring wiring = new RealRobotWiring();
         drive =
             new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-        indexer = new Indexer(new IndexerIOTalonFX());
-        intake = new Intake(new IntakeIOTalonFX());
+                wiring.createGyro(),
+                wiring.createFrontLeftModule(),
+                wiring.createFrontRightModule(),
+                wiring.createBackLeftModule(),
+                wiring.createBackRightModule());
+        indexer = new Indexer(wiring.createIndexer());
+        intake = new Intake(wiring.createIntake());
         leds = Leds.getInstance();
-        shooter =
-            new Shooter(new TurretIOSparkMax() {}, new HoodIOSparkMax(), new FlywheelIOTalonFX());
+        shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
         vision =
             new Vision(
                 new VisionConsumer() {
@@ -118,20 +105,20 @@ public class RobotContainer {
                   }
                   ;
                 },
-                new CameraIOLimelight("limelight-front", robotRotationSupplier),
-                new CameraIOLimelight("limelight-one", robotRotationSupplier));
+                wiring.createCameras(robotRotationSupplier));
       }
       case SIM -> {
+        RobotWiring wiring = new SimRobotWiring();
         drive =
             new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-        indexer = new Indexer(new IndexerIOSim());
-        intake = new Intake(new IntakeIOSim());
-        shooter = new Shooter(new TurretIOSim(), new HoodIOSim(), new FlywheelIOSim());
+                wiring.createGyro(),
+                wiring.createFrontLeftModule(),
+                wiring.createFrontRightModule(),
+                wiring.createBackLeftModule(),
+                wiring.createBackRightModule());
+        indexer = new Indexer(wiring.createIndexer());
+        intake = new Intake(wiring.createIntake());
+        shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
       }
     }
 
