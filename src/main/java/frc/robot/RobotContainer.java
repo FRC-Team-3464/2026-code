@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
@@ -28,8 +29,8 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.leds.Leds;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.vision.CameraIO;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.Vision.VisionConsumer;
 import frc.robot.util.GeomUtil;
 import frc.robot.wiring.RealRobotWiring;
 import frc.robot.wiring.RobotWiring;
@@ -70,56 +71,37 @@ public class RobotContainer {
     SmartDashboard.putData("TargetField", targetField2d);
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
 
-    // Changes the way that the subsystems are initialized based on if we're running the real robot
-    // or a simulation
-    // If real -> use the real hardware io implementations, if sim -> use the sim io implementations
-    switch (Constants.kCurrentMode) {
-      case REAL -> {
-        RobotWiring wiring = new RealRobotWiring();
-        drive =
-            new Drive(
-                wiring.createGyro(),
-                wiring.createFrontLeftModule(),
-                wiring.createFrontRightModule(),
-                wiring.createBackLeftModule(),
-                wiring.createBackRightModule());
-        indexer = new Indexer(wiring.createIndexer());
-        intake = new Intake(wiring.createIntake());
-        leds = Leds.getInstance();
-        shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
-        vision =
-            new Vision(
-                new VisionConsumer() {
-                  // We have to create an implementation of the accept function to tell the Vision
-                  // subsystem what to do with its measurements
-                  public void accept(
-                      Pose2d visionRobotPoseMeters,
-                      double timestampSeconds,
-                      edu.wpi.first.math.Matrix<N3, N1> visionMeasurementStdDevs) {
+    // Select the hardware family once. The subsystem construction below is shared so commands and
+    // subsystem behavior cannot accidentally drift between the real robot and simulation.
+    RobotWiring wiring =
+        switch (Constants.kCurrentMode) {
+          case REAL -> new RealRobotWiring();
+          case SIM -> new SimRobotWiring();
+          case REPLAY ->
+              throw new IllegalStateException(
+                  "REPLAY mode must be rejected before RobotContainer is constructed.");
+        };
 
-                    // Just send them to the RobotState class
-                    RobotState.getInstance()
-                        .addVisionMeasurement(
-                            new VisionMeasurement(
-                                timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
-                  }
-                  ;
-                },
-                wiring.createCameras(robotRotationSupplier));
-      }
-      case SIM -> {
-        RobotWiring wiring = new SimRobotWiring();
-        drive =
-            new Drive(
-                wiring.createGyro(),
-                wiring.createFrontLeftModule(),
-                wiring.createFrontRightModule(),
-                wiring.createBackLeftModule(),
-                wiring.createBackRightModule());
-        indexer = new Indexer(wiring.createIndexer());
-        intake = new Intake(wiring.createIntake());
-        shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
-      }
+    drive =
+        new Drive(
+            wiring.createGyro(),
+            wiring.createFrontLeftModule(),
+            wiring.createFrontRightModule(),
+            wiring.createBackLeftModule(),
+            wiring.createBackRightModule());
+    indexer = new Indexer(wiring.createIndexer());
+    intake = new Intake(wiring.createIntake());
+
+    // LEDs currently access physical hardware directly, so keep them absent in desktop SIM.
+    if (Constants.kCurrentMode == Constants.Mode.REAL) {
+      leds = Leds.getInstance();
+    }
+
+    shooter = new Shooter(wiring.createTurret(), wiring.createHood(), wiring.createFlywheel());
+
+    CameraIO[] cameras = wiring.createCameras(robotRotationSupplier);
+    if (cameras.length > 0) {
+      vision = new Vision(this::acceptVisionMeasurement, cameras);
     }
 
     // Configures the driver controls
@@ -141,6 +123,17 @@ public class RobotContainer {
             new DefaultControls(driver, operator, drive, indexer, intake, shooter),
             new DriverControls(driver, operator, drive, shooter, intake, indexer))
         .forEach(Configurable::configure);
+  }
+
+  /** Sends an accepted camera measurement to the shared robot pose estimator. */
+  private void acceptVisionMeasurement(
+      Pose2d visionRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> visionMeasurementStdDevs) {
+    RobotState.getInstance()
+        .addVisionMeasurement(
+            new VisionMeasurement(
+                timestampSeconds, visionRobotPoseMeters, visionMeasurementStdDevs));
   }
 
   /** This is called every 20ms. */
