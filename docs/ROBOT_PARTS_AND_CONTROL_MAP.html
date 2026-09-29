@@ -124,9 +124,9 @@
   </section>
 
   <section id="modes"><h2>Which version of each part runs?</h2><div class="cards">
-    <article class="card"><h3>REAL · roboRIO</h3><p><code>RobotContainer</code> selects CTRE/REV hardware IO, Pigeon 2, two Limelight camera adapters, and LEDs. Java configuration tells us what the program <em>expects</em>; it does not verify the modified robot.</p></article>
-    <article class="card"><h3>SIM · desktop default</h3><p>Swerve, turret, hood, and flywheel have software models. The gyro adapter is empty; intake and indexer SIM adapters are placeholders. No vision or LED subsystem is constructed. A moving model cannot validate fuel transfer or camera accuracy.</p></article>
-    <article class="card"><h3>REPLAY · incomplete</h3><p><code>Robot</code> has a log-reader branch, but <code>RobotContainer</code> has no REPLAY construction branch. Do not treat replay as a working mode.</p></article>
+    <article class="card"><h3>REAL · roboRIO</h3><p><code>RealRobotWiring</code> selects CTRE/REV hardware IO, Pigeon 2, and two Limelight camera adapters; <code>RobotContainer</code> also creates LEDs. Java configuration tells us what the program <em>expects</em>; it does not verify the modified robot.</p></article>
+    <article class="card"><h3>SIM · desktop default</h3><p><code>SimRobotWiring</code> selects software models for swerve, turret, hood, and flywheel. The gyro adapter is empty; intake and indexer adapters are placeholders. No vision or LED subsystem is constructed. A moving model cannot validate fuel transfer or camera accuracy.</p></article>
+    <article class="card"><h3>REPLAY · unavailable</h3><p><code>Robot</code> stops before logger or subsystem construction because replay-safe wiring is not implemented. Use SIM for desktop operation.</p></article>
   </div><p class="note"><strong>Autonomous today:</strong> the active command tracks flywheel and hood, then starts the indexer when flywheel readiness reports true. It does not use a stored PathPlanner route or command turret tracking in that entry point. PathPlanner classes and files in the repo are not proof that a route runs.</p></section>
 
   <section id="libraries"><h2>Names you will see in Java</h2><div class="table-scroll"><table><thead><tr><th>Library</th><th>Why it is here</th><th>Examples in this repository</th></tr></thead><tbody>

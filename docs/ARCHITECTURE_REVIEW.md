@@ -42,7 +42,7 @@ An upstream example is a useful starting point, not proof of suitability for eve
 | Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`; heading resets and RPM/RPS boundaries need repair. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
 | Shared state and dependencies | Useful intent; responsibilities need separation | `RobotState` holds an estimator, mutable velocity, and season target selection. [M2](REUSE_RECOMMENDATIONS_2027.md#acceptance-m2), [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 | Mechanism coordination | Needs correction | Shooter parts use different calculation paths; readiness can describe an old request. [H5](REUSE_RECOMMENDATIONS_2027.md#acceptance-h5), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
-| Simulation and replay | Good separation; incomplete execution | SIM has incomplete models; REPLAY has no container construction case. [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
+| Simulation and replay | Wiring separated; models incomplete | REAL and SIM select IO through separate wiring classes. REPLAY now fails clearly because replay-safe wiring is deferred. [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
 | Observability | Useful instrumentation; incomplete recording | Structured inputs and revision metadata exist; real-mode `WPILOGWriter` is disabled. [M4](REUSE_RECOMMENDATIONS_2027.md#acceptance-m4) |
 | Autonomous integration | Incomplete | Active auto is a command composition. PathPlanner setup and chooser integration are disabled despite retained assets. [M5](REUSE_RECOMMENDATIONS_2027.md#acceptance-m5) |
 | Season reuse | Needs separation | Field targets, calibrations, device configuration, and historical assets remain tied to 2026. [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
@@ -127,7 +127,10 @@ The extra stage is a project extension. Its existence is not itself a WPILib vio
 
 WPILib simulation models advance from applied inputs to simulated sensor readings. An IO-based project can place that work inside its simulated adapter; moving everything into `simulationPeriodic()` is not required for this architecture. The essential review questions here are units, time step, and behavior at the interface. [WPILib physics simulation](https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/physics-sim.html), [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
 
-REPLAY requires complete object construction as well as a saved input stream. Although `Robot` configures a replay source, `RobotContainer` has no corresponding construction case. A selectable enum value does not establish working replay. AdvantageKit also requires deterministic, synchronized inputs and recommends checking replay regularly. [AdvantageKit replay inputs](https://docs.advantagekit.org/getting-started/common-issues/non-deterministic-data-sources/).
+REPLAY requires complete object construction as well as a saved input stream. The current code
+rejects REPLAY before logger or subsystem construction because replay-safe wiring is not available.
+AdvantageKit also requires deterministic, synchronized inputs and recommends checking replay
+regularly before the team declares that mode supported. [AdvantageKit replay inputs](https://docs.advantagekit.org/getting-started/common-issues/non-deterministic-data-sources/).
 
 **Mentor recommendation:** retain modest, trustworthy simulation coverage. Complete replay only if the team will use it; otherwise make its unsupported status explicit. Keep a single main-thread behavior pipeline. Any necessary background sensor sampling should hand synchronized input data to that pipeline. AdvantageKit documents this boundary and requires its logging calls on the main thread. [AdvantageKit multithreading](https://docs.advantagekit.org/getting-started/common-issues/multithreading/).
 

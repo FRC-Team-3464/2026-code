@@ -114,9 +114,9 @@ The robot program binds **gamepad axes and buttons**, not keyboard letters. This
 
 | Runtime | What is constructed | What this means for learning |
 | --- | --- | --- |
-| REAL, on roboRIO | Phoenix/REV adapters, Pigeon 2, two Limelight adapters, LEDs. | Code may address physical devices. The source cannot confirm their actual wiring, orientation, or safe limits. |
-| SIM, on desktop by default | Simulated swerve modules, simulated turret/hood/flywheel, plus empty gyro and placeholder intake/indexer adapters. No `Vision` or `Leds` object. | A SIM startup or spinning wheel model does **not** verify fuel flow, camera behavior, field heading, or REAL motor responses. |
-| REPLAY, if selected in desktop constant | `Robot` configures a log reader, but `RobotContainer` has no REPLAY construction case. | Replay is incomplete; do not expect a working robot from this option. |
+| REAL, on roboRIO | `RealRobotWiring` selects Phoenix/REV adapters, Pigeon 2, and two Limelight adapters; `RobotContainer` also creates LEDs. | Code may address physical devices. The source cannot confirm their actual wiring, orientation, or safe limits. |
+| SIM, on desktop by default | `SimRobotWiring` selects simulated swerve and shooter adapters, plus an empty gyro and placeholder intake/indexer adapters. No `Vision` or `Leds` object. | A SIM startup or spinning wheel model does **not** verify fuel flow, camera behavior, field heading, or REAL motor responses. |
+| REPLAY, if selected in the desktop constant | `Robot` stops before logger or subsystem construction. | Replay-safe wiring is not implemented; use SIM for desktop operation. |
 
 Within each subsystem, the **same behavior class** receives either a REAL or SIM implementation of an IO interface. AdvantageKit's [IO-interface guide](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/) explains this pattern. Here, `@AutoLog` input classes feed `Logger.processInputs(...)` so readings can be inspected. `Logger` publishes to NetworkTables in REAL/SIM; the REAL `WPILOGWriter` line in `Robot.java` is currently commented out, so a persistent robot log is not established by this configuration.
 
