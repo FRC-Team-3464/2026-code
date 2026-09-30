@@ -75,6 +75,14 @@ public class CameraIOLimelight implements CameraIO {
     List<PoseObservation> poseObservations = new LinkedList<>();
     for (var rawSample : megatag1Subscriber.readQueue()) {
       if (rawSample.value.length == 0) continue;
+      String rejection = validatePoseMessage(rawSample.value);
+      if (!rejection.isEmpty()) {
+        // Keep a count and the latest reason in the camera logs, even after valid readings resume,
+        // so intermittent faults can be diagnosed. Skip only this message and keep processing.
+        inputs.rejectedPoseMessages++;
+        inputs.lastPoseRejection = "MEGATAG1: " + rejection;
+        continue;
+      }
       for (int i = 11; i < rawSample.value.length; i += 7) {
         tagIds.add((int) rawSample.value[i]);
       }
@@ -101,6 +109,14 @@ public class CameraIOLimelight implements CameraIO {
     }
     for (var rawSample : megatag2Subscriber.readQueue()) {
       if (rawSample.value.length == 0) continue;
+      String rejection = validatePoseMessage(rawSample.value);
+      if (!rejection.isEmpty()) {
+        // Keep a count and the latest reason in the camera logs, even after valid readings resume,
+        // so intermittent faults can be diagnosed. Skip only this message and keep processing.
+        inputs.rejectedPoseMessages++;
+        inputs.lastPoseRejection = "MEGATAG2: " + rejection;
+        continue;
+      }
       for (int i = 11; i < rawSample.value.length; i += 7) {
         tagIds.add((int) rawSample.value[i]);
       }
@@ -137,6 +153,45 @@ public class CameraIOLimelight implements CameraIO {
     for (int id : tagIds) {
       inputs.tagIds[i++] = id;
     }
+  }
+
+  /**
+   * Checks the message before any pose or tag data is read. Limelight's header has 11 values; newer
+   * firmware appends seven values per detected tag. Keep accepting the older header-only format,
+   * but never treat a partially received tag block as a complete observation.
+   *
+   * <p>This validates message contents, not camera accuracy or frame freshness. Vision still owns
+   * field-boundary and ambiguity filtering; the estimator still owns measurement weighting.
+   *
+   * @return an empty string for a valid message, otherwise a reason suitable for the camera log
+   */
+  private static String validatePoseMessage(double[] values) {
+    if (values.length < 11) return "Incomplete pose header";
+    for (double value : values) {
+      if (!Double.isFinite(value)) return "Non-finite pose or tag value";
+    }
+    double tagCount = values[7];
+    if (tagCount < 0 || tagCount > Integer.MAX_VALUE || tagCount != Math.rint(tagCount)) {
+      return "Invalid tag count";
+    }
+    if (values.length != 11 && (values.length - 11L != 7L * (long) tagCount)) {
+      return "Tag data does not match tag count";
+    }
+    if (values[6] < 0) return "Negative capture latency";
+    // A detected tag must have a positive distance. Zero would give it zero uncertainty and,
+    // for MegaTag 2, could turn the intentionally infinite heading uncertainty into NaN.
+    if (values[9] < 0 || (tagCount > 0 && values[9] == 0)) {
+      return "Invalid average tag distance";
+    }
+    for (int i = 11; i < values.length; i += 7) {
+      double id = values[i];
+      if (id < 0 || id > Integer.MAX_VALUE || id != Math.rint(id)) {
+        return "Invalid tag ID";
+      }
+      if (values[i + 4] < 0 || values[i + 5] < 0) return "Negative tag distance";
+      if (values[i + 6] < 0 || values[i + 6] > 1) return "Invalid tag ambiguity";
+    }
+    return "";
   }
 
   /** Parses the 3D pose from a Limelight botpose array. */
