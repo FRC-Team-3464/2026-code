@@ -24,7 +24,7 @@ Several choices discussed in the recommendations come directly from AdvantageKit
 | --- | --- |
 | Formatting during compilation, recursive file targets with build-directory exclusions, and automatic commits on `event` branches | These are template workflow choices. This branch now uses explicit formatting and narrower targets; the event commit task remains. The changes reflect team workflow preferences, not an FRC compliance correction. [Template build configuration](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/template/build.gradle) |
 | Shared REV read-fault flag and bounded CTRE retries | The local helpers match the template. Existing sequential readers reset and consume the flag per refresh. More explicit status handling can improve diagnostics, but a cross-device fault has not been demonstrated. [Spark helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/spark_swerve/src/main/java/frc/robot/util/SparkUtil.java), [Phoenix helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/talonfx_swerve/src/main/java/frc/robot/util/PhoenixUtil.java) |
-| Limelight parsing assumptions and consumption of both MegaTag streams | The local adapter closely follows the template. Extra payload guards and a documented correlation policy are hardening proposals. Dropping the calculated uncertainty in `RobotState` is a separate, confirmed integration defect. [Limelight adapter](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/vision/src/main/java/frc/robot/subsystems/vision/VisionIOLimelight.java) |
+| Limelight parsing assumptions and consumption of both MegaTag streams | The local adapter closely follows the template. The uncertainty handoff in `RobotState` has been repaired and is ready for review. Extra payload guards, a documented correlation policy, and live camera validation remain open. [Limelight adapter](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/vision/src/main/java/frc/robot/subsystems/vision/VisionIOLimelight.java) |
 
 An upstream example is a useful starting point, not proof of suitability for every robot. Conversely, choosing a different implementation does not establish that the template or the students' use of it was wrong. Each proposed change needs a concrete benefit and a check that demonstrates it.
 
@@ -34,12 +34,12 @@ An upstream example is a useful starting point, not proof of suitability for eve
 
 | Area | Assessment | Local evidence and next step |
 | --- | --- | --- |
-| Application structure | Aligned overall | `Robot` handles lifecycle and scheduling; `RobotContainer` constructs mechanisms and configures bindings. Move its runtime odometry submission to the drive/estimator owner. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2) |
-| Commands and composition | Aligned approach; ownership needs correction | Command factories, `sequence`, `parallel`, and `alongWith` are appropriate. Manual hood bindings omit requirements. [H4](REUSE_RECOMMENDATIONS_2027.md#acceptance-h4) |
+| Application structure | Aligned overall | `Robot` handles lifecycle and scheduling; `RobotContainer` constructs mechanisms and configures bindings. The 50 Hz odometry submission now belongs to `Drive`; higher-rate integration remains open. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2) |
+| Commands and composition | Aligned approach; H4 subset ready for review | Command factories, `sequence`, `parallel`, and `alongWith` are appropriate. Manual hood commands now reserve the hood while they control it. [H4](REUSE_RECOMMENDATIONS_2027.md#acceptance-h4) |
 | Subsystem lifecycle | Fix ready for review | Duplicate shooter-child callbacks were removed; [H1 SIM evidence](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle) awaits mentor review. |
 | Hardware abstraction | Strong foundation; contracts need correction | `FlywheelIO`, `ModuleIO`, and camera interfaces isolate hardware. Units and stop semantics differ between some adapters. [M3](REUSE_RECOMMENDATIONS_2027.md#acceptance-m3), [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
-| Pose estimation | Appropriate library; incomplete integration | Uses `SwerveDrivePoseEstimator`; submits cached measurements before refresh and discards supplied vision uncertainty. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2), [H7](REUSE_RECOMMENDATIONS_2027.md#acceptance-h7) |
-| Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`; heading resets and RPM/RPS boundaries need repair. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
+| Pose estimation | Appropriate library; incomplete integration | Uses `SwerveDrivePoseEstimator`; the 50 Hz update ordering and per-measurement vision uncertainty handoff are ready for review. High-rate odometry and remaining vision validation stay open. [H2](REUSE_RECOMMENDATIONS_2027.md#acceptance-h2), [H7](REUSE_RECOMMENDATIONS_2027.md#acceptance-h7) |
+| Coordinate frames and units | Partially aligned | Uses `Pose2d`, `Rotation2d`, and `ChassisSpeeds`. The flywheel SIM RPM/RPS boundary is corrected; heading resets and remaining unit contracts stay open. [H3](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3), [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
 | Shared state and dependencies | Useful intent; responsibilities need separation | `RobotState` holds an estimator, mutable velocity, and season target selection. [M2](REUSE_RECOMMENDATIONS_2027.md#acceptance-m2), [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 | Mechanism coordination | Needs correction | Shooter parts use different calculation paths; readiness can describe an old request. [H5](REUSE_RECOMMENDATIONS_2027.md#acceptance-h5), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
 | Simulation and replay | Good separation; incomplete execution | SIM has incomplete models; REPLAY has no container construction case. [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
@@ -73,15 +73,15 @@ The improvement is to make the factories clear and complete: name the intended a
 
 Using WPILib geometry, swerve kinematics, and a swerve pose estimator is appropriate. Pose means the robot's position and heading. The estimator combines wheel/gyro movement with delayed vision measurements; the team should correct its inputs and configuration rather than write a replacement estimator. [WPILib pose estimators](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html).
 
-## Where the implementation breaks the intended design
+## Where the implementation needs or recently received correction
 
 ### One owner must control each lifecycle and motor resource
 
 WPILib runs registered subsystem `periodic()` callbacks before polling triggers and executing scheduled commands. `SubsystemBase` registers itself. [Scheduler sequence](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-scheduler.html), [subsystem registration](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
-Previously, [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) called `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()` even though those children were already registered with the scheduler. The extra calls have been removed and checked in SIM; see the [H1 tracker entry](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle). The plain `Module` helper objects in `Drive` still need their owner's explicit updates.
+Previously, [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) called `hood.periodic()`, `turret.periodic()`, and `flywheel.periodic()` even though those children were already registered with the scheduler. The extra calls have been removed and checked in SIM; see the [H1 tracker entry](IMPLEMENTATION_TRACKER_2027.md#p31--h1-one-shooter-child-update-per-robot-cycle). The plain `Module` helper objects are not registered subsystems, so `Drive.periodic()` correctly updates them explicitly.
 
-A related issue appears in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java): the manual hood `StartEndCommand` objects declare no hood requirement, while the default command also controls the hood. The scheduler arbitrates declared resources; it cannot infer ownership by inspecting a lambda. Read-only access to a measurement does not by itself require taking control of the mechanism. [WPILib subsystem resource management](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
+The manual hood commands previously declared no hood requirement while the default command also controlled the hood. The command factory now belongs to [Hood.java](../src/main/java/frc/robot/subsystems/shooter/hood/Hood.java) and reserves that subsystem. The scheduler can therefore interrupt automatic hood tracking while the D-pad is held. After release, the default command holds that angle while RB remains held, matching the reviewed operator behavior. [WPILib subsystem resource management](https://docs.wpilib.org/en/stable/docs/software/commandbased/subsystems.html).
 
 **Mentor recommendation:** keep the hood, turret, and flywheel as separately owned subsystems and make the shooter coordinator compose their commands. Each action must reserve the resources it actually controls. Do not assume that requiring the coordinator automatically reserves its children. Verify release, interruption, mode changes, and deliberate hold/stop behavior through H4.
 
@@ -91,19 +91,18 @@ The current call order is:
 
 ```text
 Robot.robotPeriodic()
-  RobotContainer.robotPeriodic()
-    submit previously cached drive measurements with the current time
   CommandScheduler.run()
-    Drive.periodic() refreshes drive measurements
+    Drive.periodic() refreshes drive measurements and updates RobotState
     triggers and commands run
+  RobotContainer.updateDashboard() publishes the resulting pose
   FullSubsystem applies staged outputs
 ```
 
-The cached values describe an earlier observation than the timestamp attached to them. Meanwhile, the higher-frequency update path in [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) is commented out. Moving the container call after the scheduler would still leave commands consuming an older estimate.
+This 50 Hz ordering repair ensures commands can consume the pose updated from the current loop's ordinary drive inputs. The higher-frequency queue path in [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) remains incomplete and is not part of this accepted subset.
 
-**Mentor recommendation:** give drive measurement refresh and odometry submission one owner. Preserve measurement timestamps, update measured chassis velocity, and expose the resulting state before dependent commands run. Do not rely on incidental registration order between unrelated subsystems. If vision/drive ordering needs coordination, define how timestamped observations are queued and incorporated.
+**Remaining mentor recommendation:** preserve original timestamps when completing high-frequency odometry, update measured chassis velocity only with reviewed shooting behavior, and avoid relying on incidental registration order between unrelated subsystems. If vision/drive ordering needs coordination, define how timestamped observations are queued and incorporated.
 
-[RobotState.java](../src/main/java/frc/robot/RobotState.java) also ignores the `stdDevs` field of its vision measurement record. The estimator API has an overload that accepts these per-observation standard deviations, which express measurement uncertainty. Pass the already-calculated information through and verify its effect. [WPILib PoseEstimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html).
+[RobotState.java](../src/main/java/frc/robot/RobotState.java) now passes each vision measurement's `stdDevs` to the estimator. These standard deviations express how strongly WPILib should trust that observation. The handoff has been checked on desktop; live camera accuracy and stream policy remain open. [WPILib PoseEstimator API](https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/math/estimator/PoseEstimator.html).
 
 H2, H3, and H7 provide the detailed checks. Source changes alone cannot establish physical localization accuracy.
 
@@ -123,7 +122,7 @@ The extra stage is a project extension. Its existence is not itself a WPILib vio
 
 ### Simulation and replay must preserve the control contract
 
-[FlywheelIOSim.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java) gives its PID controller an RPS target and RPM feedback. It also recomputes PID output every update even after an open-loop or stop request. These differences invalidate behavior comparisons with the real adapter.
+[FlywheelIOSim.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java) previously compared an RPS target with RPM feedback and allowed the saved PID target to override open-loop or stopped behavior. It now converts feedback to RPS and keeps velocity, open-loop, and stopped modes separate. Model gearing and comparison with the physical flywheel remain unverified.
 
 WPILib simulation models advance from applied inputs to simulated sensor readings. An IO-based project can place that work inside its simulated adapter; moving everything into `simulationPeriodic()` is not required for this architecture. The essential review questions here are units, time step, and behavior at the interface. [WPILib physics simulation](https://docs.wpilib.org/en/stable/docs/software/wpilib-tools/robot-simulation/physics-sim.html), [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
 

@@ -11,13 +11,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.RobotState.OdometryObservation;
 import frc.robot.RobotState.VisionMeasurement;
 import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
@@ -25,8 +23,8 @@ import frc.robot.control.DriverController;
 import frc.robot.control.DriverControls;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
-import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
@@ -122,9 +120,11 @@ public class RobotContainer {
                 new CameraIOLimelight("limelight-one", robotRotationSupplier));
       }
       case SIM -> {
+        // The gyro reads module feedback during periodic updates, after Drive has been assigned
+        // and its modules have advanced. No sensor sampling occurs inside this supplier's creation.
         drive =
             new Drive(
-                new GyroIO() {},
+                new GyroIOSim(() -> drive.getModulePositions()),
                 new ModuleIOSim(TunerConstants.FrontLeft),
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
@@ -156,16 +156,8 @@ public class RobotContainer {
         .forEach(Configurable::configure);
   }
 
-  /** This is called every 20ms. */
-  public void robotPeriodic() {
-    // Gets the current measured robot heading (rotation) from the drive subsystem and sends it to
-    // the RobotState class
-    RobotState.getInstance()
-        .addOdometryObservation(
-            new OdometryObservation(
-                Timer.getTimestamp(), drive.getModulePositions(), drive.getRawGyroRotation()));
-
-    // Update the SmartDashboard visualizations
+  /** Publishes the current target and estimated robot pose after the scheduler updates state. */
+  public void updateDashboard() {
     targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getShooterTarget()));
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
   }

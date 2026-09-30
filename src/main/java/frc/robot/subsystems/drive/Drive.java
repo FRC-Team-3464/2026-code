@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -21,12 +22,15 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.RobotState;
+import frc.robot.RobotState.OdometryObservation;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -53,13 +57,6 @@ public class Drive extends SubsystemBase {
 
   private Rotation2d
       rawGyroRotation; // Stores the drivetrain's current heading (may not be completely accurate)
-  private SwerveModulePosition[] lastModulePositions = // For delta (change in position) tracking
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
 
   public Drive(
       GyroIO gyroIO,
@@ -100,18 +97,35 @@ public class Drive extends SubsystemBase {
 
   @Override
   public void periodic() {
-    odometryLock.lock(); // Prevents odometry updates while reading data
-    gyroIO.updateInputs(gyroInputs); // Get new measurements from the gyro
-    Logger.processInputs("Drive/Gyro", gyroInputs); // Log gyro values
-    rawGyroRotation =
-        gyroInputs.yawPosition; // Sets the local heading to the measured gyro rotation
+    // Refresh the gyro and all four modules while preventing the odometry sampling thread from
+    // modifying their queues. The hardware reads occur sequentially rather than simultaneously, so
+    // this is one protected refresh batch. Always release the lock if an IO adapter throws.
+    odometryLock.lock();
+    try {
+      // Modules are plain helper objects rather than registered subsystems, so Drive owns their
+      // periodic input refresh.
+      for (var module : modules) {
+        module.periodic();
+      }
 
-    // Runs the periodic() function for each module (they aren't subsystems so we have to do this
-    // manually)
-    for (var module : modules) {
-      module.periodic();
+      // The simulated gyro derives yaw from measured wheel travel. Refresh modules first so yaw
+      // and wheel positions describe the same simulation step. REAL still reads the Pigeon here.
+      gyroIO.updateInputs(gyroInputs);
+      Logger.processInputs("Drive/Gyro", gyroInputs);
+      rawGyroRotation = gyroInputs.yawPosition;
+    } finally {
+      odometryLock.unlock();
     }
-    odometryLock.unlock(); // Odometry can update now
+
+    // Publish the freshly read drivetrain snapshot before commands execute. CommandScheduler calls
+    // subsystem periodic methods before command execute methods, so commands now consume state from
+    // this cycle instead of the previous cycle. This intentionally remains a simple 50 Hz path;
+    // completing the unfinished high-frequency sample pipeline is separate follow-up work.
+    SwerveModulePosition[] modulePositions = getModulePositions();
+    RobotState.getInstance()
+        .addOdometryObservation(
+            new OdometryObservation(Timer.getTimestamp(), modulePositions, rawGyroRotation));
+    Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
 
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
@@ -124,45 +138,6 @@ public class Drive extends SubsystemBase {
     if (DriverStation.isDisabled()) {
       Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
       Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
-    }
-
-    // Update odometry
-    double[] sampleTimestamps =
-        modules[0].getOdometryTimestamps(); // All signals are sampled together
-    int sampleCount = sampleTimestamps.length;
-    for (int i = 0; i < sampleCount; i++) {
-      // Read wheel positions and deltas from each module
-      SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
-      for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
-        modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
-        moduleDeltas[moduleIndex] =
-            new SwerveModulePosition(
-                modulePositions[moduleIndex].distanceMeters
-                    - lastModulePositions[moduleIndex].distanceMeters,
-                modulePositions[moduleIndex].angle);
-        lastModulePositions[moduleIndex] =
-            new SwerveModulePosition(
-                modulePositions[moduleIndex].distanceMeters, modulePositions[moduleIndex].angle);
-      }
-
-      // // Update gyro angle
-      // if (gyroInputs.connected) {
-      //   // Use the real gyro angle
-      //   rawGyroRotation = gyroInputs.yawPosition;
-      // } else {
-      //   // Use the angle delta from the kinematics and module deltas
-      //   Twist2d twist = kinematics.toTwist2d(moduleDeltas);
-      //   rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-      // }
-
-      // Apply update (doesn't work)
-      // RobotState.getInstance()
-      //     .addOdometryObservation(
-      //         new OdometryObservation(sampleTimestamps[i], modulePositions, rawGyroRotation));
-
-      // Log the measured module positions (angle and distance)
-      Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
     }
 
     // Update gyro alert
@@ -230,13 +205,37 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * Sets the gyro yaw to the specified angle.
+   * Sets the sensor yaw and cached raw heading without changing the pose estimator.
    *
-   * @param angle The angle to set the gyro to.
+   * @param angle the requested sensor heading
    */
   public void setYaw(Rotation2d angle) {
     gyroIO.setYaw(angle);
     rawGyroRotation = angle;
+  }
+
+  /**
+   * Creates the driver's heading-reset command, requiring the drivetrain and preserving X/Y.
+   *
+   * <p>REAL retains the existing estimator-zero and hardware-zero requests. SIM additionally aligns
+   * the estimator with its immediately reset sensor. The physical gyro's offset and reset timing
+   * need separate validation before adopting that alignment policy on REAL.
+   */
+  public Command resetHeading() {
+    return runOnce(
+        () -> {
+          RobotState state = RobotState.getInstance();
+          state.resetRotation(Rotation2d.kZero);
+          setYaw(Rotation2d.kZero);
+          if (Constants.kCurrentMode == Mode.SIM) {
+            // Rebase the estimator's gyro offset and wheel baseline together. Otherwise the next
+            // sample can restore the old heading offset after the sensor has already been zeroed.
+            state.setPose(
+                new Pose2d(state.getEstimatedPose().getTranslation(), Rotation2d.kZero),
+                getModulePositions(),
+                rawGyroRotation);
+          }
+        });
   }
 
   /** Zeros the gyro yaw. */

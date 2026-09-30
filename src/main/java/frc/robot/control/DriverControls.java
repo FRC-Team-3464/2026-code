@@ -2,7 +2,6 @@ package frc.robot.control;
 
 import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManualDutyCycle;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -49,11 +48,7 @@ public class DriverControls implements Configurable {
   }
 
   private void configureDriverControls() {
-    driver
-        .xSquare()
-        .onTrue(
-            Commands.runOnce(() -> RobotState.getInstance().resetRotation(Rotation2d.kZero))
-                .alongWith(drive.zeroYaw()));
+    driver.xSquare().onTrue(drive.resetHeading());
     driver.bCircle().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     driver.dPadUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
