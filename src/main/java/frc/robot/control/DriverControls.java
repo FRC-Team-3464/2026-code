@@ -2,7 +2,6 @@ package frc.robot.control;
 
 import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManualDutyCycle;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.event.BooleanEvent;
@@ -56,10 +55,7 @@ public class DriverControls implements Configurable {
     // cannot take ownership from autonomous commands. While-held controls activate on teleop entry.
     // Reset references only on a fresh physical press in teleop. Gating the trigger itself would
     // also create a rising edge when teleop starts with the button already held.
-    teleopPress(driver.xSquare())
-        .onTrue(
-            Commands.runOnce(() -> RobotState.getInstance().resetRotation(Rotation2d.kZero))
-                .alongWith(drive.zeroYaw()));
+    teleopPress(driver.xSquare()).onTrue(drive.resetHeading());
     driver
         .bCircle()
         .and(DriverStation::isTeleopEnabled)

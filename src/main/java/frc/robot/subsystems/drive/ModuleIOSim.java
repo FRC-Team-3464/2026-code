@@ -18,6 +18,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.Constants;
 
 /**
  * Physics sim implementation of module IO. The sim models are configured using a set of module
@@ -42,8 +43,10 @@ public class ModuleIOSim implements ModuleIO {
 
   private boolean driveClosedLoop = false;
   private boolean turnClosedLoop = false;
-  private PIDController driveController = new PIDController(DRIVE_KP, 0, DRIVE_KD);
-  private PIDController turnController = new PIDController(TURN_KP, 0, TURN_KD);
+  private PIDController driveController =
+      new PIDController(DRIVE_KP, 0, DRIVE_KD, Constants.kLoopPeriodSeconds);
+  private PIDController turnController =
+      new PIDController(TURN_KP, 0, TURN_KD, Constants.kLoopPeriodSeconds);
   private double driveFFVolts = 0.0;
   private double driveAppliedVolts = 0.0;
   private double turnAppliedVolts = 0.0;
@@ -85,8 +88,9 @@ public class ModuleIOSim implements ModuleIO {
     // Update simulation state
     driveSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0));
     turnSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0));
-    driveSim.update(0.02);
-    turnSim.update(0.02);
+    // Match the controllers and simulated gyro rate calculation to the same model timestep.
+    driveSim.update(Constants.kLoopPeriodSeconds);
+    turnSim.update(Constants.kLoopPeriodSeconds);
 
     // Update drive inputs
     inputs.driveConnected = true;

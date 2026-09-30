@@ -93,13 +93,15 @@ classDiagram
     ModuleIOTalonFX ..|> ModuleIO : REAL
     ModuleIOSim ..|> ModuleIO : SIM
     GyroIOPigeon2 ..|> GyroIO : REAL
+    GyroIOSim ..|> GyroIO : SIM
+    GyroIOSim ..> Drive : reads refreshed positions through supplier
     ModuleIOTalonFX ..> PhoenixOdometryThread : registers samples
     GyroIOPigeon2 ..> PhoenixOdometryThread : registers samples
 ```
 
-`RobotContainer` selects the **REAL** implementations (`GyroIOPigeon2` and four `ModuleIOTalonFX` objects) or the **SIM** implementations (an empty `GyroIO` and four `ModuleIOSim` objects). It passes them to one `Drive` constructor in front-left, front-right, back-left, back-right order. `Drive` wraps each module adapter in a `Module` object. `ModuleIO` and `GyroIO` are team-owned interfaces; Talon FX, CANcoder, Pigeon 2, `DCMotorSim`, kinematics, and the pose estimator are third-party APIs. [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java).
+`RobotContainer` selects the **REAL** implementations (`GyroIOPigeon2` and four `ModuleIOTalonFX` objects) or the **SIM** implementations (`GyroIOSim` and four `ModuleIOSim` objects). It passes them to one `Drive` constructor in front-left, front-right, back-left, back-right order. `Drive` wraps each module adapter in a `Module` object. `ModuleIO` and `GyroIO` are team-owned interfaces; Talon FX, CANcoder, Pigeon 2, `DCMotorSim`, kinematics, and the pose estimator are third-party APIs. [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java).
 
-The class diagram shows dependencies, **not call order**. It also simplifies generated `@AutoLog` input classes, logging, and the other robot subsystems so the drive relationships remain readable. In SIM, the empty `GyroIO` has default no-op methods, not a simulated Pigeon 2. `Drive` sends its refreshed 50 Hz position reading to `RobotState`; `RobotContainer` reads the resulting pose only for dashboard display.
+The class diagram shows dependencies, **not call order**. It also simplifies generated `@AutoLog` input classes, logging, and the other robot subsystems so the drive relationships remain readable. In SIM, `GyroIOSim` derives yaw from measured module travel, assuming no wheel slip. `Drive` sends its refreshed 50 Hz position reading to `RobotState`; `RobotContainer` reads the resulting pose only for dashboard display.
 
 ## 2. Sequence diagram: moving the driver sticks
 
@@ -159,8 +161,6 @@ sequenceDiagram
     end
     Robot->>Scheduler: run()
     Scheduler->>Drive: periodic()
-    Drive->>Gyro: updateInputs(gyroInputs)
-    Gyro-->>Drive: Yaw and connection status
     loop Four modules
         Drive->>Module: periodic()
         Module->>IO: updateInputs(inputs)
@@ -171,6 +171,8 @@ sequenceDiagram
         IO-->>Module: Current signals and sample arrays
         Note over Module: Convert sampled wheel radians to meters
     end
+    Drive->>Gyro: updateInputs(gyroInputs)
+    Gyro-->>Drive: Yaw and connection status
     Drive->>State: addOdometryObservation(current timestamp, current positions, yaw)
     Note over State: Pose estimator updates from the refreshed 50 Hz reading
     Scheduler->>Command: execute() using updated state
@@ -178,8 +180,10 @@ sequenceDiagram
     Container->>State: getEstimatedPose()
 ```
 
-**Important boundary:** the active estimator path is intentionally 50 Hz. `Drive.periodic()` refreshes the ordinary gyro and module fields sequentially under the odometry lock, then submits those current fields with a new `Timer.getTimestamp()`. The lock prevents the background thread from changing its queues during the refresh; it does not make the hardware measurements simultaneous. REAL module adapters still drain their high-rate queues, but those queued arrays are not submitted to `RobotState`. The high-rate gyro queue is registered on REAL, while copying and clearing it in `GyroIOPigeon2` remains commented out. In SIM, `ModuleIOSim.updateInputs()` advances each module model during this scheduler stage, and the empty gyro IO leaves yaw at zero.
+**Important boundary:** the active estimator path is intentionally 50 Hz. `Drive.periodic()` refreshes the ordinary gyro and module fields sequentially under the odometry lock, then submits those current fields with a new `Timer.getTimestamp()`. The lock prevents the background thread from changing its queues during the refresh; it does not make the hardware measurements simultaneous. REAL module adapters still drain their high-rate queues, but those queued arrays are not submitted to `RobotState`. The high-rate gyro queue is registered on REAL, while copying and clearing it in `GyroIOPigeon2` remains commented out. In SIM, `ModuleIOSim.updateInputs()` advances each module model during this scheduler stage, then `GyroIOSim` integrates the rotation inferred from that measured travel.
 
 ## A related control: heading reset
 
-The driver X-button binding schedules an estimator reset alongside `Drive.zeroYaw()`. That drive method returns a command; **calling `zeroYaw()` in the `Drive` constructor only creates a command and does not schedule it**. `GyroIOPigeon2.setYaw()` also transforms the requested angle by 180 degrees before sending it to the Pigeon 2. These are current code facts, not a recommended heading convention. The [2027 Recommendations](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3) require the team to define and verify one heading/reset convention before relying on field-relative behavior. [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
+The driver X-button binding schedules `Drive.resetHeading()`, which owns the estimator and gyro reset requests. The separate `zeroYaw()` method returns a sensor-only command; **calling `zeroYaw()` in the `Drive` constructor only creates a command and does not schedule it**. `GyroIOPigeon2.setYaw()` also transforms the requested angle by 180 degrees before sending it to the Pigeon 2. These are current code facts, not a recommended heading convention. The [2027 Recommendations](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3) require the team to define and verify one heading/reset convention before relying on field-relative behavior. [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
+
+In SIM, `resetHeading()` also aligns the pose estimator with the new sensor reference while preserving translation. REAL reset behavior remains unchanged.

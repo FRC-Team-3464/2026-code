@@ -401,7 +401,7 @@ Angle-holding drive, turn-to-point, feedforward characterization, wheel-radius c
 
 The active estimator path is 50 Hz: `Drive.periodic()` refreshes the ordinary gyro and module fields, then submits those fields to `RobotState` before commands execute. REAL module adapters still drain and convert their high-rate queued arrays, but the arrays are not submitted to the estimator. The gyro's queued-array extraction and clearing are also commented out.
 
-The disconnected-gyro alert says that kinematics provides a fallback, but the wheel-based heading fallback is commented out. In the current simulator, the empty gyro interface therefore leaves raw heading at zero even when wheel motion requests rotation.
+SIM now uses `GyroIOSim` to calculate heading changes from refreshed module travel, assuming no wheel slip. The gyro publishes yaw and angular velocity after the modules advance. This does not add a fallback for a disconnected physical gyro; the existing REAL alert still overstates that capability.
 
 Sources: [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java), [ModuleIOTalonFX.java](../src/main/java/frc/robot/subsystems/drive/ModuleIOTalonFX.java), [PhoenixOdometryThread.java](../src/main/java/frc/robot/subsystems/drive/PhoenixOdometryThread.java).
 
@@ -470,7 +470,9 @@ If alliance information is absent, the utility does not flip. `RobotState.getSho
 
 ### Heading reset detail
 
-The Pigeon constructor calls `pigeon.setYaw(0)`. Later, `GyroIOPigeon2.setYaw(angle)` adds 180° to its argument before writing it. The driver X binding calls both estimator rotation reset and `drive.zeroYaw()`; this is not a simple universal “everything becomes zero” operation. The drivetrain temporarily stores the requested heading, then reads the hardware-adjusted heading on its next refresh.
+The Pigeon constructor calls `pigeon.setYaw(0)`. Later, `GyroIOPigeon2.setYaw(angle)` adds 180° to its argument before writing it. The driver X binding schedules `drive.resetHeading()`, which requests estimator rotation reset and gyro zero; this is not a simple universal “everything becomes zero” operation. The drivetrain temporarily stores the requested heading, then reads the hardware-adjusted heading on its next refresh.
+
+In SIM, the `Drive.resetHeading()` command also aligns the estimator with the reset sensor reading while preserving translation. The low-level `setYaw()` method changes only the sensor and cached raw heading. This prevents the next update from restoring an old heading offset.
 
 Also, `Drive` calls `zeroYaw()` in its constructor but does not schedule the returned command. The real startup zero comes from the Pigeon constructor, not from executing that returned command.
 
@@ -678,8 +680,8 @@ Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), 
 
 | Component | Desktop implementation | Practical limitation |
 | --- | --- | --- |
-| Swerve modules | Drive and turn motor models with feedback control | Individual modules are modeled; heading integration is incomplete |
-| Gyro | Empty `GyroIO` | No simulated yaw update |
+| Swerve modules | Drive and turn motor models with feedback control | Individual modules are modeled; wheel slip is not modeled |
+| Gyro | `GyroIOSim` integrates measured module travel | Assumes no wheel slip; no gyro noise or drift |
 | Intake | `IntakeIOSim` | Entire implementation body is commented out |
 | Indexer | `IndexerIOSim` | Captures requested motor voltages; does not simulate movement or sensors |
 | Turret | `DCMotorSim` with PID | Simulated behavior differs from real limits |
@@ -795,7 +797,7 @@ Read one working behavior end to end before studying every utility.
 
 A useful first tracing exercise is: “What happens when the operator holds the right bumper, then presses the right trigger?” You should be able to identify three tracking commands, a separate feed command, their subsystem requirements, the target source, and the motor output methods.
 
-A second exercise is: “Why might a rotating simulated robot still display a constant heading?” Follow the empty simulated gyro interface and the commented heading fallback rather than starting with the dashboard.
+A second exercise is: “How does simulated wheel movement change heading?” Follow module feedback through `GyroIOSim` into the pose estimator.
 
 ## 18. Glossary
 
