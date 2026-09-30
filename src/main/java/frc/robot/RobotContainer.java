@@ -23,8 +23,8 @@ import frc.robot.control.DriverController;
 import frc.robot.control.DriverControls;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
-import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.indexer.Indexer;
@@ -120,9 +120,11 @@ public class RobotContainer {
                 new CameraIOLimelight("limelight-one", robotRotationSupplier));
       }
       case SIM -> {
+        // The gyro reads module feedback during periodic updates, after Drive has been assigned
+        // and its modules have advanced. No sensor sampling occurs inside this supplier's creation.
         drive =
             new Drive(
-                new GyroIO() {},
+                new GyroIOSim(() -> drive.getModulePositions()),
                 new ModuleIOSim(TunerConstants.FrontLeft),
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
