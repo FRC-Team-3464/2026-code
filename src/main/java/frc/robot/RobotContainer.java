@@ -74,7 +74,7 @@ public class RobotContainer {
     RobotWiring wiring =
         switch (Constants.kCurrentMode) {
           case REAL -> new RealRobotWiring();
-          case SIM -> new SimRobotWiring();
+          case SIM -> new SimRobotWiring(() -> drive.getModulePositions());
           case REPLAY ->
               throw new IllegalStateException(
                   "REPLAY mode must be rejected before RobotContainer is constructed.");

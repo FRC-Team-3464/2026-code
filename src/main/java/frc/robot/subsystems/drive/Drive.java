@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -101,15 +102,17 @@ public class Drive extends SubsystemBase {
     // this is one protected refresh batch. Always release the lock if an IO adapter throws.
     odometryLock.lock();
     try {
-      gyroIO.updateInputs(gyroInputs);
-      Logger.processInputs("Drive/Gyro", gyroInputs);
-      rawGyroRotation = gyroInputs.yawPosition;
-
       // Modules are plain helper objects rather than registered subsystems, so Drive owns their
       // periodic input refresh.
       for (var module : modules) {
         module.periodic();
       }
+
+      // The simulated gyro derives yaw from measured wheel travel. Refresh modules first so yaw
+      // and wheel positions describe the same simulation step. REAL still reads the Pigeon here.
+      gyroIO.updateInputs(gyroInputs);
+      Logger.processInputs("Drive/Gyro", gyroInputs);
+      rawGyroRotation = gyroInputs.yawPosition;
     } finally {
       odometryLock.unlock();
     }
@@ -202,13 +205,37 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * Sets the gyro yaw to the specified angle.
+   * Sets the sensor yaw and cached raw heading without changing the pose estimator.
    *
-   * @param angle The angle to set the gyro to.
+   * @param angle the requested sensor heading
    */
   public void setYaw(Rotation2d angle) {
     gyroIO.setYaw(angle);
     rawGyroRotation = angle;
+  }
+
+  /**
+   * Creates the driver's heading-reset command, requiring the drivetrain and preserving X/Y.
+   *
+   * <p>REAL retains the existing estimator-zero and hardware-zero requests. SIM additionally aligns
+   * the estimator with its immediately reset sensor. The physical gyro's offset and reset timing
+   * need separate validation before adopting that alignment policy on REAL.
+   */
+  public Command resetHeading() {
+    return runOnce(
+        () -> {
+          RobotState state = RobotState.getInstance();
+          state.resetRotation(Rotation2d.kZero);
+          setYaw(Rotation2d.kZero);
+          if (Constants.kCurrentMode == Mode.SIM) {
+            // Rebase the estimator's gyro offset and wheel baseline together. Otherwise the next
+            // sample can restore the old heading offset after the sensor has already been zeroed.
+            state.setPose(
+                new Pose2d(state.getEstimatedPose().getTranslation(), Rotation2d.kZero),
+                getModulePositions(),
+                rawGyroRotation);
+          }
+        });
   }
 
   /** Zeros the gyro yaw. */

@@ -5,8 +5,10 @@
 package frc.robot.wiring;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
 import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.indexer.IndexerIO;
@@ -26,13 +28,22 @@ import java.util.function.Supplier;
 
 /** Selects the IO adapters used by desktop physics simulation. */
 public final class SimRobotWiring implements RobotWiring {
-  /** Creates the stateless simulation wiring selector. */
-  public SimRobotWiring() {}
+  private final Supplier<SwerveModulePosition[]> modulePositions;
 
-  /** Returns an empty gyro adapter because simulated heading is not modeled yet. */
+  /**
+   * Creates simulation wiring with wheel feedback for the simulated gyro.
+   *
+   * @param modulePositions refreshed wheel positions; read during gyro updates after Drive has been
+   *     constructed, not while selecting or creating adapters
+   */
+  public SimRobotWiring(Supplier<SwerveModulePosition[]> modulePositions) {
+    this.modulePositions = modulePositions;
+  }
+
+  /** Returns a simulated gyro that derives heading from measured wheel travel. */
   @Override
   public GyroIO createGyro() {
-    return new GyroIO() {};
+    return new GyroIOSim(modulePositions);
   }
 
   /** Returns the simulated front-left swerve module adapter. */
