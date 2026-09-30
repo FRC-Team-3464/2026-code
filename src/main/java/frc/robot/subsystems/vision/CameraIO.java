@@ -21,6 +21,12 @@ public interface CameraIO {
         new TargetObservation(Rotation2d.kZero, Rotation2d.kZero);
     public PoseObservation[] poseObservations = new PoseObservation[0];
     public int[] tagIds = new int[0];
+
+    /** Cumulative malformed pose messages rejected by the adapter; empty messages are ignored. */
+    public long rejectedPoseMessages = 0;
+
+    /** Most recent rejection, retained across updates so an intermittent fault remains visible. */
+    public String lastPoseRejection = "";
   }
 
   /** Represents the angle to a target. Not used for pose estimation */
