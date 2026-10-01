@@ -5,7 +5,10 @@ import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManua
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.event.BooleanEvent;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -49,21 +52,51 @@ public class DriverControls implements Configurable {
   }
 
   private void configureDriverControls() {
-    driver
-        .xSquare()
+    // Bindings are polled in autonomous and test too. Gate manual requests at the trigger so they
+    // cannot take ownership from autonomous commands. While-held controls activate on teleop entry.
+    // Reset references only on a fresh physical press in teleop. Gating the trigger itself would
+    // also create a rising edge when teleop starts with the button already held.
+    teleopPress(driver.xSquare())
         .onTrue(
             Commands.runOnce(() -> RobotState.getInstance().resetRotation(Rotation2d.kZero))
                 .alongWith(drive.zeroYaw()));
-    driver.bCircle().onTrue(Commands.runOnce(drive::stopWithX, drive));
+    driver
+        .bCircle()
+        .and(DriverStation::isTeleopEnabled)
+        .onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-    driver.dPadUp().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
-    driver.dPadUpLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
-    driver.dPadUpRight().whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHEAST));
-    driver.dPadLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.WEST));
-    driver.dPadRight().whileTrue(DriveCommands.crabWalk(drive, Direction.EAST));
-    driver.dPadDownLeft().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHWEST));
-    driver.dPadDownRight().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHEAST));
-    driver.dPadDown().whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
+    driver
+        .dPadUp()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.NORTH));
+    driver
+        .dPadUpLeft()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHWEST));
+    driver
+        .dPadUpRight()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.NORTHEAST));
+    driver
+        .dPadLeft()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.WEST));
+    driver
+        .dPadRight()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.EAST));
+    driver
+        .dPadDownLeft()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHWEST));
+    driver
+        .dPadDownRight()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTHEAST));
+    driver
+        .dPadDown()
+        .and(DriverStation::isTeleopEnabled)
+        .whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
 
     // driver
     // .leftBumper()
@@ -84,7 +117,13 @@ public class DriverControls implements Configurable {
   }
 
   private void configureOperatorControls() {
-    operator.leftBumper().and(operator.leftTrigger().negate()).whileTrue(intake.intake());
+    // Guard operator bindings here so autonomous can still use the same subsystem commands.
+    // Leaving enabled teleop cancels while-held requests through their existing end actions.
+    operator
+        .leftBumper()
+        .and(DriverStation::isTeleopEnabled)
+        .and(operator.leftTrigger().negate())
+        .whileTrue(intake.intake());
 
     Supplier<Translation2d> targetSupplier = () -> RobotState.getInstance().getShooterTarget();
 
@@ -122,7 +161,7 @@ public class DriverControls implements Configurable {
         .and(DriverStation::isTeleopEnabled)
         .onFalse(Commands.runOnce(() -> manualHoodOverrideActive = false).ignoringDisable(true));
 
-    operator.rightTrigger().whileTrue(indexer.index());
+    operator.rightTrigger().and(DriverStation::isTeleopEnabled).whileTrue(indexer.index());
 
     operator
         .dPadUp()
@@ -133,12 +172,13 @@ public class DriverControls implements Configurable {
         .and(DriverStation::isTeleopEnabled)
         .whileTrue(shooter.getHood().manualControl(-kManualDutyCycle));
 
-    operator.aCross().whileTrue(intake.outtake());
-    operator.xSquare().whileTrue(intake.deployOpenLoop());
-    operator.yTriangle().whileTrue(intake.retractOpenLoop());
+    operator.aCross().and(DriverStation::isTeleopEnabled).whileTrue(intake.outtake());
+    operator.xSquare().and(DriverStation::isTeleopEnabled).whileTrue(intake.deployOpenLoop());
+    operator.yTriangle().and(DriverStation::isTeleopEnabled).whileTrue(intake.retractOpenLoop());
 
     operator
         .dPadLeft()
+        .and(DriverStation::isTeleopEnabled)
         .whileTrue(
             Commands.runEnd(
                 () -> shooter.getTurret().setOpenLoop(-0.05),
@@ -146,14 +186,15 @@ public class DriverControls implements Configurable {
                 shooter.getTurret()));
     operator
         .dPadRight()
+        .and(DriverStation::isTeleopEnabled)
         .whileTrue(
             Commands.runEnd(
                 () -> shooter.getTurret().setOpenLoop(0.05),
                 () -> shooter.getTurret().setOpenLoop(0),
                 shooter.getTurret()));
 
-    operator
-        .bCircle()
+    // A held button must not redefine the turret's encoder zero on teleop entry or re-enable.
+    teleopPress(operator.bCircle())
         .onTrue(Commands.runOnce(() -> shooter.getTurret().zero(), shooter.getTurret()));
 
     // operator.aCross().whileTrue(shooter.shootAtTargetNoRotation(() ->
@@ -161,10 +202,26 @@ public class DriverControls implements Configurable {
     // operator.aCross().and(shooter::readyToShoot).whileTrue(indexer.index());
   }
 
+  /**
+   * Allows a reset only on a new physical button press during enabled teleop.
+   *
+   * <p>Capture the button edge before applying the mode condition: enabling teleop while a button
+   * is held must not count as a new press. Filtering before scheduling also prevents a blocked
+   * reset from claiming its subsystem and interrupting an autonomous command.
+   */
+  private Trigger teleopPress(Trigger button) {
+    return new BooleanEvent(CommandScheduler.getInstance().getDefaultButtonLoop(), button)
+        .rising()
+        .castTo(Trigger::new)
+        .and(DriverStation::isTeleopEnabled);
+  }
+
   private void configureSingleController() {
+    // Preserve teleop-only manual control if this alternative layout is enabled in configure().
 
     driver
         .rightBumper()
+        .and(DriverStation::isTeleopEnabled)
         .whileTrue(
             shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
                 () -> RobotState.getInstance().getShooterTarget()));
@@ -184,8 +241,8 @@ public class DriverControls implements Configurable {
     // () -> shooter.setFlywheelOpenLoop(0),
     // shooter));
 
-    driver.bCircle().whileTrue(indexer.index());
-    driver.aCross().whileTrue(indexer.indexReverse());
+    driver.bCircle().and(DriverStation::isTeleopEnabled).whileTrue(indexer.index());
+    driver.aCross().and(DriverStation::isTeleopEnabled).whileTrue(indexer.indexReverse());
 
     // driver
     // .aCross()
@@ -201,14 +258,15 @@ public class DriverControls implements Configurable {
     // // () -> indexer.setThroatOpenLoop(0),
     // // indexer));
 
-    driver.xSquare().whileTrue(intake.retractOpenLoop());
-    driver.yTriangle().whileTrue(intake.deployOpenLoop());
+    driver.xSquare().and(DriverStation::isTeleopEnabled).whileTrue(intake.retractOpenLoop());
+    driver.yTriangle().and(DriverStation::isTeleopEnabled).whileTrue(intake.deployOpenLoop());
 
-    driver.leftTrigger().whileTrue(intake.outtake());
-    driver.rightTrigger().whileTrue(intake.intake());
+    driver.leftTrigger().and(DriverStation::isTeleopEnabled).whileTrue(intake.outtake());
+    driver.rightTrigger().and(DriverStation::isTeleopEnabled).whileTrue(intake.intake());
 
     driver
         .dPadLeft()
+        .and(DriverStation::isTeleopEnabled)
         .whileTrue(
             Commands.runEnd(
                 () -> shooter.getTurret().setOpenLoop(-0.05),
@@ -216,14 +274,15 @@ public class DriverControls implements Configurable {
                 shooter.getTurret()));
     driver
         .dPadRight()
+        .and(DriverStation::isTeleopEnabled)
         .whileTrue(
             Commands.runEnd(
                 () -> shooter.getTurret().setOpenLoop(0.05),
                 () -> shooter.getTurret().setOpenLoop(0),
                 shooter.getTurret()));
 
-    driver
-        .yTriangle()
+    // A held button must not redefine the turret's encoder zero on teleop entry or re-enable.
+    teleopPress(driver.yTriangle())
         .onTrue(Commands.runOnce(() -> shooter.getTurret().zero(), shooter.getTurret()));
   }
 }
