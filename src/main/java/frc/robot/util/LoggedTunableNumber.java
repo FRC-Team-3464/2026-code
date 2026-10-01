@@ -63,16 +63,24 @@ public class LoggedTunableNumber implements DoubleSupplier {
   }
 
   /**
-   * Get the current value, from dashboard if available and in tuning mode.
+   * Get the current value, from dashboard if available and in tuning mode. Dashboard access is
+   * initialized on demand if tuning was disabled when the default was set.
    *
    * @return The current value
    */
   public double get() {
     if (!hasDefault) {
       return 0.0;
-    } else {
-      return Constants.kTuningMode && !Constants.kDisableHAL ? dashboardNumber.get() : defaultValue;
     }
+    if (!Constants.kTuningMode || Constants.kDisableHAL) {
+      return defaultValue;
+    }
+    // Tuning and HAL access can be enabled after construction. Create the dashboard value only
+    // when access is allowed, and retain it across mode changes instead of resetting the setting.
+    if (dashboardNumber == null) {
+      dashboardNumber = new LoggedNetworkNumber(key, defaultValue);
+    }
+    return dashboardNumber.get();
   }
 
   /**
@@ -95,7 +103,8 @@ public class LoggedTunableNumber implements DoubleSupplier {
   }
 
   /**
-   * Runs action if any of the tunableNumbers have changed
+   * Checks every supplied number and runs the action once if any changed. The first check for a
+   * caller counts as a change; an empty list does not run the action.
    *
    * @param id Unique identifier for the caller to avoid conflicts when shared between multiple *
    *     objects. Recommended approach is to pass the result of "hashCode()"
@@ -105,7 +114,15 @@ public class LoggedTunableNumber implements DoubleSupplier {
    */
   public static void ifChanged(
       int id, Consumer<double[]> action, LoggedTunableNumber... tunableNumbers) {
-    if (Arrays.stream(tunableNumbers).anyMatch(tunableNumber -> tunableNumber.hasChanged(id))) {
+    boolean changed = false;
+    // Each check updates that number's remembered value. Do not stop at the first change, or
+    // later numbers will report the same changes again on subsequent robot cycles.
+    for (LoggedTunableNumber tunableNumber : tunableNumbers) {
+      if (tunableNumber.hasChanged(id)) {
+        changed = true;
+      }
+    }
+    if (changed) {
       action.accept(Arrays.stream(tunableNumbers).mapToDouble(LoggedTunableNumber::get).toArray());
     }
   }
