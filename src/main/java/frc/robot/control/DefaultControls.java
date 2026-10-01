@@ -40,9 +40,15 @@ public class DefaultControls implements Configurable {
   /** Configure all default commands for the subsystems (e.g. includes joystick driving). */
   @Override
   public void configure() {
+    // The drive default can run whenever no other command owns Drive, including autonomous/test.
+    // Read the mode every cycle and request zero speed outside teleop, even if sticks are held.
+    // An autonomous command that requires Drive still replaces this default normally.
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
-            drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+            drive,
+            () -> DriverStation.isTeleopEnabled() ? -driver.getLeftY() : 0.0,
+            () -> DriverStation.isTeleopEnabled() ? -driver.getLeftX() : 0.0,
+            () -> DriverStation.isTeleopEnabled() ? -driver.getRightX() : 0.0));
 
     Supplier<Translation2d> targetPoseSupplier = () -> RobotState.getInstance().getShooterTarget();
     // Avoid the trench
