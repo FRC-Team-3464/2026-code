@@ -174,8 +174,15 @@ public class DriveCommands {
         .beforeStarting(() -> angleController.reset(drive.getRawGyroRotation().getRadians()));
   }
 
+  /**
+   * Drives in a fixed robot-relative direction and stops when the command ends or is interrupted.
+   *
+   * @param drive drivetrain controlled by the command
+   * @param direction requested direction relative to the robot
+   * @return a command that owns the drivetrain until cancelled
+   */
   public static Command crabWalk(Drive drive, Direction direction) {
-    return drive.run(
+    return drive.runEnd(
         () -> {
           // TODO: tune ts
           double speed = 1.0; // meters per second (tune this)
@@ -183,7 +190,9 @@ public class DriveCommands {
           ChassisSpeeds speeds = direction.toChassisSpeeds().times(speed);
 
           drive.runVelocity(speeds);
-        });
+        },
+        // Clear the last speed on release or mode exit instead of waiting for the drive default.
+        drive::stop);
   }
 
   // ----------------------- Characterization Commands -----------------------
