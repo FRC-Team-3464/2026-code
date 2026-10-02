@@ -682,22 +682,22 @@ Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), 
 | Swerve modules | Drive and turn motor models with feedback control | Individual modules are modeled; heading integration is incomplete |
 | Gyro | Empty `GyroIO` | No simulated yaw update |
 | Intake | `IntakeIOSim` | Entire implementation body is commented out |
-| Indexer | `IndexerIOSim` | Methods delegate to no-op defaults |
+| Indexer | `IndexerIOSim` | Captures requested motor voltages; does not simulate movement or sensors |
 | Turret | `DCMotorSim` with PID | Simulated behavior differs from real limits |
 | Hood | `SingleJointedArmSim` with gravity and PID | Physical calibration still required |
-| Flywheel | `DCMotorSim` with PID | Unit and output-mode issues described below |
+| Flywheel | `DCMotorSim` with PID | Speed units and output modes are handled; gearing still needs physical validation |
 | Vision | No instance constructed in `SIM` | PhotonVision simulation class exists but is unused |
 | LEDs | No instance constructed in `SIM` | No active LED simulation wiring |
 
 There is no implemented end-to-end fuel trajectory, ball transport, scoring, or contact/obstacle simulation. Desktop simulation can expose control flow and some mechanism behavior, but it cannot currently demonstrate an accurate full match.
 
-For example, in `SIM` the operator's right trigger can schedule `indexer.index()`, but `IndexerIOSim` does not model fuel moving through the robot. The flywheel and hood have simulated motors; the flywheel unit and mode issues below still limit comparison with REAL.
+For example, in `SIM` the operator's right trigger can schedule `indexer.index()`. The indexer adapter shows the requested throat and tongue voltages, but does not model motors or fuel moving through the robot. The flywheel and hood have simulated motors, but their physical behavior still needs checking against the real mechanisms.
 
-### Flywheel simulation mismatch
+### Flywheel simulation status
 
-`Flywheel.setVelocity()` passes RPS to IO. `FlywheelIOSim.setVelocity()` uses that number directly as a PID setpoint, but compares it with `sim.getAngularVelocityRPM()`. A 2400 RPM request becomes `40`, which the simulator treats as a 40 RPM target rather than 40 RPS.
+`Flywheel.setVelocity()` passes RPS to IO. `FlywheelIOSim` converts the motor model's RPM feedback to RPS before comparing it with that target. For example, a 2400 RPM request becomes 40 RPS, and the simulated PID compares it with feedback in RPS.
 
-The simulator also recalculates voltage from PID unconditionally in `updateInputs()`, overwriting the voltage set by open-loop or stop methods. Its configured reduction is `300`, while the real flywheel implementation does not apply that constant as a sensor-to-mechanism conversion. These differences prevent assuming equivalent simulated and real flywheel behavior.
+The simulator keeps velocity, open-loop, and stopped modes separate, so an old PID target does not overwrite an open-loop or stop request. Its motor model uses a reduction of `300`; the real adapter reports the Talon FX motor sensor speed without applying that reduction in this code. The shaft meaning and gearing still need validation before simulated speed can be treated as a prediction of real flywheel speed.
 
 ### Replay is only partially connected
 
