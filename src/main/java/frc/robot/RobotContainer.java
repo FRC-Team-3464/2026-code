@@ -22,6 +22,7 @@ import frc.robot.RobotState.VisionMeasurement;
 import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
+import frc.robot.control.DriverControllerFactory;
 import frc.robot.control.DriverControls;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
@@ -51,10 +52,17 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class RobotContainer {
-  // Declare and initialize both controllers
-  // Uses our custom class to make switching controllers based on driver preference easy
-  private final DriverController driver = new DriverController.XboxDriverController(0);
-  private final DriverController operator = new DriverController.XboxDriverController(1);
+  // Driver and operator may use different controller layouts without changing their bindings.
+  private final DriverController driver =
+      DriverControllerFactory.create(
+          Constants.kCurrentMode,
+          Constants.kDriverControllerProfile,
+          Constants.kDriverControllerPort);
+  private final DriverController operator =
+      DriverControllerFactory.create(
+          Constants.kCurrentMode,
+          Constants.kOperatorControllerProfile,
+          Constants.kOperatorControllerPort);
 
   // Declare all subsystems (to be initialized in constructor)
   private Drive drive;

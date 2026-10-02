@@ -9,6 +9,7 @@ package frc.robot;
 
 import com.pathplanner.lib.config.RobotConfig;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.control.DriverControllerFactory.Profile;
 import frc.robot.subsystems.drive.DriveConstants;
 
 /**
@@ -36,6 +37,10 @@ public final class Constants {
 
   public static final int kDriverControllerPort = 0;
   public static final int kOperatorControllerPort = 1;
+
+  // Choose each real controller's layout before deployment; SIM uses Xbox-style virtual ports.
+  public static final Profile kDriverControllerProfile = Profile.XBOX;
+  public static final Profile kOperatorControllerProfile = Profile.XBOX;
 
   public static boolean kDisableHAL = false;
   public static boolean kTuningMode = true;
