@@ -55,6 +55,32 @@ An upstream example is a useful starting point, not proof of suitability for eve
 
 The control classes are a reasonable way to keep construction readable. Passing subsystem objects into their constructors makes dependencies visible. This is **dependency injection**: giving an object the collaborators it needs. No additional dependency-injection library is needed.
 
+### Controller selection and binding
+
+[RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java) asks [DriverControllerFactory.java](../src/main/java/frc/robot/control/DriverControllerFactory.java) for a driver on USB port 0 and an operator on port 1. Each call selects one adapter from [DriverController.java](../src/main/java/frc/robot/control/DriverController.java):
+
+```mermaid
+flowchart TD
+    RC[RobotContainer] --> F[DriverControllerFactory called once per port]
+    F --> M{Robot mode}
+    M -->|SIM or REPLAY| X[XboxDriverController]
+    M -->|REAL| P{Profile for this port}
+    P -->|XBOX| X
+    P -->|PS4| P4[PS4DriverController]
+    P -->|PS5| P5[PS5DriverController]
+    X --> I[DriverController interface]
+    P4 --> I
+    P5 --> I
+    I --> D[Driver on port 0]
+    I --> O[Operator on port 1]
+    D --> B[DefaultControls and DriverControls]
+    O --> B
+    B --> DRIVE[DriveCommands.joystickDrive]
+    B --> OTHER[Other driver and operator actions]
+```
+
+The two REAL profiles are chosen independently with `kDriverControllerProfile` and `kOperatorControllerProfile` in [Constants.java](../src/main/java/frc/robot/Constants.java); both default to Xbox. Selection happens at startup, so changing a profile requires rebuilding and redeploying. SIM uses Xbox-style virtual joystick ports even if a REAL profile is set to PS5 or PS4. A keyboard can feed those ports through the simulation GUI; there is no separate keyboard adapter in the robot code. The REPLAY controller choice is shown because it is in the factory, but REPLAY robot construction remains incomplete.
+
 ### IO interfaces and replaceable implementations
 
 [Flywheel.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java) takes a `FlywheelIO`, updates an input object, logs it, and uses that snapshot. Real and simulated adapters implement the interface. This matches AdvantageKit's recommended separation between control logic and hardware access. Its input payloads intentionally use public mutable fields and generated logging support. [AdvantageKit IO interfaces](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces/).
