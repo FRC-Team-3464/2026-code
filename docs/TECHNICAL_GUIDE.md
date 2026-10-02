@@ -311,12 +311,12 @@ The swerve CAN bus name is the empty string in `TunerConstants`; mechanism const
 
 Other connections are:
 
-- Driver Xbox controller: USB/Driver Station port `0`.
-- Operator Xbox controller: port `1`.
+- Driver controller: USB/Driver Station port `0`; Xbox profile by default on REAL.
+- Operator controller: port `1`; Xbox profile by default on REAL.
 - Limelight NetworkTables names: `limelight-front` and `limelight-one`.
 - Addressable LED strip: PWM port `0`, configured length `30`.
 
-The constants also define controller port numbers, but `RobotContainer` currently supplies literal `0` and `1` to the controller constructors.
+`RobotContainer` passes the port and profile constants to `DriverControllerFactory`. Each REAL controller can use the Xbox, PS4, or PS5 profile selected in `Constants`; SIM uses Xbox-style virtual joystick ports.
 
 ### Mechanical values used by software
 
@@ -598,7 +598,7 @@ Sources: [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.ja
 
 ## 11. Driver and operator controls
 
-Both active controllers are Xbox controllers. `DriverController` also supplies PS4/PS5 adapters using paired names such as `aCross()` and `xSquare()`. Those adapters are alternatives, not simultaneously active controller mappings.
+The driver and operator profiles both default to Xbox. `DriverControllerFactory` selects an Xbox, PS4, or PS5 adapter for each REAL controller independently, using the profiles in `Constants`. SIM always uses the Xbox-style virtual joystick layout. The [architecture review](ARCHITECTURE_REVIEW.md#controller-selection-and-binding) diagrams this selection; `DriverController` uses paired button names such as `aCross()` and `xSquare()` so bindings can use any selected adapter.
 
 ### Driver: port 0
 
