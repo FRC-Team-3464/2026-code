@@ -24,7 +24,7 @@ Several choices discussed in the recommendations come directly from AdvantageKit
 | --- | --- |
 | Formatting during compilation, recursive file targets with build-directory exclusions, and automatic commits on `event` branches | These are template workflow choices. This branch now uses explicit formatting and narrower targets; the event commit task remains. The changes reflect team workflow preferences, not an FRC compliance correction. [Template build configuration](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/template/build.gradle) |
 | Shared REV read-fault flag and bounded CTRE retries | The local helpers match the template. Existing sequential readers reset and consume the flag per refresh. More explicit status handling can improve diagnostics, but a cross-device fault has not been demonstrated. [Spark helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/spark_swerve/src/main/java/frc/robot/util/SparkUtil.java), [Phoenix helper](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/talonfx_swerve/src/main/java/frc/robot/util/PhoenixUtil.java) |
-| Limelight parsing assumptions and consumption of both MegaTag streams | The local adapter closely follows the template. Extra payload guards and a documented correlation policy are hardening proposals. The separate uncertainty-handoff defect in `RobotState` has been repaired and checked on desktop; live camera validation remains open. [Limelight adapter](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/vision/src/main/java/frc/robot/subsystems/vision/VisionIOLimelight.java) |
+| Limelight parsing assumptions and consumption of both MegaTag streams | The local adapter closely follows the template. It now rejects malformed pose payloads and logs rejection reasons; a stream-correlation policy remains open. The separate uncertainty-handoff defect in `RobotState` has been repaired and checked on desktop; live camera validation remains open. [Limelight adapter](https://github.com/Mechanical-Advantage/AdvantageKit/blob/v26.0.1/template_projects/sources/vision/src/main/java/frc/robot/subsystems/vision/VisionIOLimelight.java) |
 
 An upstream example is a useful starting point, not proof of suitability for every robot. Conversely, choosing a different implementation does not establish that the template or the students' use of it was wrong. Each proposed change needs a concrete benefit and a check that demonstrates it.
 
@@ -181,7 +181,7 @@ Keep these distinctions explicit when explaining the plan to students:
 | Rename `Drive` to `Drivetrain` | Optional clarity improvement; `Drive` is already a valid Java class name |
 | Prefer a plain shooter coordinator | Design recommendation for the current child-subsystem arrangement |
 | Use Spotless and Checkstyle | Team enforcement workflow; neither establishes robot correctness |
-| Add camera payload guards or change the REV fault helper | Hardening or maintainability work; template ancestry and actual call order matter |
+| Document camera stream correlation or change the REV fault helper | Remaining hardening or maintainability choices; camera payload validation has already been implemented |
 | Change automatic formatting, target patterns, or event commits | Team workflow tradeoffs; the matching AdvantageKit template contains the original patterns |
 | Add a large unit-test suite | Not required by this reuse plan; acceptance evidence is still required |
 

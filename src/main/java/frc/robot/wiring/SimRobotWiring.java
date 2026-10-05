@@ -59,7 +59,7 @@ public final class SimRobotWiring implements RobotWiring {
     return new ModuleIOSim(TunerConstants.BackRight);
   }
 
-  /** Returns the current no-op indexer simulation adapter. */
+  /** Returns an indexer adapter that captures motor requests without modeling movement. */
   @Override
   public IndexerIO createIndexer() {
     return new IndexerIOSim();
