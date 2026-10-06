@@ -27,7 +27,9 @@ public class TurretIOSparkMax implements TurretIO {
   private final RelativeEncoder encoder;
   private final SparkClosedLoopController motorController;
 
-  private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+  // Drop connection on the first failed read so stale position cannot keep autonomous feeding.
+  // Require stable good reads before reporting that the turret has recovered.
+  private final Debouncer connectedDebouncer = new Debouncer(0.5, DebounceType.kRising);
 
   public TurretIOSparkMax() {
     motor = new SparkMax(DeviceIDs.kTurretAzimuth, MotorType.kBrushless);

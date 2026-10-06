@@ -85,17 +85,17 @@ Make only the insertions shown below. In each file outside package `frc.robot`, 
    ShooterLifecycleProbe.record(ShooterLifecycleProbe.Event.FLYWHEEL_IO_UPDATE);
    ```
 
-8. In [DriverControls.java](../../src/main/java/frc/robot/control/DriverControls.java), add imports for `edu.wpi.first.wpilibj2.command.Command` and `frc.robot.ShooterLifecycleProbe`. Inside `configureOperatorControls()`, replace **only** the existing operator right-bumper binding with this block:
+8. In [DriverControls.java](../../src/main/java/frc/robot/control/DriverControls.java), add imports for `edu.wpi.first.wpilibj2.command.Command` and `frc.robot.ShooterLifecycleProbe`. Inside `configureOperatorControls()`, temporarily replace the three operator right-bumper tracking bindings with this one diagnostic binding:
 
    ```java
    Command trackingCommand =
-       shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
+       shooter.trackTarget(
            () -> RobotState.getInstance().getShooterTarget());
    ShooterLifecycleProbe.setTrackingCommand(trackingCommand);
-   operator.rightBumper().whileTrue(trackingCommand);
+   operator.rightBumper().and(DriverStation::isTeleopEnabled).whileTrue(trackingCommand);
    ```
 
-   The same `trackingCommand` object is passed to the trigger and the helper. Creating a second command solely for the probe would give an invalid scheduling result. Leave all other bindings unchanged.
+   The same `trackingCommand` object is passed to the trigger and the helper. Creating a second command solely for the probe would give an invalid scheduling result. This temporary composition is only for the count diagnostic; restore the three independent bindings afterward so D-pad hood control can interrupt only the hood.
 
 ## 3. Compile and run SIM
 
@@ -130,17 +130,7 @@ Record the two complete console lines, the mode and button state, the results, a
 
 ## 5. Remove the temporary code and check the final version
 
-1. Delete `src/main/java/frc/robot/ShooterLifecycleProbe.java` after saving the snapshots. Remove every `ShooterLifecycleProbe` import and call inserted in step 2. Restore the original right-bumper binding in `DriverControls.java` without changing its command factory or requirements:
-
-   ```java
-   operator
-       .rightBumper()
-       .whileTrue(
-           shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
-               () -> RobotState.getInstance().getShooterTarget()));
-   ```
-
-   Remove the temporary `Command` import if nothing else uses it. Review each diff; do not run `git restore` on files containing unrelated work.
+1. Delete `src/main/java/frc/robot/ShooterLifecycleProbe.java` after saving the snapshots. Remove every `ShooterLifecycleProbe` import and call inserted in step 2. Restore the three original right-bumper tracking bindings in `DriverControls.java` from the pre-diagnostic diff, including their teleop and manual-hood guards. Remove the temporary `Command` import if nothing else uses it. Review each diff; do not run `git restore` on files containing unrelated work.
 2. Run `rg -n 'ShooterLifecycleProbe' src/main/java`. It should return no matches. Check that [Shooter.java](../../src/main/java/frc/robot/subsystems/shooter/Shooter.java) does not manually call registered child `periodic()` methods; the scheduler should own those callbacks. The plain drive `Module` helpers still have their explicit update owner.
 3. Run the final checks:
 

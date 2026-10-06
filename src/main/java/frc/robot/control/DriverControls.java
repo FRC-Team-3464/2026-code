@@ -222,9 +222,7 @@ public class DriverControls implements Configurable {
     driver
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
-        .whileTrue(
-            shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
-                () -> RobotState.getInstance().getShooterTarget()));
+        .whileTrue(shooter.trackTarget(() -> RobotState.getInstance().getShooterTarget()));
     // // RB -> Shoot
     // driver
     // .rightBumper()

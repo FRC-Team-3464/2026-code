@@ -30,6 +30,7 @@ public class Shooter extends SubsystemBase {
     this.flywheel = new Flywheel(flywheelIO);
   }
 
+  /** Returns true only while the current turret, hood, and flywheel requests are all ready. */
   public boolean readyToShoot() {
     return turret.atGoal() && hood.atGoal() && flywheel.atGoal();
   }
@@ -53,9 +54,11 @@ public class Shooter extends SubsystemBase {
     hood.setAngle(cmd.hoodAngle());
   }
 
-  public Command trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
-      Supplier<Translation2d> targetSupplier) {
-    // e
+  /**
+   * Aims the turret and hood while spinning the flywheel toward the supplied field target. Each
+   * child command owns its own mechanism; feeding is a separate, readiness-gated action.
+   */
+  public Command trackTarget(Supplier<Translation2d> targetSupplier) {
     return trackTargetTurret(targetSupplier)
         .alongWith(trackTargetHood(targetSupplier), trackTargetFlywheel(targetSupplier));
   }

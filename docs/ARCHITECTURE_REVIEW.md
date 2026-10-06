@@ -44,7 +44,7 @@ An upstream example is a useful starting point, not proof of suitability for eve
 | Mechanism coordination | Needs correction | Shooter parts use different calculation paths; readiness can describe an old request. [H5](REUSE_RECOMMENDATIONS_2027.md#acceptance-h5), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
 | Simulation and replay | Wiring separated; models incomplete | REAL and SIM select IO through separate wiring classes. REPLAY now fails clearly because replay-safe wiring is deferred. [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
 | Observability | Useful instrumentation; incomplete recording | Structured inputs and revision metadata exist; real-mode `WPILOGWriter` is disabled. [M4](REUSE_RECOMMENDATIONS_2027.md#acceptance-m4) |
-| Autonomous integration | Incomplete | Active auto is a command composition. PathPlanner setup and chooser integration are disabled despite retained assets. [M5](REUSE_RECOMMENDATIONS_2027.md#acceptance-m5) |
+| Autonomous integration | Partially restored | A chooser offers three 2026 URI PathPlanner autos and defaults to Do Nothing. Other assets and physical path tuning remain open. [M5](REUSE_RECOMMENDATIONS_2027.md#acceptance-m5) |
 | Season reuse | Needs separation | Field targets, calibrations, device configuration, and historical assets remain tied to 2026. [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 
 ## What the team should preserve
@@ -67,7 +67,7 @@ Preserve that boundary. Improve method units and behavior before adding more int
 
 Methods returning `Command`, and the existing sequential and parallel compositions, fit WPILib's model. WPILib explicitly supports combining commands this way. A separate Java class for every button action is unnecessary. [WPILib command compositions](https://docs.wpilib.org/en/stable/docs/software/commandbased/command-compositions.html).
 
-The improvement is to make the factories clear and complete: name the intended action, declare the controlled resources, and define termination behavior. For example, the current `trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne()` coordinates aiming and spin-up but does not feed a ball. A name such as `trackTargetCommand()` makes its actual responsibility teachable.
+The improvement is to make the factories clear and complete: name the intended action, declare the controlled resources, and define termination behavior. For example, `Shooter.trackTarget()` coordinates aiming and spin-up; feeding is a separate, readiness-gated indexer command in the URI autos.
 
 ### Existing math and estimation libraries
 

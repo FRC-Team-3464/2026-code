@@ -36,7 +36,8 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
-    // FlywheelIO targets are RPS; DCMotorSim reports RPM, so convert feedback before PID.
+    // FlywheelIO targets motor RPS. With the provisional 1:1 belt model, simulated flywheel
+    // speed is also motor speed; convert the model's RPM reading to RPS for PID feedback.
     double requestedVolts =
         switch (controlMode) {
           case STOPPED -> 0.0;
