@@ -49,14 +49,21 @@ public class Drive extends SubsystemBase {
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR in that specific order
   private final SysIdRoutine sysId; // We didn't use this
   private final Alert gyroDisconnectedAlert =
-      new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+      new Alert("Gyro unavailable; heading accuracy is degraded.", AlertType.kError);
+  private final Alert headingHeldAlert =
+      new Alert("Gyro and wheel heading unavailable; holding last heading.", AlertType.kError);
 
   // Kinematics object helps translate general robot movement to individual swerve module movement
   // and vice versa
   private final SwerveDriveKinematics kinematics = DriveConstants.kSwerveKinematics;
 
-  private Rotation2d
-      rawGyroRotation; // Stores the drivetrain's current heading (may not be completely accurate)
+  // Heading used by both odometry and field-relative driving. During a gyro outage it is estimated
+  // from wheel travel; after recovery it includes an offset to keep that heading continuous.
+  private Rotation2d rawGyroRotation;
+  private Rotation2d gyroRecoveryOffset = Rotation2d.kZero;
+  private SwerveModulePosition[] previousModulePositions;
+  private boolean headingInitialized;
+  private boolean gyroWasConnected;
 
   public Drive(
       GyroIO gyroIO,
@@ -112,7 +119,6 @@ public class Drive extends SubsystemBase {
       // and wheel positions describe the same simulation step. REAL still reads the Pigeon here.
       gyroIO.updateInputs(gyroInputs);
       Logger.processInputs("Drive/Gyro", gyroInputs);
-      rawGyroRotation = gyroInputs.yawPosition;
     } finally {
       odometryLock.unlock();
     }
@@ -122,6 +128,7 @@ public class Drive extends SubsystemBase {
     // this cycle instead of the previous cycle. This intentionally remains a simple 50 Hz path;
     // completing the unfinished high-frequency sample pipeline is separate follow-up work.
     SwerveModulePosition[] modulePositions = getModulePositions();
+    updateHeading(modulePositions);
     RobotState.getInstance()
         .addOdometryObservation(
             new OdometryObservation(Timer.getTimestamp(), modulePositions, rawGyroRotation));
@@ -141,7 +148,64 @@ public class Drive extends SubsystemBase {
     }
 
     // Update gyro alert
-    gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.kCurrentMode != Mode.SIM);
+    gyroDisconnectedAlert.set(!gyroWasConnected && Constants.kCurrentMode != Mode.SIM);
+    Logger.recordOutput("Drive/Heading", rawGyroRotation);
+  }
+
+  /** Keep a continuous heading when gyro feedback is lost or returns with a different reference. */
+  private void updateHeading(SwerveModulePosition[] modulePositions) {
+    double wheelTurn = 0.0;
+    boolean wheelsValid = hasValidWheelPositions();
+    boolean wheelTurnValid = wheelsValid && previousModulePositions != null;
+    if (wheelTurnValid) {
+      SwerveModulePosition[] deltas = new SwerveModulePosition[modules.length];
+      for (int i = 0; i < modules.length; i++) {
+        deltas[i] =
+            new SwerveModulePosition(
+                modulePositions[i].distanceMeters - previousModulePositions[i].distanceMeters,
+                modulePositions[i].angle);
+      }
+      wheelTurn = kinematics.toTwist2d(deltas).dtheta;
+      wheelTurnValid = Double.isFinite(wheelTurn);
+      if (!wheelTurnValid) {
+        wheelTurn = 0.0;
+      }
+    }
+    // Save a baseline every cycle, including healthy gyro cycles. The first sample establishes the
+    // baseline so existing encoder distances at startup are not mistaken for fresh movement.
+    // Discard the baseline after a failed read. On recovery, start fresh instead of treating
+    // accumulated travel (or an encoder reset) across the outage as one new movement sample.
+    previousModulePositions = wheelsValid ? modulePositions : null;
+    boolean gyroConnected =
+        gyroInputs.connected && Double.isFinite(gyroInputs.yawPosition.getRadians());
+    if (gyroConnected) {
+      if (headingInitialized && !gyroWasConnected) {
+        // Include this cycle's wheel movement before anchoring the returning gyro. Keep the offset
+        // on subsequent cycles: switching straight back to its raw yaw would cause a heading jump.
+        gyroRecoveryOffset =
+            rawGyroRotation.plus(new Rotation2d(wheelTurn)).minus(gyroInputs.yawPosition);
+      }
+      rawGyroRotation = gyroInputs.yawPosition.plus(gyroRecoveryOffset);
+    } else {
+      // Wheel travel is a temporary estimate, not an absolute heading reference. It can drift when
+      // wheels slip and relies on usable module feedback; the gyro alert remains active in REAL.
+      rawGyroRotation = rawGyroRotation.plus(new Rotation2d(wheelTurn));
+    }
+    boolean holdingHeading = !gyroConnected && !wheelTurnValid;
+    headingHeldAlert.set(holdingHeading && Constants.kCurrentMode != Mode.SIM);
+    Logger.recordOutput("Drive/UsingWheelHeading", !gyroConnected && wheelTurnValid);
+    Logger.recordOutput("Drive/HoldingHeading", holdingHeading);
+    gyroWasConnected = gyroConnected;
+    headingInitialized = true;
+  }
+
+  private boolean hasValidWheelPositions() {
+    for (Module module : modules) {
+      if (!module.hasValidPosition()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -212,6 +276,10 @@ public class Drive extends SubsystemBase {
   public void setYaw(Rotation2d angle) {
     gyroIO.setYaw(angle);
     rawGyroRotation = angle;
+    // An explicit reset replaces any recovery offset. During an outage, preserve the requested
+    // heading and anchor the gyro to it when feedback returns.
+    gyroRecoveryOffset = Rotation2d.kZero;
+    previousModulePositions = hasValidWheelPositions() ? getModulePositions() : null;
   }
 
   /**
@@ -298,7 +366,7 @@ public class Drive extends SubsystemBase {
     return output;
   }
 
-  /** Returns the current gyro rotation. */
+  /** Returns the continuous drive heading, including wheel fallback and gyro recovery offset. */
   public Rotation2d getRawGyroRotation() {
     return rawGyroRotation;
   }

@@ -114,6 +114,16 @@ public class Module {
     return inputs.driveVelocityRadPerSec * constants.WheelRadius;
   }
 
+  /** Whether this cycle's wheel feedback can be used to estimate a change in heading. */
+  public boolean hasValidPosition() {
+    return inputs.positionValid
+        && inputs.driveConnected
+        && inputs.turnConnected
+        && inputs.turnEncoderConnected
+        && Double.isFinite(getPositionMeters())
+        && Double.isFinite(inputs.turnPosition.getRadians());
+  }
+
   /** Returns the module position (turn angle and drive position). */
   public SwerveModulePosition getPosition() {
     return new SwerveModulePosition(getPositionMeters(), getAngle());
