@@ -103,6 +103,11 @@ public class Hood extends SubsystemBase {
    * @param angle The target angle (in radians).
    */
   public void setAngle(double angle) {
+    if (!closedLoop || Math.abs(angle - targetAngleRad) >= HoodConstants.kAngleTolerance) {
+      // A new aim must settle again; the previous target's debounce cannot certify it.
+      atGoal = false;
+      atGoalDebouncer.calculate(false);
+    }
     closedLoop = true;
     targetAngleRad = angle;
   }
@@ -160,7 +165,12 @@ public class Hood extends SubsystemBase {
     return inputs.velocityRadPerSec;
   }
 
+  /** Returns true only when the current connected position matches the active hood target. */
   public boolean atGoal() {
-    return atGoal;
+    // setAngle() can change the target after periodic(); do not expose the old ready result.
+    return atGoal
+        && inputs.connected
+        && closedLoop
+        && Math.abs(targetAngleRad - inputs.positionRad) < HoodConstants.kAngleTolerance;
   }
 }

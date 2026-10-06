@@ -72,14 +72,15 @@ public class Turret extends FullSubsystem {
   }
 
   /**
-   * Creates a command that continuously points the turret toward a field-relative target.
+   * Creates a command that continuously points the turret toward a field-relative target and stops
+   * the turret when the command ends or is interrupted.
    *
    * @param targetSupplier supplier for the target translation in field coordinates
    * @return command requiring this turret subsystem
    */
   public Command trackTarget(Supplier<Translation2d> targetSupplier) {
 
-    return Commands.run(
+    return Commands.runEnd(
         () -> {
           Translation2d target = targetSupplier.get();
           Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
@@ -108,6 +109,7 @@ public class Turret extends FullSubsystem {
 
           setPosition(targetAngle.unaryMinus());
         },
+        this::stop,
         this);
   }
 
