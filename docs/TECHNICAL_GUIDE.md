@@ -730,7 +730,7 @@ Telemetry lets you compare what the robot was asked to do with what sensors repo
 | `LaunchCalculator/LookaheadRobotPose` | Position prediction used by the full calculator |
 | `Shooter/Flywheel/AtGoal` | Debounced speed readiness |
 | `Turret/TargetAngleDegrees` / `TargetOffsetDegrees` | Requested turret angle and angle error |
-| `Hood target angle` / `Hood target difference` | Active hood target and difference from measurement |
+| `Hood/TargetAngleRad` / `PositionErrorRad` / `Mode` | Requested target and measured-angle error update every cycle. Target and error are unavailable (`NaN`) in open-loop mode; error is also unavailable when feedback is disconnected. Compare with `Hood/PositionRad` and `Hood/Connected`. |
 | `Intake` / `Indexer` | Mechanism electrical and velocity measurements |
 | `Mechanism3d/Robot/Components` | Turret and hood transforms for visualization |
 
