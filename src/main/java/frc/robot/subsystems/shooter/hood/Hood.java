@@ -52,6 +52,16 @@ public class Hood extends SubsystemBase {
       io.setAngle(targetAngleRad);
     }
 
+    // The measured angle is already in Hood/PositionRad. Log the active target and its error here
+    // every cycle; values recorded only by trackTarget() appeared frozen after that command ended.
+    // No position target applies in open-loop mode; disconnected feedback cannot give a valid
+    // error.
+    Logger.recordOutput("Hood/Mode", closedLoop ? "CLOSED_LOOP" : "OPEN_LOOP");
+    Logger.recordOutput("Hood/TargetAngleRad", closedLoop ? targetAngleRad : Double.NaN);
+    Logger.recordOutput(
+        "Hood/PositionErrorRad",
+        closedLoop && inputs.connected ? targetAngleRad - inputs.positionRad : Double.NaN);
+
     // Log the exact mechanism position for visualization in AdvantageScope
     RobotVisualizer.getInstance().setTurretHoodAngle(inputs.positionRad);
   }
@@ -66,9 +76,6 @@ public class Hood extends SubsystemBase {
           Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
           // Use the lookup table to get the goal angle based on distance to the target
           setAngle(TrajectoryCalculator.calculateHoodAngle(target, robotPose));
-          // Record the target angle and difference between positions
-          Logger.recordOutput("Hood target angle", targetAngleRad);
-          Logger.recordOutput("Hood target difference", targetAngleRad - inputs.positionRad);
         },
         this); // Reference to current subsystem
   }
