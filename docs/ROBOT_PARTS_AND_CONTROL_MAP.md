@@ -136,7 +136,7 @@ This is an **intended data flow, not a certified aiming system**. `Drive.periodi
 | [CTRE Phoenix 6](https://v6.docs.ctr-electronics.com/) | Talks to Talon FX motor controllers, CANcoders, and Pigeon 2 on REAL; supplies generated swerve configuration types. | `TalonFX`, `CANcoder`, `Pigeon2`, `StatusSignal`, `VelocityVoltage`, `PositionVoltage`. |
 | [REVLib](https://docs.revrobotics.com/revlib/) | Talks to SPARK MAX controllers for hood and turret on REAL. | `SparkMax`, `RelativeEncoder`, `SparkClosedLoopController`, `SparkMaxConfig`. |
 | [AdvantageKit](https://docs.advantagekit.org/) | `LoggedRobot`, sensor/input logging, telemetry publication, and the IO abstraction used throughout this project. | `LoggedRobot`, `Logger`, `@AutoLog`, `NT4Publisher`. |
-| [PathPlannerLib](https://pathplanner.dev/) | Library for planned autonomous paths, present as a dependency and in inactive setup code. | `NamedCommands`, `AutoBuilder`; the active autonomous entry point does **not** select a stored PathPlanner path. |
+| [PathPlannerLib](https://pathplanner.dev/) | Library for planned autonomous paths. | `AutoBuilder` follows paths; `NamedCommands` connects path events to robot commands. |
 | [PhotonVision](https://docs.photonvision.org/) | Alternative camera implementation included in source and vendor dependency. | `PhotonCamera`, `CameraIOPhotonVision`; **not constructed** by this robot's active REAL/SIM branches. |
 | Studica vendor dependency | Available in `vendordeps`, with a `GyroIONavX` adapter in source. | The active REAL heading adapter is `GyroIOPigeon2`, not navX. |
 

@@ -54,7 +54,7 @@ The hopper is part of this conceptual ball path; there is no separate active `Ho
 
 The current operator workflow is to aim and spin the shooter with one control, then feed fuel with another. There is no active ball-counting or ball-presence sensor logic in the intake/indexer interfaces.
 
-The current autonomous routine spins the flywheel, adjusts the hood, and begins feeding after a flywheel readiness check. It does **not** follow a driving path or automatically turn the turret. Numerous stored routes exist, but they are not selected by the current autonomous code.
+The autonomous chooser defaults to **Do Nothing** and offers three 2026 PathPlanner routes: URI Center, URI Left Depot, and URI Right Outpost. Other stored routes are not selectable yet because their named actions and missed-shot behavior need review.
 
 Source: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java).
 
@@ -167,10 +167,10 @@ Versions below come from this checkout, not a claim about the latest available r
 | AdvantageKit | 26.0.1 | Structured telemetry and replay infrastructure |
 | CTRE Phoenix 6 | 26.1.1 | Talon FX, CANcoder, Pigeon 2 interfaces |
 | REVLib | 2026.0.3 | Spark MAX interfaces |
-| PathPlannerLib | 2026.1.2 | Autonomous path tooling, currently disconnected |
+| PathPlannerLib | 2026.1.2 | Loads the three selectable 2026 URI autonomous routes |
 | PhotonVision | v2026.2.2 | Alternative camera implementation, currently unused |
 | Studica | 2026.0.0 | Alternative navX gyro implementation |
-| JUnit Jupiter | 5.10.1 | Test framework dependency; no tests found |
+| JUnit Jupiter | 5.10.1 | Test framework for command behavior checks |
 | Spotless | 6.25.0 | Formatting integration |
 | google-java-format | 1.21.0 | Pinned Java formatter used by Spotless |
 
@@ -227,7 +227,7 @@ Two project-specific details are easy to miss:
 | Test starts | Cancel all scheduled commands at that moment |
 | Simulation callbacks | Present but empty; most simulation happens through IO classes |
 
-Cancelling all commands in `testInit()` does not permanently prevent defaults or bindings from scheduling later. In the pinned WPILib `2026.2.1`, LiveWindow is disabled in test mode by default, and this project does not enable it; do not assume LiveWindow will disable the command scheduler. Also, default commands and bindings are not explicitly restricted to teleop here. The autonomous command does not claim the drivetrain, so the joystick-drive default can remain available during autonomous. See the [versioned robot lifecycle source](https://github.com/wpilibsuite/allwpilib/blob/v2026.2.1/wpilibj/src/main/java/edu/wpi/first/wpilibj/IterativeRobotBase.java).
+Cancelling all commands in `testInit()` does not permanently prevent defaults or bindings from scheduling later. In the pinned WPILib `2026.2.1`, LiveWindow is disabled in test mode by default, and this project does not enable it; do not assume LiveWindow will disable the command scheduler. A PathPlanner auto containing a drive path reserves `Drive` for the whole auto, including pauses between paths. Once it ends, the joystick-drive default can resume, but it requests zero speed outside enabled teleop. See the [versioned robot lifecycle source](https://github.com/wpilibsuite/allwpilib/blob/v2026.2.1/wpilibj/src/main/java/edu/wpi/first/wpilibj/IterativeRobotBase.java).
 
 Sources: [Main.java](../src/main/java/frc/robot/Main.java), [Robot.java](../src/main/java/frc/robot/Robot.java), [FullSubsystem.java](../src/main/java/frc/robot/util/FullSubsystem.java).
 
@@ -245,16 +245,16 @@ The project frequently uses these factories:
 | `run` | Repeat an action while scheduled | Joystick driving |
 | `startEnd` | Act on start and on end | Start indexer motors, then stop them |
 | `runEnd` | Repeat while active and clean up on end | Intake rollers |
-| `sequence` | Run commands in order | Wait for flywheel, then index |
+| `sequence` | Run commands in order | Wait, then begin a timed auto action |
 | `parallel` / `alongWith` | Run commands together | Track turret, hood, and flywheel |
-| `waitUntil` | Finish when a condition is true | Flywheel readiness |
+| `waitUntil` | Finish when a condition is true | A sensor-based wait in a command sequence |
 | `withTimeout` | Bound how long a command can run | Intake deployment registration for paths |
 
 For example, `indexer.index()` **creates and returns** a command. It does not immediately start the motor. A binding, composition, or explicit scheduling call must run that command. This distinction also matters for `drive.zeroYaw()`.
 
 The shooter is a coordinating subsystem with three child subsystems. Its active tracking composition separately requires turret, hood, and flywheel, allowing an independent indexer command to run alongside them.
 
-Follow the operator's right bumper as an example. `DriverControls` schedules a command that tracks the turret, hood, and flywheel. Each tracking command declares the child subsystem it controls. If the operator also holds the right trigger, `indexer.index()` can run because it declares the separate `Indexer` requirement. Releasing the bumper ends tracking; releasing the trigger ends feeding. The hood D-pad commands are an exception to this ownership pattern: they request manual hood output without declaring a hood requirement, so the scheduler cannot keep the hood's default command from competing with them. A requirement is therefore a practical rule for **who gets to control a mechanism**, not just a label on a command.
+Follow the operator's right bumper as an example. `DriverControls` schedules separate commands that track the turret, hood, and flywheel. Each declares the child subsystem it controls. If the operator also holds the right trigger, `indexer.index()` can run because it declares the separate `Indexer` requirement. Releasing the bumper ends tracking; releasing the trigger ends feeding. A hood D-pad command reserves the hood and interrupts its automatic tracking while the turret and flywheel continue. A requirement is therefore a practical rule for **who gets to control a mechanism**, not just a label on a command.
 
 ### IO separates behavior from devices
 
@@ -505,7 +505,7 @@ All intake commands require the same `Intake` subsystem, including roller-only a
 
 `Indexer.index()` starts the throat at `-0.4` and the tongue at `+0.4`, then stops both when the command ends. `indexReverse()` reverses those signs. The separate tongue-speed constant `0.5` is not used by these commands.
 
-The active operator binding feeds whenever the right trigger is held. It does not check shooter readiness, target validity, ball presence, or hub activity. The autonomous routine has a one-time flywheel readiness gate, discussed below.
+The active operator binding feeds whenever the right trigger is held. It does not check shooter readiness, target validity, ball presence, or hub activity. The URI autos instead use `indexWhileReady()` to check shooter readiness throughout feeding.
 
 ### Legacy guts subsystem
 
@@ -519,7 +519,7 @@ Sources: [Intake.java](../src/main/java/frc/robot/subsystems/intake/Intake.java)
 
 The turret controls horizontal direction. The hood controls a mechanism angle that changes the shot. The flywheel controls launch energy through rotational speed.
 
-`Shooter.readyToShoot()` combines all three `atGoal()` values. However, the active manual feed control does not use it, and autonomous checks only `flywheelAtGoal()`.
+`Shooter.readyToShoot()` combines turret, hood, and flywheel readiness. The manual feed control does not use it. In the three URI autos, `Indexer.indexWhileReady()` checks all three on every command loop; it pauses feeding when any part is not ready and resumes within the timed shooting phase if readiness returns. These schedules still need physical validation before use in a match.
 
 The operator controls make that distinction concrete: holding the right bumper asks the shooter to aim and spin, while holding the right trigger runs the indexer that feeds fuel. The trigger does not consult `Shooter.readyToShoot()`. The robot may therefore feed while the flywheel is still speeding up or while the turret or hood is still moving. A readiness flag reports what its code checks; it is not a physical guarantee that a shot will score.
 
@@ -542,7 +542,7 @@ The advanced calculator clamps queried distance to 1.5–5.0 m, but the table it
 
 ### The active aiming command uses different calculation paths
 
-The long method name `trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne()` combines three commands. Despite the word “Shoot,” it does not run the indexer.
+`Shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne()` combines the turret, hood, and flywheel commands. It does not run the indexer. The URI autos use it for their `Shoot` action; the operator's right bumper schedules the three child commands separately so manual hood control can interrupt only the hood command.
 
 | Mechanism | Active calculation |
 | --- | --- |
@@ -591,9 +591,9 @@ The flywheel command accepts RPM, divides by 60, and sends RPS to Phoenix's `Vel
 
 Readiness compares measured rad/s with the goal converted to rad/s, using tolerance `25.0`. That means **25 rad/s**, approximately **239 RPM**, rather than 25 RPM. A rising-edge debouncer requires the condition to remain true for 0.2 s before reporting readiness.
 
-Turret tolerance is 0.5° and hood tolerance is 1°. Their falling-edge debouncers work differently: becoming true is immediate, while becoming false is delayed. They do not require a sustained initial settling interval. Their readiness fields are updated when target setters run.
+Turret tolerance is 0.5° and hood tolerance is 1°. The hood uses rising-edge debounce. The turret currently uses falling-edge debounce and updates readiness in its target setter. Its readiness correction is a prerequisite for validating the autonomous feeding gate.
 
-When active tracking ends, the flywheel receives zero open-loop output. The hood's default command returns it toward zero, and the turret's default requests zero open-loop output. `setOpenLoop(0)` does not clear the stored flywheel goal RPM, so readiness telemetry can still refer to the previous target afterward.
+When active tracking ends, the flywheel receives zero open-loop output and clears its goal/readiness. The hood's default command returns it toward zero; the turret's default requests zero open-loop output.
 
 Sources: [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java), [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java), [Turret.java](../src/main/java/frc/robot/subsystems/shooter/turret/Turret.java), [Hood.java](../src/main/java/frc/robot/subsystems/shooter/hood/Hood.java), [Flywheel.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/Flywheel.java).
 
@@ -635,42 +635,17 @@ Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultContro
 
 ### What autonomous currently runs
 
-`RobotContainer.getAutonomousCommand()` returns this composition:
-
-```text
-Parallel group
-├── Track flywheel target continuously
-├── Track hood target continuously
-└── Sequence
-    ├── Wait until flywheelAtGoal() is true
-    └── Run indexer continuously
-```
-
-There is no explicit drive trajectory, turret tracking command, intake command, duration limit, or ball-count termination. The group normally continues until interrupted, including cancellation on entry to teleop.
-
-The readiness wait is a **one-time gate**. Once indexing begins, a subsequent RPM drop does not return the sequence to its waiting step. The condition is the flywheel's cached readiness field, so it should not be interpreted as a fresh combined turret/hood/flywheel alignment check.
-
-For example, if the flywheel becomes ready and fuel starts feeding, a later fuel impact might slow the wheel. The running indexer command continues because the earlier `waitUntil` step has already finished. This follows directly from the command sequence; it does not depend on PathPlanner files, which are not connected to the active autonomous command.
+`RobotContainer` configures PathPlanner at startup and publishes an `Autonomous` chooser. With no selection, `getAutonomousCommand()` returns **Do Nothing**. The three URI choices load their `.auto` files and run the paths and named actions described there. Each URI routine ends with its timed shooting step; if turret, hood, or flywheel never becomes ready, feeding never starts and the routine ends there. Other stored routes can intake after a missed shot; keep them unavailable until the robot can confirm there is room for more fuel or that continuation is otherwise safe. `Robot.autonomousInit()` schedules the selected command; teleop cancels it. The 2026 path geometry, robot model, and controller gains are not yet verified on the physical robot.
 
 ### What the stored files represent
 
 PathPlanner `.path` files contain geometry and motion constraints. `.auto` files compose paths, waits, and named robot actions. `settings.json` contains the robot model and editor defaults; `navgrid.json` contains a pathfinding grid.
 
-For example, [URI Center.auto](../src/main/deploy/pathplanner/autos/URI%20Center.auto) describes following `C to C Tower`, then running an eight-second shooting phase, starting indexing after one second. This is a stored plan, not the command returned by the current robot program.
-
-The reason those assets do not run is visible in `RobotContainer`:
-
-- The call to `configurePathPlanner()` is commented out.
-- The `AutoBuilder.configure(...)` body is commented out.
-- Building and publishing the auto chooser is commented out.
-- `getAutonomousCommand()` returns a manually built command instead of chooser output.
-- `LocalADStarAK` exists but is not installed as a pathfinder.
-
-The otherwise-unused configuration method registers `Shoot`, `Index`, `Intake`, `DeployIntake`, and `RetractIntake`. A scan of the assets also found lowercase `shoot`, `intake`, and `climb` references. These do not have matching registrations in that method. There is no implemented climber subsystem. Simply uncommenting the configuration would not fully integrate all stored autos.
+For example, [URI Center.auto](../src/main/deploy/pathplanner/autos/URI%20Center.auto) follows `C to C Tower`, then runs an eight-second shooting phase and starts indexing after one second. The registered actions are `Shoot`, `Index`, `Intake`, `DeployIntake`, `RetractIntake`, and a no-op `climb` placeholder. The auto team included `climb` for a future mechanism; this robot has no climber, so that action does nothing. Nineteen stored autos call it. Those routes also use lowercase `shoot` and `intake`, whose intended behavior is not registered yet. They stay out of the chooser until those actions are implemented and the routes are verified. `LocalADStarAK` exists but is not installed as a pathfinder.
 
 All path names referenced by the scanned assets have corresponding `.path` files. That file-reference check does not validate the routes' physical feasibility or execution behavior.
 
-There are also inconsistent robot-model values: `DriveConstants` specifies mass `72.088 kg`, whereas PathPlanner settings specify `52.163 kg`. Those configurations must be reconciled before treating them as an authoritative model for path following.
+The runtime reads [PathPlanner settings](../src/main/deploy/pathplanner/settings.json), which specifies mass `52.163 kg`; `DriveConstants` separately specifies `72.088 kg`. Reconcile these values with measurements before physical path validation.
 
 Sources: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [PathPlanner settings](../src/main/deploy/pathplanner/settings.json), [autonomous files](../src/main/deploy/pathplanner/autos), [path files](../src/main/deploy/pathplanner/paths).
 

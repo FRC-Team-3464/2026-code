@@ -51,7 +51,9 @@ public final class ShooterConstants {
   }
 
   public static final class FlywheelConstants {
-    public static final double kGearRatio = 300;
+    // SIM motor turns per flywheel turn. The team recalls equal-sized belt pulleys (1:1);
+    // verify this on the physical mechanism before treating SIM spin-up time as accurate.
+    public static final double kGearRatio = 1.0;
     public static final double kSpeedTolerance = 25.0;
 
     // PID + feedforward gains to be sent to the motor
