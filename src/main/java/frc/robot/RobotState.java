@@ -51,7 +51,8 @@ public class RobotState {
   }
 
   /**
-   * Update robot pose estimate from drive sensors.
+   * Update robot pose and robot-relative velocity from the same drive input refresh. Requiring both
+   * in one observation prevents a caller from updating pose while forgetting to publish speed.
    *
    * @param observation An {@link OdometryObservation} object representing the measured odometry
    *     state.
@@ -66,6 +67,7 @@ public class RobotState {
     // Sends an updated drivetrain pose to the PoseEstimator object
     poseEstimator.updateWithTime(
         observation.timestamp(), observation.gyroAngle(), observation.modulePositions());
+    robotVelocity = observation.robotRelativeSpeeds();
 
     //  Log updated estimated poses with AdvantageKit
     Logger.recordOutput("RobotState/EstimatedPose", poseEstimator.getEstimatedPosition());
@@ -111,15 +113,6 @@ public class RobotState {
 
   public void resetRotation(Rotation2d rotation) {
     poseEstimator.resetRotation(rotation);
-  }
-
-  /**
-   * Set the robot's velocity.
-   *
-   * @param speeds A ChassisSpeeds object representing the robot's current velocity
-   */
-  public void setRobotVelocity(ChassisSpeeds speeds) {
-    robotVelocity = speeds;
   }
 
   /**
@@ -178,7 +171,10 @@ public class RobotState {
 
   // Helper records (objects that just store data) to standardize sharing data between classes
   public record OdometryObservation(
-      double timestamp, SwerveModulePosition[] modulePositions, Rotation2d gyroAngle) {}
+      double timestamp,
+      SwerveModulePosition[] modulePositions,
+      Rotation2d gyroAngle,
+      ChassisSpeeds robotRelativeSpeeds) {}
 
   public record VisionMeasurement(double timestamp, Pose2d visionPose, Matrix<N3, N1> stdDevs) {}
 }

@@ -124,7 +124,10 @@ public class Drive extends SubsystemBase {
     SwerveModulePosition[] modulePositions = getModulePositions();
     RobotState.getInstance()
         .addOdometryObservation(
-            new OdometryObservation(Timer.getTimestamp(), modulePositions, rawGyroRotation));
+            // Include measured speed with pose inputs so neither can be forgotten. Use wheel
+            // feedback, not the request: the robot may lag a command or still be coasting.
+            new OdometryObservation(
+                Timer.getTimestamp(), modulePositions, rawGyroRotation, getChassisSpeeds()));
     Logger.recordOutput("Drive/MeasuredPositions", modulePositions);
 
     // Stop moving when disabled
