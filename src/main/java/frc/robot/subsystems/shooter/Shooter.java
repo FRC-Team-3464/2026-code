@@ -98,7 +98,7 @@ public class Shooter extends SubsystemBase {
   public Command trackTargetFlywheel(Supplier<Translation2d> targetSupplier) {
     return Commands.runEnd(
         () -> {
-          ShooterCommand cmd = TrajectoryCalculator.calculate(targetSupplier.get());
+          ShooterCommand cmd = TrajectoryCalculator.calculateStationary(targetSupplier.get());
           flywheel.setVelocity(cmd.wheelRPM());
         },
         () -> {
