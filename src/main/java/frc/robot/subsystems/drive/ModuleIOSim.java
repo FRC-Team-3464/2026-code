@@ -93,6 +93,7 @@ public class ModuleIOSim implements ModuleIO {
     turnSim.update(Constants.kLoopPeriodSeconds);
 
     // Update drive inputs
+    inputs.positionValid = true;
     inputs.driveConnected = true;
     inputs.drivePositionRad = driveSim.getAngularPositionRad();
     inputs.driveVelocityRadPerSec = driveSim.getAngularVelocityRadPerSec();
