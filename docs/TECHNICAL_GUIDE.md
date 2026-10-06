@@ -706,9 +706,9 @@ Replay-safe subsystem wiring has not been implemented. If `REPLAY` is selected, 
 with a clear error before starting the logger or constructing `RobotContainer`. Desktop users should
 select `SIM` until replay has its own reviewed wiring and known-log verification.
 
-### Persistent logs are currently disabled on the real robot
+### Persistent logs and live viewing
 
-The real-mode `WPILOGWriter` line is commented out. Both `REAL` and `SIM` add an `NT4Publisher` for live telemetry. Do not assume this application currently produces a USB `.wpilog` file for every run. External tooling might record network data separately, but that is outside the configuration reviewed here.
+Both `REAL` and `SIM` use `WPILOGWriter` to save recordings alongside `NT4Publisher` for live telemetry. REAL writes to `/U/logs` on the roboRIO USB drive; SIM writes to the local `logs/` folder. Build metadata and `RuntimeMode` identify the recording. See [saved-log retrieval instructions](../README.md#saved-logs-for-advantagescope).
 
 Sources: [Constants.java](../src/main/java/frc/robot/Constants.java), [Robot.java](../src/main/java/frc/robot/Robot.java), [FlywheelIOSim.java](../src/main/java/frc/robot/subsystems/shooter/flywheel/FlywheelIOSim.java), [ModuleIOSim.java](../src/main/java/frc/robot/subsystems/drive/ModuleIOSim.java).
 

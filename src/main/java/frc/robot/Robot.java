@@ -16,6 +16,7 @@ import frc.robot.util.FullSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -35,6 +36,7 @@ public class Robot extends LoggedRobot {
   public Robot() {
     // Record metadata -- this is used for AdvantageKit
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+    Logger.recordMetadata("RuntimeMode", Constants.kCurrentMode.name());
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
     Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
     Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
@@ -50,13 +52,15 @@ public class Robot extends LoggedRobot {
     // Set up data receivers & replay source
     switch (Constants.kCurrentMode) {
       case REAL:
-        // Running on a real robot, log to a USB stick ("/U/logs")
-        // Logger.addDataReceiver(new WPILOGWriter());
+        // Save recordings on the roboRIO USB drive (/U/logs) for later AdvantageScope review.
+        // NT4Publisher still provides live viewing; it does not save a recording by itself.
+        Logger.addDataReceiver(new WPILOGWriter());
         Logger.addDataReceiver(new NT4Publisher());
         break;
 
       case SIM:
-        // Running a physics simulator, log to NT
+        // Save desktop runs in the project logs/ folder as well as publishing live data.
+        Logger.addDataReceiver(new WPILOGWriter());
         Logger.addDataReceiver(new NT4Publisher());
         break;
 
