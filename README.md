@@ -21,6 +21,16 @@ To check formatting, run `./gradlew spotlessCheck`. Run `./gradlew spotlessApply
 
 The `git-hooks/pre-commit` checks staged changes for whitespace errors and runs `spotlessCheck` before each commit. Spotless checks the working tree, including unstaged changes, so an unrelated unformatted file can also block a commit. The hook does not change or stage files. To enable it locally, first check whether you already have a custom hook path with `git config --local --get core.hooksPath`. If you do not, run `git config --local core.hooksPath git-hooks`. This Git setting affects only your local checkout; CI checks formatting for everyone even if they do not enable the hook.
 
+## Saved logs for AdvantageScope
+
+REAL saves `.wpilog` recordings to `/U/logs` on a FAT32 USB drive connected to the roboRIO. SIM saves them in the project's ignored `logs/` folder. Live NetworkTables viewing remains available in both modes.
+
+After a run, copy the recording from the USB drive (after safely shutting down the robot) or from `logs/`, then open it in AdvantageScope. Open the Metadata tab for the build and runtime mode; compare mechanism targets, measured inputs, and Driver Station state along the timeline.
+
+If the destination cannot be opened, AdvantageKit reports `Failed to open output log file`. Live telemetry is not proof that recording worked: verify a new file exists. Restore writable storage and restart the program; this setup has no alternate recording destination. Check available USB space before robot sessions.
+
+Opening a saved log in AdvantageScope does not require this project's unsupported REPLAY mode.
+
 ## Structure
 
 ### Root Repository Structure

@@ -43,7 +43,7 @@ An upstream example is a useful starting point, not proof of suitability for eve
 | Shared state and dependencies | Useful intent; responsibilities need separation | `RobotState` holds an estimator, mutable velocity, and season target selection. [M2](REUSE_RECOMMENDATIONS_2027.md#acceptance-m2), [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 | Mechanism coordination | Needs correction | Shooter parts use different calculation paths; readiness can describe an old request. [H5](REUSE_RECOMMENDATIONS_2027.md#acceptance-h5), [H6](REUSE_RECOMMENDATIONS_2027.md#acceptance-h6) |
 | Simulation and replay | Wiring separated; models incomplete | REAL and SIM select IO through separate wiring classes. REPLAY now fails clearly because replay-safe wiring is deferred. [H8](REUSE_RECOMMENDATIONS_2027.md#acceptance-h8) |
-| Observability | Useful instrumentation; incomplete recording | Structured inputs and revision metadata exist; real-mode `WPILOGWriter` is disabled. [M4](REUSE_RECOMMENDATIONS_2027.md#acceptance-m4) |
+| Observability | File recording enabled; hardware verification pending | REAL and SIM save existing telemetry and build metadata through `WPILOGWriter`; broader diagnostic coverage remains open. [M4](REUSE_RECOMMENDATIONS_2027.md#acceptance-m4) |
 | Autonomous integration | Incomplete | Active auto is a command composition. PathPlanner setup and chooser integration are disabled despite retained assets. [M5](REUSE_RECOMMENDATIONS_2027.md#acceptance-m5) |
 | Season reuse | Needs separation | Field targets, calibrations, device configuration, and historical assets remain tied to 2026. [H9](REUSE_RECOMMENDATIONS_2027.md#acceptance-h9) |
 
