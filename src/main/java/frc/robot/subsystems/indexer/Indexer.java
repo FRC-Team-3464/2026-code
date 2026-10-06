@@ -7,6 +7,7 @@ package frc.robot.subsystems.indexer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
 /** The Indexer subsystem controls the feeding of the fuel from the hopper to the shooter. */
@@ -42,6 +43,27 @@ public class Indexer extends SubsystemBase {
           io.stop();
         },
         this); // Subsystem requirements
+  }
+
+  /**
+   * Feeds only while the current shot is ready, stopping the feed request on the next command loop
+   * when readiness is lost. The command remains scheduled through a pause so it can resume within
+   * the auto's timed window.
+   *
+   * @param readyToFeed true only while every required shooter mechanism is ready
+   */
+  public Command indexWhileReady(BooleanSupplier readyToFeed) {
+    return Commands.runEnd(
+        () -> {
+          if (readyToFeed.getAsBoolean()) {
+            io.setThroatOpenLoop(-IndexerConstants.kGutsMotorSpeed);
+            io.setTongueOpenLoop(IndexerConstants.kGutsMotorSpeed);
+          } else {
+            io.stop();
+          }
+        },
+        io::stop,
+        this);
   }
 
   public Command indexReverse() {
