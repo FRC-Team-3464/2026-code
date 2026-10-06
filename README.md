@@ -9,7 +9,7 @@ For the swerve drivetrain specifically, see the [class and sequence diagrams](do
 
 For a detailed explanation of the architecture, robotics concepts, subsystems, controls, and current implementation limitations, read the [Technical Guide](docs/TECHNICAL_GUIDE.md).
 
-For mentor recommendations and team expectations before reusing this code, including Java naming, analysis tools, and detailed acceptance procedures, read the [2027 Mentor Recommendations](docs/REUSE_RECOMMENDATIONS_2027.md). For proposed staffing, week-by-week work, and hardware-dependent review gates, read the [2027 Delivery Plan](docs/DELIVERY_PLAN_2027.md).
+For mentor recommendations and team expectations before reusing this code, including Java naming, analysis tools, and detailed acceptance procedures, read the [2027 Mentor Recommendations](docs/REUSE_RECOMMENDATIONS_2027.md). For the current task list and status, read the [2027 Delivery Plan](docs/DELIVERY_PLAN_2027.md).
 
 Track implementation progress and verification separately in the [2027 Implementation Tracker](docs/IMPLEMENTATION_TRACKER_2027.md); the original recommendations remain unchanged.
 

@@ -2,7 +2,7 @@
 
 Original review: September 23, 2026. Revalidated: September 24, 2026.
 
-**Source baseline:** `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51). This revision includes the formatting/CI work merged after the original review. Current behavior and remaining work below refer to this baseline.
+**Source baseline:** `mentor-review` at [`477a8bf`](https://github.com/FRC-Team-3464/2026-code/tree/477a8bfc8be6f2bf33eba9ece365a21a50018a51). This revision includes the formatting/CI work merged after the original review. The findings describe that baseline; the status column below reflects subsequent work.
 
 **Direction for preseason work:** keep the command-based structure, subsystem/IO separation, and structured logging. Correct the update timing, position estimation, and command ownership before carrying the affected code into the next robot. Adopt one Java naming standard and enforce it with **Spotless plus Checkstyle**.
 
@@ -72,30 +72,35 @@ Some sections contain more than one basis. Their acceptance procedures must foll
 
 ## Priority overview
 
-| ID | Priority | Recommendation | Scope | Basis |
-| --- | --- | --- | --- | --- |
-| H1 | High | Give each subsystem exactly one update per cycle | Robot loop and shooter | Confirmed defect |
-| H2 | High | Establish one timestamp-consistent odometry pipeline | Drive and shared state | Confirmed defect |
-| H3 | High | Define and verify heading/reset conventions | Gyro, driving, alliance handling | Confirmed behavior mismatch; team frame policy |
-| H4 | High | Fix command ownership, mode gating, and termination behavior | Controls and autonomous | Confirmed defect; team operating policy |
-| H5 | High | Establish valid mechanism references and travel limits | Turret, hood, intake | Confirmed limit behavior; hardening |
-| H6 | High | Make shooting use one solution and explicit readiness policy | Shooter and feeder | Confirmed inconsistencies; team shot/feed policy |
-| H7 | High | Apply vision uncertainty and validate camera observations | Vision and estimator | Confirmed defect; separate hardening |
-| H8 | High | Make supported runtime modes complete and internally consistent | Real, sim, replay | Confirmed defects; team coverage choice |
-| H9 | High | Separate reusable code from season/hardware assumptions | Configuration and migration | Team design choice; configuration reconciliation |
-| H10 | High | Establish an enforceable Java standard and non-mutating CI checks | Build and style | Team style/workflow choice |
-| M1 | Medium | Rename team-owned APIs systematically | Whole maintained source tree | Team naming choice |
-| M2 | Medium | Reduce global mutable state and hidden construction effects | Constants, state, utilities | Team design choice; hardening |
-| M3 | Medium | Make IO contracts explicit and failures observable | Hardware adapters | Hardening; team API choice |
-| M4 | Medium | Restore persistent logging and improve diagnostics | Logging and dashboards | Team recording/diagnostics choice |
-| M5 | Medium | Integrate only supported autonomous assets | Autonomous tooling | Inactive integration gaps; team scope choice |
-| M6 | Medium | Simplify build, deployment, and IDE configuration | Developer workflow | Team workflow choice |
-| M7 | Medium | Remove unfinished and obsolete code from the reusable core | Legacy mechanisms and helpers | Team scope/maintenance choice |
-| M8 | Medium | Fix retained shared utility defects | Choosers, tuning, caching | Confirmed defects or risks in retained helpers |
-| L1 | Low | Correct LED boundary and waveform behavior | LED utility | Confirmed defects |
-| L2 | Low | Make geometric utilities and direction names unambiguous | Zones and directions | Team API/geometry policy |
-| L3 | Low | Harden characterization commands before exposing them | Drive calibration helpers | Hardening of inactive helpers |
-| L4 | Low | Improve comments and optimize only measured bottlenecks | Documentation and loop efficiency | Team maintenance choice |
+Status describes the **whole recommendation**, not just one merged fix. `In progress` includes
+partial fixes; `Software merged; robot check pending` means the code is in `mentor-review` but
+physical acceptance is open. The [Delivery Plan](DELIVERY_PLAN_2027.md) gives the shorter task
+view; the [Implementation Tracker](IMPLEMENTATION_TRACKER_2027.md) holds the evidence.
+
+| ID | Priority | Recommendation | Status | Scope | Basis |
+| --- | --- | --- | --- | --- | --- |
+| H1 | High | Give each subsystem exactly one update per cycle | Software merged; robot check pending | Robot loop and shooter | Confirmed defect |
+| H2 | High | Establish one timestamp-consistent odometry pipeline | In progress | Drive and shared state | Confirmed defect |
+| H3 | High | Define and verify heading/reset conventions | In progress | Gyro, driving, alliance handling | Confirmed behavior mismatch; team frame policy |
+| H4 | High | Fix command ownership, mode gating, and termination behavior | In progress | Controls and autonomous | Confirmed defect; team operating policy |
+| H5 | High | Establish valid mechanism references and travel limits | Not started | Turret, hood, intake | Confirmed limit behavior; hardening |
+| H6 | High | Make shooting use one solution and explicit readiness policy | In progress | Shooter and feeder | Confirmed inconsistencies; team shot/feed policy |
+| H7 | High | Apply vision uncertainty and validate camera observations | In progress | Vision and estimator | Confirmed defect; separate hardening |
+| H8 | High | Make supported runtime modes complete and internally consistent | In progress | Real, sim, replay | Confirmed defects; team coverage choice |
+| H9 | High | Separate reusable code from season/hardware assumptions | Not started | Configuration and migration | Team design choice; configuration reconciliation |
+| H10 | High | Establish an enforceable Java standard and non-mutating CI checks | In progress | Build and style | Team style/workflow choice |
+| M1 | Medium | Rename team-owned APIs systematically | Not started | Whole maintained source tree | Team naming choice |
+| M2 | Medium | Reduce global mutable state and hidden construction effects | In progress | Constants, state, utilities | Team design choice; hardening |
+| M3 | Medium | Make IO contracts explicit and failures observable | In progress | Hardware adapters | Hardening; team API choice |
+| M4 | Medium | Restore persistent logging and improve diagnostics | In progress | Logging and dashboards | Team recording/diagnostics choice |
+| M5 | Medium | Integrate only supported autonomous assets | In progress | Autonomous tooling | Inactive integration gaps; team scope choice |
+| M6 | Medium | Simplify build, deployment, and IDE configuration | In progress | Developer workflow | Team workflow choice |
+| M7 | Medium | Remove unfinished and obsolete code from the reusable core | Not started | Legacy mechanisms and helpers | Team scope/maintenance choice |
+| M8 | Medium | Fix retained shared utility defects | Not started | Choosers, tuning, caching | Confirmed defects or risks in retained helpers |
+| L1 | Low | Correct LED boundary and waveform behavior | In progress | LED utility | Confirmed defects |
+| L2 | Low | Make geometric utilities and direction names unambiguous | Not started | Zones and directions | Team API/geometry policy |
+| L3 | Low | Harden characterization commands before exposing them | Not started | Drive calibration helpers | Hardening of inactive helpers |
+| L4 | Low | Improve comments and optimize only measured bottlenecks | Not started | Documentation and loop efficiency | Team maintenance choice |
 
 ## Work already present in the baseline
 
@@ -212,13 +217,13 @@ Document output timing for each mechanism. Immediate IO writes, applying a store
 
 ### H2. Establish one timestamp-consistent odometry pipeline
 
-**What the code does:** [Robot.java](../src/main/java/frc/robot/Robot.java) runs the container before the scheduler. [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), `robotPeriodic()`, submits cached drive measurements with the current timestamp. [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) refreshes them later. Its high-frequency estimator update and wheel-based gyro fallback are commented out. [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) registers queues but leaves extraction and clearing commented out.
+**Current status:** [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) now refreshes modules and gyro, then submits one 50 Hz pose observation before commands execute. Its odometry lock is released in `finally`. The observation is timestamped after the reads, not with the original sensor sample time. The high-frequency thread still collects samples, but `Drive` does not use them; [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) does not drain its queues. [RobotState.java](../src/main/java/frc/robot/RobotState.java) has a velocity setter, but no active code supplies measured velocity. REAL gyro disconnection raises an alert without switching to a heading fallback.
 
-**Why this matters:** measurement age and timestamp differ by roughly a main-loop interval. Fast sampling adds complexity without supplying fast estimator updates. The missing heading fallback also prevents realistic simulated rotation.
+**Why this matters:** commands no longer use a stale-cycle pose, but the unused fast samples add complexity, shared state lacks measured velocity, and REAL gyro failure can leave heading based on stale or invalid feedback. SIM rotation has its own wheel-based gyro model; it does not verify REAL failure behavior.
 
-**Recommended action:** start with a correct, explicit 50 Hz pipeline if necessary: refresh drive inputs, update pose using their measurement timestamp, publish measured chassis velocity, then let behavior consume the resulting state. Place this in one responsible owner, preferably the drive/state-estimation boundary. Do not simply move the container callback after the scheduler: commands would still consume the previous estimate, and ordering would remain implicit.
+**Recommended action:** finish the current 50 Hz pipeline by defining its timestamp policy, publishing measured chassis velocity, and handling disconnected gyro feedback. Keep `Drive` responsible for submitting one observation before commands execute. Decide whether high-frequency sampling is needed; if not, remove the unused queue path.
 
-If high-frequency odometry is retained, submit synchronized module and gyro samples with their original timestamps and remove the duplicate low-frequency submission. Restore queue draining, validate array alignment, and handle missing samples deliberately. Bounded queues can drop samples when full; this is not an unbounded-memory leak, but dropped data should be observable. Put `odometryLock.unlock()` in `finally` so an exception during input refresh cannot leave the background thread blocked.
+If high-frequency odometry is retained, submit synchronized module and gyro samples with their original timestamps and remove the low-frequency submission. Restore queue draining, validate array alignment, and handle missing samples deliberately. Bounded queues can drop samples when full; dropped data should be observable. Retain the existing `finally` lock release.
 
 The intended contract is:
 
@@ -237,7 +242,7 @@ fresh measurements + their timestamps
 2. Inject a short known sample sequence in a desktop IO diagnostic. Confirm timestamps are preserved, increasing as expected, and not replaced with the time of later submission. Supply missing/misaligned arrays and verify they are rejected or handled by the documented policy without indexing exceptions. Check reset boundaries separately from normal samples.
 3. If queues are retained, run long enough to observe repeated draining, then simulate a consumer delay. Confirm overflows/drops are counted and recovery does not repeatedly submit old samples. Review lock handling for `try/finally`; use a desktop injected read exception to verify the lock is released, independent of whether the outer application treats that exception as fatal.
 4. Run forward, sideways, and rotation commands in SIM; compare signs of measured speed and pose change. With H3 passed and physical error limits recorded, drive a marked straight segment, a lateral segment, a turn, and a square on the robot. Measure start/end pose independently rather than using the estimator as its own reference.
-5. Inject a disconnected gyro in SIM and verify the chosen fallback and alert; restore valid input and inspect recovery for unexpected heading jumps.
+5. Inject disconnected REAL-style gyro feedback in a desktop IO diagnostic and verify the chosen fallback and alert; restore valid input and inspect recovery for heading jumps. Check SIM's wheel-based gyro separately.
 
 **Pass:** no double submission, stale-cycle substitution, unhandled mismatched arrays, or unreleased lock. Queue recovery matches the declared policy. Measured physical errors meet the team's recorded limits; simulator motion alone cannot satisfy that criterion.
 
@@ -382,7 +387,7 @@ For the small uncertainty repair, use steps 3 and 4's matrix/heading checks with
 
 **Recommended action:** use explicit construction for every advertised mode. For replay, construct real subsystem logic with appropriate no-op IO and let recorded inputs populate it. If replay is deferred, fail clearly at startup or remove it as a selectable supported mode. Do not advertise a partially initialized mode as operational.
 
-Make REAL/SIM selection easier to read through a small wiring boundary rather than changing the existing subsystem/IO pattern. `RobotContainer` should select wiring, construct the same subsystems, and configure the same bindings; mode-specific wiring should create concrete IO adapters on request. Preserve construction order, including the point when `Drive` starts the Phoenix odometry thread. Keep the REAL-only LED singleton and absent SIM vision explicit until those capabilities have their own reviewed support. The [Phase 3 wiring package](DELIVERY_PLAN_2027.md#p32-separate-real-and-simulation-wiring-in-small-commits) gives the commit sequence and checks.
+Make REAL/SIM selection easier to read through a small wiring boundary rather than changing the existing subsystem/IO pattern. `RobotContainer` should select wiring, construct the same subsystems, and configure the same bindings; mode-specific wiring should create concrete IO adapters on request. Preserve construction order, including the point when `Drive` starts the Phoenix odometry thread. The [Phase 3 wiring status](DELIVERY_PLAN_2027.md#p32-separate-real-and-simulation-wiring-in-small-commits) notes the remaining physical check.
 
 For simulation, correct units and introduce explicit stopped/open-loop/closed-loop state where necessary. Ensure stop cannot be overwritten by a stale closed-loop target, and verify disabled behavior. Implement only the simulation fidelity needed for the team's workflow: a simple model or clearly named no-op is preferable to a misleading physical model. Complete gyro behavior through a chassis model or documented kinematic fallback. Reconcile mechanism reductions against the real hardware.
 
