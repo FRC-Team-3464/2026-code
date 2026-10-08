@@ -39,6 +39,8 @@ public class RobotVisualizer {
    * @param key A String representing the output location.
    */
   public void log(String key) {
+    // TODO: Verify these shared pivots and encoder-zero directions against the real robot.
+    // The draft CAD asset follows this geometry, so agreement in SIM is not physical validation.
     Pose3d turretPose =
         GeomUtil.toPose3d(TurretConstants.kRobotToTurret)
             .transformBy(

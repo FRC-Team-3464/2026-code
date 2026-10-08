@@ -10,7 +10,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.GeomUtil;
 
 /**
  * This class holds all constant values for the shooter subsystem. Place a specific "magic" value in
@@ -32,27 +31,19 @@ public final class ShooterConstants {
   }
 
   public static final class HoodConstants {
-    public static final double kTurretToHoodInches = 1.878;
     public static final double kGearRatio = 16 / 1;
     public static final double kManualDutyCycle = 0.05;
 
     public static final double kAngleTolerance = Units.degreesToRadians(1);
 
-    // Transforms represent the location of different robot components relative to the center of the
-    // robot
-    // We apply these to get more accurate angle calculations
-    // They are also used for visualization in AdvantageScope
-    public static final Transform3d kRobotToHood =
-        new Transform3d(
-            Inches.of(7.268715), Meters.of(0.20792316), Inches.of(16.018516), Rotation3d.kZero);
-
+    // Hood pivot relative to the turret pivot, in the turret's local frame (+X shooting direction,
+    // +Y left, +Z up). Estimated from the retained shooter in the old CAD; currently used only
+    // for visualization. A direct offset avoids mixing old hood and newer turret robot coordinates.
+    // TODO: Confirm the pivot offset and encoder zero on the real robot before using this for
+    // aiming.
     public static final Transform3d kTurretToHood =
-        GeomUtil.toPose3d(HoodConstants.kRobotToHood)
-            .minus(
-                GeomUtil.toPose3d(TurretConstants.kRobotToTurret)
-                    .plus(
-                        new Transform3d(
-                            Inches.of(7.268715), Inches.of(0), Inches.of(0), new Rotation3d())));
+        new Transform3d(
+            Meters.of(0.08890813), Meters.of(0.00071777), Meters.of(0.05334), Rotation3d.kZero);
 
     public static final double kMaxAngleRad = Units.degreesToRadians(0);
     // TODO: Tune
