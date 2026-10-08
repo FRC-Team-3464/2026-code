@@ -12,6 +12,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -37,12 +38,15 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.CameraIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldConstants;
 import frc.robot.util.GeomUtil;
 import frc.robot.wiring.RealRobotWiring;
 import frc.robot.wiring.RobotWiring;
 import frc.robot.wiring.SimRobotWiring;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
 
@@ -73,6 +77,7 @@ public class RobotContainer {
 
   // Published as "Autonomous" on SmartDashboard so the team can select an auto before a match.
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+  private final Map<Command, Pose2d> autoStartingPoses = new HashMap<>();
 
   public RobotContainer() {
 
@@ -145,6 +150,47 @@ public class RobotContainer {
   public void updateDashboard() {
     targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getShooterTarget()));
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
+    Pose2d start = getSelectedAutoStartingPose();
+    field2d.getObject("Auto Start").setPoses(start == null ? List.of() : List.of(start));
+    SmartDashboard.putBoolean("Auto Start/Available", start != null);
+    SmartDashboard.putString(
+        "Auto Start/Alliance",
+        DriverStation.getAlliance().map(Enum::name).orElse("Unknown - blue preview only"));
+    SmartDashboard.putString(
+        "Auto Start/Placement",
+        start == null
+            ? "Select a URI auto"
+            : String.format(
+                java.util.Locale.ROOT,
+                "Robot center: X %.3f m, Y %.3f m; chassis heading %.1f deg; turret centered rearward",
+                start.getX(),
+                start.getY(),
+                start.getRotation().getDegrees()));
+  }
+
+  /** Uses the same blue-origin pose and alliance flip as PathPlanner's autonomous reset. */
+  private Pose2d getSelectedAutoStartingPose() {
+    Pose2d blueStart = autoStartingPoses.get(autoChooser.getSelected());
+    return blueStart == null
+        ? null
+        : AllianceFlipUtil.shouldFlip() ? FlippingUtil.flipFieldPose(blueStart) : blueStart;
+  }
+
+  /**
+   * Explicit setup action for both REAL and SIM; it changes the estimate, not physical position.
+   */
+  private void applySelectedAutoStartingPose() {
+    // Never let a dashboard click teleport the estimate while driving or running an auto.
+    if (!DriverStation.isDisabled()) {
+      return;
+    }
+    Pose2d start = getSelectedAutoStartingPose();
+    if (start == null || DriverStation.getAlliance().isEmpty()) {
+      DriverStation.reportWarning(
+          "Select a URI auto and set the alliance before applying its start.", false);
+      return;
+    }
+    RobotState.getInstance().setPose(start, drive.getModulePositions(), drive.getRawGyroRotation());
   }
 
   /** Returns the dashboard-selected autonomous routine, or Do Nothing when none is selected. */
@@ -157,6 +203,9 @@ public class RobotContainer {
     // Startup must remain safe if a deployed PathPlanner file is missing or invalid.
     autoChooser.setDefaultOption("Do Nothing", Commands.none());
     SmartDashboard.putData("Autonomous", autoChooser);
+    SmartDashboard.putData(
+        "Apply Auto Starting Pose",
+        Commands.runOnce(this::applySelectedAutoStartingPose).ignoringDisable(true));
 
     // Register actions before loading .auto files that refer to them.
     NamedCommands.registerCommand(
@@ -179,6 +228,9 @@ public class RobotContainer {
       // Keep the runtime robot model aligned with the PathPlanner editor settings. The 2026
       // values and controller gains still need physical robot validation.
       RobotConfig config = RobotConfig.fromGUISettings();
+      // Match the field dimensions used by the hub target and alliance utilities.
+      FlippingUtil.fieldSizeX = FieldConstants.fieldLength;
+      FlippingUtil.fieldSizeY = FieldConstants.fieldWidth;
       AutoBuilder.configure(
           () -> RobotState.getInstance().getEstimatedPose(),
           pose ->
@@ -209,7 +261,9 @@ public class RobotContainer {
       if (PathPlannerAuto.getPathGroupFromAutoFile(name).isEmpty()) {
         throw new IllegalStateException("routine contains no paths");
       }
-      autoChooser.addOption(name, AutoBuilder.buildAuto(name));
+      PathPlannerAuto auto = new PathPlannerAuto(name);
+      autoStartingPoses.put(auto, auto.getStartingPose());
+      autoChooser.addOption(name, auto);
     } catch (IOException | ParseException | RuntimeException e) {
       DriverStation.reportError(
           "Cannot load autonomous routine '" + name + "': " + e.getMessage(), e.getStackTrace());
