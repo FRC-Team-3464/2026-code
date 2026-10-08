@@ -115,10 +115,13 @@ public class DriverControls implements Configurable {
   private void configureOperatorControls() {
     // Guard operator bindings here so autonomous can still use the same subsystem commands.
     // Leaving enabled teleop cancels while-held requests through their existing end actions.
+    // Pause collection while either pivot button is held. Releasing both makes this trigger
+    // active again when LB is still held, so collection resumes without another LB press.
     operator
         .leftBumper()
         .and(DriverStation::isTeleopEnabled)
         .and(operator.leftTrigger().negate())
+        .and(operator.xSquare().or(operator.yTriangle()).negate())
         .whileTrue(intake.intake());
 
     Supplier<Translation2d> targetSupplier = () -> RobotState.getInstance().getShooterTarget();
