@@ -9,6 +9,28 @@ The `git-hooks/pre-commit` checks staged changes for whitespace errors and runs 
 
 ## Structure
 
+### Autonomous Routine Names
+
+The 51 routines listed in the renamed FRC Autos Time Reference Sheet use matching filenames in `src/main/deploy/pathplanner/autos/`. Use uppercase tokens separated by hyphens, with the start position first. For example, `LT-ATW-DP`, `MS-LT-ATW-ASST`, and `RT-LT-MOVESHOOT-CLIMB`. Dual-shot variants append `-2SHOT`, including after `CLIMB`.
+
+| Token | Meaning |
+| --- | --- |
+| LT / MS / RT | Left / middle / right start |
+| ATW | Around the World |
+| DP / OP | Depot / outpost |
+| SUTO | Shoot position |
+| REP | Repetitive |
+| BUMP | Bump route |
+| 2SHOT | Dual shot |
+| HALF | Half Around the World |
+| NOIN | Without intake |
+| MOVESHOOT | MoveShot |
+| LOCK | Locked auto |
+| ASST / HOARD | Assist / hoard |
+| CLIMB | Ends with a climb |
+
+These names identify complete `.auto` routines. The shared `.path` filenames and command names inside each routine retain their existing names.
+
 ### Root Repository Structure
 - `.github` - CI/CD workflows for GitHub
 - `.vscode/` and `.wpilib` - Configurations and settings for VSCode and WPILib respectively
