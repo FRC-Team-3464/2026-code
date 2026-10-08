@@ -1,63 +1,55 @@
 package frc.robot.subsystems.intake;
 
-/** Simulation implementation of the IntakeIO interface. */
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.RobotController;
+import org.littletonrobotics.junction.Logger;
+
+/** Captures the real adapter's intake requests without modeling mechanism or fuel movement. */
 public class IntakeIOSim implements IntakeIO {
-  // // Make motor simulation objects
-  // private final DCMotor pivotGearbox = DCMotor.getNEO(1);
-  // private final DCMotor wheelGearbox = DCMotor.getKrakenX60(1);
-  // private final DCMotorSim pivotSim;
-  // private final DCMotorSim wheelSim;
+  private boolean pivotPositionControl;
+  private double pivotTargetMotorRotations;
+  private double leftPivotDutyCycle;
+  private double rightPivotDutyCycle;
+  private double rollerDutyCycle;
 
-  // // private final PIDController pid = new PIDController(1, 0, 0,
-  // // Constants.kLoopPeriodSeconds);
+  @Override
+  public void updateInputs(IntakeIOInputs inputs) {
+    // Match IndexerIOSim: voltage fields represent requested duty cycle times battery voltage,
+    // not measured motor output. Leave connection, velocity, and current feedback at their
+    // defaults.
+    double batteryVolts = RobotController.getBatteryVoltage();
+    inputs.leftPivotAppliedVolts = leftPivotDutyCycle * batteryVolts;
+    inputs.rightPivotAppliedVolts = rightPivotDutyCycle * batteryVolts;
+    inputs.driveAppliedVolts = rollerDutyCycle * batteryVolts;
 
-  // private double pivotAppliedVolts = 0.0;
-  // private double wheelAppliedVolts = 0.0;
+    Logger.recordOutput("Intake/Sim/PivotPositionControl", pivotPositionControl);
+    Logger.recordOutput("Intake/Sim/PivotTargetMotorRotations", pivotTargetMotorRotations);
+    Logger.recordOutput("Intake/Sim/LeftPivotDutyCycle", leftPivotDutyCycle);
+    Logger.recordOutput("Intake/Sim/RightPivotDutyCycle", rightPivotDutyCycle);
+    Logger.recordOutput("Intake/Sim/RollerDutyCycle", rollerDutyCycle);
+  }
 
-  // public IntakeIOSim() {
-  //   // Make simulation objects that will represent the motor systems
-  //   pivotSim =
-  //       new DCMotorSim(
-  //           LinearSystemId.createDCMotorSystem(
-  //               pivotGearbox, 0.025, IntakeConstants.kPivotMotorGearRatio),
-  //           pivotGearbox);
+  @Override
+  public void setPivotSpeed(double speed) {
+    pivotPositionControl = false;
+    pivotTargetMotorRotations = 0.0;
+    // Preserve the independent motor requests in IntakeIOTalonFX, including its sign and scaling.
+    leftPivotDutyCycle = MathUtil.clamp(speed, -1.0, 1.0);
+    rightPivotDutyCycle = MathUtil.clamp(speed * -0.95, -1.0, 1.0);
+  }
 
-  //   wheelSim =
-  //       new DCMotorSim(
-  //           LinearSystemId.createDCMotorSystem(
-  //               wheelGearbox, 0.025, IntakeConstants.kRollerMotorGearRatio),
-  //           wheelGearbox);
-  // }
+  @Override
+  public void setWheelSpeed(double speed) {
+    rollerDutyCycle = MathUtil.clamp(speed, -1.0, 1.0);
+  }
 
-  // @Override
-  // public void updateInputs(IntakeIOInputs inputs) {
-  //   // Make sure that we don't send more than 12 volts to the motors
-  //   pivotAppliedVolts = MathUtil.clamp(pivotAppliedVolts, -12.0, 12.0);
-  //   wheelAppliedVolts = MathUtil.clamp(wheelAppliedVolts, -12.0, 12.0);
-
-  //   pivotSim.setInputVoltage(pivotAppliedVolts);
-  //   pivotSim.update(0.02);
-
-  //   wheelSim.setInputVoltage(wheelAppliedVolts);
-  //   wheelSim.update(0.02);
-
-  //   // Update IO input values
-  //   inputs.pivotPositionRad = Units.rotationsToRadians(pivotSim.getAngularPositionRotations());
-  //   inputs.pivotVelocityRadPerSec = Units.rotationsToRadians(pivotSim.getAngularVelocityRPM());
-
-  //   inputs.wheelPositionRad = Units.rotationsToRadians(wheelSim.getAngularPositionRotations());
-  //   inputs.wheelVelocityRadPerSec = Units.rotationsToRadians(wheelSim.getAngularVelocityRPM());
-  // }
-
-  // @Override
-  // public void setPivotSpeed(double speed) {
-  //   // If the maximum is 12 volts, and the value of speed is <=1, then multiply by 12 to get the
-  // percentage of max voltage
-  //   pivotAppliedVolts = 12 * speed;
-  // }
-
-  // @Override
-  // public void setWheelSpeed(double speed) {
-  //   wheelAppliedVolts = 12 * speed;
-  // }
+  @Override
+  public void setPivotPosition(double positionRotations) {
+    // REAL sends this same motor-rotation target to both pivots. These unused helpers currently
+    // have zero PID/feedforward gains; record the target without inventing a position response.
+    pivotPositionControl = true;
+    pivotTargetMotorRotations = positionRotations;
+    leftPivotDutyCycle = 0.0;
+    rightPivotDutyCycle = 0.0;
+  }
 }
