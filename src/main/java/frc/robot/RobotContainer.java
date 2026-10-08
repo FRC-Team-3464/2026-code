@@ -203,6 +203,9 @@ public class RobotContainer {
     // Startup must remain safe if a deployed PathPlanner file is missing or invalid.
     autoChooser.setDefaultOption("Do Nothing", Commands.none());
     SmartDashboard.putData("Autonomous", autoChooser);
+    // Publish the writable choice so the SIM GUI can edit it without creating a table entry.
+    // Preserve an existing dashboard selection; a fresh session still defaults to Do Nothing.
+    SmartDashboard.getEntry("Autonomous/selected").setDefaultString("Do Nothing");
     SmartDashboard.putData(
         "Apply Auto Starting Pose",
         Commands.runOnce(this::applySelectedAutoStartingPose).ignoringDisable(true));
