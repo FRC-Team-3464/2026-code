@@ -1,0 +1,38 @@
+{
+  "name": "3464 2026 \u2014 CAD draft",
+  "rotations": [],
+  "position": [
+    0,
+    0,
+    0
+  ],
+  "cameras": [],
+  "components": [
+    {
+      "zeroedRotations": [
+        {
+          "axis": "z",
+          "degrees": 180
+        }
+      ],
+      "zeroedPosition": [
+        0.1905,
+        -0.1016,
+        -0.3683
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "z",
+          "degrees": 180
+        }
+      ],
+      "zeroedPosition": [
+        0.10159187,
+        -0.10231777,
+        -0.42164
+      ]
+    }
+  ]
+}
