@@ -637,6 +637,15 @@ Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultContro
 
 `RobotContainer` configures PathPlanner at startup and publishes an `Autonomous` chooser. With no selection, `getAutonomousCommand()` returns **Do Nothing**. The three URI choices load their `.auto` files and run the paths and named actions described there. Each URI routine ends with its timed shooting step; if turret, hood, or flywheel never becomes ready, feeding never starts and the routine ends there. Other stored routes can intake after a missed shot; keep them unavailable until the robot can confirm there is room for more fuel or that continuation is otherwise safe. `Robot.autonomousInit()` schedules the selected command; teleop cancels it. The 2026 path geometry, robot model, and controller gains are not yet verified on the physical robot.
 
+### Set up a URI starting position
+
+1. While disabled, select `URI Left Depot`, `URI Center`, or `URI Right Outpost` in `Autonomous` and set the Driver Station alliance.
+2. Check the `Auto Start` marker on `FieldInstance` and the `Auto Start/Placement` dashboard text. Coordinates describe the robot center in meters from the blue field origin; the heading describes the chassis. The initial headings point the centered, rear-facing shooter toward the hub using the current turret mounting constants.
+3. On the real field, place the robot at that location and heading. In either REAL or SIM, run the dashboard command `Apply Auto Starting Pose` while disabled to set the position estimate. This does not physically move the robot. In SIM, the displayed robot moves to that pose.
+4. The selected URI auto resets to the same starting pose when autonomous begins. Selecting `Do Nothing` or leaving the alliance unknown prevents the setup command from applying a pose; clicking it while enabled does nothing.
+
+The three positions come from each routine's first path, with red-alliance poses flipped by PathPlanner. These starting headings do not guarantee that later route headings keep the hub within the turret's travel limits. Confirm physical placement and aiming before running the routes on the robot.
+
 ### What the stored files represent
 
 PathPlanner `.path` files contain geometry and motion constraints. `.auto` files compose paths, waits, and named robot actions. `settings.json` contains the robot model and editor defaults; `navgrid.json` contains a pathfinding grid.
