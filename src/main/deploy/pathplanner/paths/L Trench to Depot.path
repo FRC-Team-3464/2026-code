@@ -28,7 +28,24 @@
       "linkedName": "Depot Actual Intake Extended"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": -172.281257
+    },
+    {
+      "waypointRelativePos": 0.65,
+      "rotationDegrees": -153.090719
+    },
+    {
+      "waypointRelativePos": 0.8,
+      "rotationDegrees": -120.047752
+    },
+    {
+      "waypointRelativePos": 0.9,
+      "rotationDegrees": -97.232963
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,7 +59,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": -80.537678
   },
   "reversed": false,
   "folder": "Left Paths",
