@@ -1,0 +1,17 @@
+{
+  "name": "SIMCITY-3464-2026",
+  "disableSimplification": true,
+  "rotations": [
+    {
+      "axis": "z",
+      "degrees": 90
+    }
+  ],
+  "position": [
+    6.0558319091796875e-05,
+    -0.00013592839241027832,
+    -0.011112872914083017
+  ],
+  "cameras": [],
+  "components": []
+}

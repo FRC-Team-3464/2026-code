@@ -563,10 +563,10 @@ turret_field_position = robot_field_position + rotated_turret_offset
 target_vector_field = target_position - turret_field_position
 target_vector_robot = rotate(target_vector_field, -robot_heading)
 geometric_angle = atan2(target_vector_robot.y, target_vector_robot.x)
-commanded_angle = wrap_to_plus_or_minus_pi(geometric_angle - pi)
+commanded_angle = -geometric_angle
 ```
 
-Turret zero points rearward, 180 degrees from chassis +X. Positive turret angles turn counterclockwise viewed from above, matching the visualizer. This shared tracking convention applies in autonomous and teleop; verify the physical encoder zero and direction before deployment. Manual controls and the auto-to-teleop transition are unchanged.
+The team identifies the shooter side as the robot front (+X) and the intake side as the rear. The original motor/encoder sign convention from `main` is retained; no rear-facing 180-degree offset is applied. Front/back identification alone does not verify encoder zero or positive direction. Manual controls and the auto-to-teleop transition are unchanged.
 
 The Spark MAX implementation clamps closed-loop targets to the configured bounds. Turret open-loop control checks whether the measured position is outside those bounds; if so, it blocks both directions. This is not a direction-aware recovery limit, and hardware soft limits are explicitly disabled in the Spark configuration.
 
@@ -640,11 +640,11 @@ Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultContro
 ### Set up a URI starting position
 
 1. While disabled, select `URI Left Depot`, `URI Center`, or `URI Right Outpost` in `Autonomous` and set the Driver Station alliance.
-2. Check the `Auto Start` marker on `FieldInstance` and the `Auto Start/Placement` dashboard text. Coordinates describe the robot center in meters from the blue field origin; the heading describes the chassis. The initial headings point the centered, rear-facing shooter toward the hub using the current turret mounting constants.
+2. Check the `Auto Start` marker on `FieldInstance` and the `Auto Start/Placement` dashboard text. Coordinates describe the robot center in meters from the blue field origin; the heading describes the chassis. The shooter side is the front; the intake is at the rear. Starting headings come from the original path files.
 3. On the real field, place the robot at that location and heading. In either REAL or SIM, run the dashboard command `Apply Auto Starting Pose` while disabled to set the position estimate. This does not physically move the robot. In SIM, the displayed robot moves to that pose.
 4. The selected URI auto resets to the same starting pose when autonomous begins. Selecting `Do Nothing` or leaving the alliance unknown prevents the setup command from applying a pose; clicking it while enabled does nothing.
 
-The three positions come from each routine's first path, with red-alliance poses flipped by PathPlanner. The final shooting headings also align the centered rear-facing shooter with the hub; Left turns its front intake along the final depot approach while the intake command runs, then retains that heading at the transition to its shooting path. Right retains its existing collection heading. The shooter does not remain pointed at the hub during collection. Turret tracking uses the rear-facing zero; confirm physical encoder zero, direction, travel limits, and deployed intake reach before running these routines on the robot. The intake SIM does not model fuel capture.
+The three positions come from each routine's first path, with red-alliance poses flipped by PathPlanner. The original path headings and rotation targets are restored. The later heading edits were based on the incorrect intake-is-front assumption. Verify rear-intake collection and front-shooter alignment against the physical robot; the intake SIM does not model fuel capture.
 
 ### What the stored files represent
 
