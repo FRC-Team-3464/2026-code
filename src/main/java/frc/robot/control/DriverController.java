@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
- * Abstracts controller input so DriverControls works with any supported controller type without
+ * Abstracts controller input so DualDriverControls works with any supported controller type without
  * caring about the underlying hardware.
  */
 public interface DriverController {
@@ -19,6 +19,8 @@ public interface DriverController {
   Trigger xSquare();
 
   Trigger yTriangle();
+
+  Trigger startMenu();
 
   Trigger leftBumper();
 
@@ -80,6 +82,11 @@ public interface DriverController {
     @Override
     public Trigger yTriangle() {
       return controller.y();
+    }
+
+    @Override
+    public Trigger startMenu() {
+      return controller.start();
     }
 
     @Override
@@ -197,6 +204,11 @@ public interface DriverController {
     }
 
     @Override
+    public Trigger startMenu() {
+      return controller.options();
+    }
+
+    @Override
     public Trigger leftBumper() {
       return controller.L1();
     }
@@ -307,6 +319,11 @@ public interface DriverController {
     @Override
     public Trigger yTriangle() {
       return controller.triangle();
+    }
+
+    @Override
+    public Trigger startMenu() {
+      return controller.options();
     }
 
     @Override

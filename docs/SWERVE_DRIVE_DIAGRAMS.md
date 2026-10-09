@@ -105,7 +105,7 @@ The class diagram shows dependencies, **not call order**. It also simplifies gen
 
 ## 2. Sequence diagram: moving the driver sticks
 
-This diagram follows the **default teleoperated drive command**. `DefaultControls` installs it when `RobotContainer` starts. The WPILib scheduler runs it when no other command owns `Drive`. Holding a D-pad crab-walk command can replace it because both commands require `Drive`. See [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java), [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), and [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java).
+This diagram follows the **default teleoperated drive command**. `DefaultControls` installs it when `RobotContainer` starts. The WPILib scheduler runs it when no other command owns `Drive`. Holding a D-pad crab-walk command can replace it because both commands require `Drive`. See [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java), [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), and [DualDriverControls.java](../src/main/java/frc/robot/control/DualDriverControls.java).
 
 ```mermaid
 sequenceDiagram
@@ -184,6 +184,6 @@ sequenceDiagram
 
 ## A related control: heading reset
 
-The driver X-button binding schedules `Drive.resetHeading()`, which owns the estimator and gyro reset requests. The separate `zeroYaw()` method returns a sensor-only command; **calling `zeroYaw()` in the `Drive` constructor only creates a command and does not schedule it**. `GyroIOPigeon2.setYaw()` also transforms the requested angle by 180 degrees before sending it to the Pigeon 2. These are current code facts, not a recommended heading convention. The [2027 Recommendations](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3) require the team to define and verify one heading/reset convention before relying on field-relative behavior. [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
+The driver X-button binding schedules `Drive.resetHeading()`, which owns the estimator and gyro reset requests. The separate `zeroYaw()` method returns a sensor-only command; **calling `zeroYaw()` in the `Drive` constructor only creates a command and does not schedule it**. `GyroIOPigeon2.setYaw()` also transforms the requested angle by 180 degrees before sending it to the Pigeon 2. These are current code facts, not a recommended heading convention. The [2027 Recommendations](REUSE_RECOMMENDATIONS_2027.md#acceptance-h3) require the team to define and verify one heading/reset convention before relying on field-relative behavior. [DualDriverControls.java](../src/main/java/frc/robot/control/DualDriverControls.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java).
 
 In SIM, `resetHeading()` also aligns the pose estimator with the new sensor reference while preserving translation. REAL reset behavior remains unchanged.
