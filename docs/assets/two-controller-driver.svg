@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="940" viewBox="0 0 1280 940" role="img" aria-labelledby="title desc">
+<title id="title">Two-controller configuration — Driver</title>
+<desc id="desc">Current driver bindings verified against mentor-review 6d2e518. Complete text equivalent in SINGLE_CONTROLLER_OPTIONS.md.</desc>
+<rect width="1280" height="940" fill="#f8fafc" />
+<style>text{font-family:Arial,sans-serif;fill:#172033}.heading{font-size:28px;font-weight:bold}.body{font-size:17px}.small{font-size:15px}.button{font-size:19px;font-weight:bold;text-anchor:middle}</style>
+<text x="35" y="45" class="heading">Two Controllers — Driver</text>
+<text x="35" y="75" class="body">Current code · Driver Station port 0 · Xbox profile</text>
+<rect x="805" y="24" width="440" height="56" rx="9" fill="#dcfce7" />
+<text x="825" y="49" class="body" font-weight="bold">CURRENT CODE — two controllers</text>
+<text x="825" y="69" class="small">Verified against mentor-review · 6d2e518</text>
+<path d="M420 302 Q423 268 485 268 L795 268 Q857 268 860 302 L900 609 Q901 660 852 650 L771 566 L509 566 L428 650 Q379 660 380 609 Z" fill="#e2e8f0" stroke="#475569" stroke-width="3" />
+<rect x="440" y="230" width="90" height="48" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
+<text x="485.0" y="261.0" class="button">LT</text>
+<rect x="750" y="230" width="90" height="48" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
+<text x="795.0" y="261.0" class="button">RT</text>
+<rect x="435" y="288" width="100" height="36" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
+<text x="485.0" y="313.0" class="button">LB</text>
+<rect x="745" y="288" width="100" height="36" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
+<text x="795.0" y="313.0" class="button">RB</text>
+<rect x="572" y="365" width="44" height="28" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
+<text x="594.0" y="386.0" class="button">◁</text>
+<rect x="664" y="365" width="44" height="28" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
+<text x="686.0" y="386.0" class="button">▷</text>
+<circle cx="488" cy="411" r="43" fill="#cbd5e1" stroke="#475569" stroke-width="3" />
+<text x="488" y="418" class="button">LS</text>
+<circle cx="740" cy="516" r="43" fill="#cbd5e1" stroke="#475569" stroke-width="3" />
+<text x="740" y="523" class="button">RS</text>
+<path d="M525 477 H555 V497 H575 V527 H555 V547 H525 V527 H505 V497 H525 Z" fill="#64748b" />
+<circle cx="800" cy="354" r="22" fill="#facc15" stroke="#475569" />
+<text x="800" y="361" class="button">Y</text>
+<circle cx="843" cy="397" r="22" fill="#f87171" stroke="#475569" />
+<text x="843" y="404" class="button">B</text>
+<circle cx="800" cy="440" r="22" fill="#86efac" stroke="#475569" />
+<text x="800" y="447" class="button">A</text>
+<circle cx="757" cy="397" r="22" fill="#93c5fd" stroke="#475569" />
+<text x="757" y="404" class="button">X</text>
+<path d="M345 173.5 L465 399" stroke="#2563eb" stroke-width="2" fill="none" />
+<rect x="30" y="135" width="315" height="77" rx="9" fill="white" stroke="#2563eb" stroke-width="2" />
+<text x="43" y="158" class="body" font-weight="bold">Left stick</text>
+<text x="43" y="181" class="small">Drive translation</text>
+<path d="M345 275.5 L445 304" stroke="#475569" stroke-width="2" fill="none" />
+<rect x="30" y="237" width="315" height="77" rx="9" fill="white" stroke="#475569" stroke-width="2" />
+<text x="43" y="260" class="body" font-weight="bold">LB</text>
+<text x="43" y="283" class="small">Unassigned</text>
+<path d="M345 377.5 L470 250" stroke="#475569" stroke-width="2" fill="none" />
+<rect x="30" y="339" width="315" height="77" rx="9" fill="white" stroke="#475569" stroke-width="2" />
+<text x="43" y="362" class="body" font-weight="bold">LT</text>
+<text x="43" y="385" class="small">Unassigned</text>
+<path d="M345 479.5 L520 512" stroke="#2563eb" stroke-width="2" fill="none" />
+<rect x="30" y="441" width="315" height="77" rx="9" fill="white" stroke="#2563eb" stroke-width="2" />
+<text x="43" y="464" class="body" font-weight="bold">D-pad</text>
+<text x="43" y="487" class="small">Hold direction: swerve movement</text>
+<text x="43" y="507" class="small">Retained for swerve testing</text>
+<path d="M345 581.5 L590 380" stroke="#475569" stroke-width="2" fill="none" />
+<rect x="30" y="543" width="315" height="77" rx="9" fill="white" stroke="#475569" stroke-width="2" />
+<text x="43" y="566" class="body" font-weight="bold">Back / View</text>
+<text x="43" y="589" class="small">Unassigned</text>
+<path d="M935 173.5 L810 250" stroke="#475569" stroke-width="2" fill="none" />
+<rect x="935" y="135" width="315" height="77" rx="9" fill="white" stroke="#475569" stroke-width="2" />
+<text x="948" y="158" class="body" font-weight="bold">RT</text>
+<text x="948" y="181" class="small">Unassigned</text>
+<path d="M935 275.5 L830 305" stroke="#475569" stroke-width="2" fill="none" />
+<rect x="935" y="237" width="315" height="77" rx="9" fill="white" stroke="#475569" stroke-width="2" />
+<text x="948" y="260" class="body" font-weight="bold">RB</text>
+<text x="948" y="283" class="small">Unassigned</text>
+<path d="M935 377.5 L865 420" stroke="#2563eb" stroke-width="2" fill="none" />
+<rect x="935" y="339" width="315" height="77" rx="9" fill="white" stroke="#2563eb" stroke-width="2" />
+<text x="948" y="362" class="body" font-weight="bold">A / B</text>
+<text x="948" y="385" class="small">A: unassigned</text>
+<text x="948" y="405" class="small">B: press for swerve X-lock</text>
+<path d="M935 479.5 L778 371" stroke="#2563eb" stroke-width="2" fill="none" />
+<rect x="935" y="441" width="315" height="77" rx="9" fill="white" stroke="#2563eb" stroke-width="2" />
+<text x="948" y="464" class="body" font-weight="bold">X / Y</text>
+<text x="948" y="487" class="small">X: fresh press to reset heading</text>
+<text x="948" y="507" class="small">Y: unassigned</text>
+<path d="M935 581.5 L692 380" stroke="#475569" stroke-width="2" fill="none" />
+<rect x="935" y="543" width="315" height="77" rx="9" fill="white" stroke="#475569" stroke-width="2" />
+<text x="948" y="566" class="body" font-weight="bold">Start / Menu</text>
+<text x="948" y="589" class="small">Unassigned</text>
+<path d="M740 559 V678" stroke="#2563eb" stroke-width="2" />
+<rect x="388" y="678" width="504" height="72" rx="9" fill="white" stroke="#2563eb" stroke-width="2" />
+<text x="408" y="703" class="body" font-weight="bold">Right stick</text>
+<text x="408" y="729" class="small">Left/right: rotate robot. Up/down: unassigned.</text>
+<rect x="30" y="775" width="1215" height="107" rx="10" fill="#fff7ed" stroke="#b45309" />
+<text x="48" y="800" dy="0" class="body">Teleop: left stick drives; right stick rotates; D-pad requests swerve movement.</text>
+<text x="48" y="800" dy="27" class="body">X resets heading on a fresh press. B requests X-lock; it is not a latched drive-disable.</text>
+<text x="48" y="800" dy="54" class="body">Driving input can move the robot again after X-lock. Mechanisms use the operator controller.</text>
+<text x="35" y="915" class="small">Blue: driving • Green: intake/feed • Orange: shooting • Gray: mixed/unassigned. Labels also identify each action.</text>
+</svg>
