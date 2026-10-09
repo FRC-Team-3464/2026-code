@@ -1,8 +1,8 @@
 # Controller configurations and single-controller options for CKI
 
-**October 17, 2026 event reference.** Option 2 is implemented and selected in this branch. The existing two-controller layout remains available. Option 1 is retained for comparison only. Physical controller acceptance is still pending.
+**October 17, 2026 event reference.** Option 2 is the currently selected single-controller layout. The existing two-controller layout remains available. Option 1 is retained for comparison only. Physical controller acceptance is still pending.
 
-The two-controller mappings were checked against `origin/mentor-review` at `6d2e518`. Option 2 is implemented on `feature/single-controller-layout`.
+The two-controller mappings retain the existing driver/operator layout. Option 2 is the implemented single-controller layout.
 
 ## WhatsApp sharing
 
@@ -180,53 +180,48 @@ Choose an unused button or swap assignments so two actions do not share a button
 
 ## Before and after design
 
-Before this change, initialization always registered driver and operator bindings, and the hood default always read operator RB:
+Both diagrams show the same parts: `RobotContainer`, the controls classes, `DefaultControls`, and the commands they configure. Controller creation is unchanged and omitted from both diagrams.
+
+### Before
+
+`RobotContainer` always configured `DriverControls` for two controllers. `DefaultControls` read chassis rotation from the driver and the hood-hold condition from the operator.
 
 ```mermaid
 flowchart TD
-    RC[RobotContainer] --> F[Controller factory]
-    F --> D[Driver on port 0]
-    F --> O[Operator on port 1]
-    RC --> B[DriverControls: always dual]
-    D --> B
-    O --> B
-    RC --> DF[DefaultControls]
-    O --> H[Hood default reads operator RB]
-    DF --> H
-    B --> C[Existing subsystem commands]
+    RC[RobotContainer] --> DUAL[DriverControls]
+    RC --> DEFAULTS[DefaultControls]
+    DUAL --> BINDINGS[Button-bound subsystem commands]
+    DEFAULTS --> COMMANDS[Default drive, turret, and hood commands]
 ```
 
-After this change, `RobotContainer` selects one controls class. Each class provides the rotation input and hood-hold condition used by `DefaultControls`:
+### After
+
+`RobotContainer` selects either `SingleDriverControls` or `DualDriverControls` using `Constants.kControllerLayout`. `DriverControls` is now named `DualDriverControls`; its active two-controller bindings are preserved. The selected controls class supplies chassis rotation and the hood-hold condition to `DefaultControls`.
 
 ```mermaid
 flowchart TD
-    CFG[Constants: controller layout] --> RC[RobotContainer]
-    RC --> F[Existing controller factory]
-    RC --> SELECT{Layout}
-    SELECT -->|Single| ONE[SingleDriverControls]
-    SELECT -->|Dual| TWO[DualDriverControls]
-    ONE --> SD[Single-layout driving buttons]
-    TWO --> DD[Dual-layout driving buttons]
-    ONE --> MANUAL[Single-controller mappings and stick handoff]
-    TWO --> OP[Existing driver/operator mappings]
-    ONE -->|Rotation input and hood hold| DF[DefaultControls]
-    TWO -->|Rotation input and hood hold| DF
-    DF --> DEFAULT[Teleop-gated default commands]
-    MANUAL --> C[Existing subsystem commands]
-    OP --> C
+    RC[RobotContainer] --> LAYOUT{"ControllerLayout?"}
+    RC --> DEFAULTS[DefaultControls]
+    LAYOUT -->|SINGLE_CONTROLLER| SINGLE[SingleDriverControls]
+    LAYOUT -->|TWO_CONTROLLERS| DUAL[DualDriverControls]
+    SINGLE --> BINDINGS[Button-bound subsystem commands]
+    DUAL --> BINDINGS
+    SINGLE -. Control inputs .-> DEFAULTS
+    DUAL -. Control inputs .-> DEFAULTS
+    DEFAULTS --> COMMANDS[Default drive, turret, and hood commands]
 ```
 
-
+Solid arrows show configuration relationships. Dashed arrows show control inputs supplied to `DefaultControls`: the requested chassis rotation and whether to prevent the hood from returning to software zero. Each controls class contains its own complete button mappings.
 
 ## Verification and remaining checks
 
 - Six HAL joystick/scheduler tests exercise Option 2 transitions, simultaneous controls, disable behavior, autonomous ownership, heading reset/X-lock, and the retained dual-controller bindings.
 - A temporary headless check constructed the actual `RobotContainer` with `SimRobotWiring` and exercised RB tracking, LT manual adjustment, release, and disable. The temporary probe is not part of the committed test suite.
-- The intake tests record motor requests because this base branch still has an empty intake SIM adapter; they do not simulate fuel collection.
+- The intake tests record motor requests because the current intake SIM adapter is empty; they do not simulate fuel collection.
 - Critical review checks command ownership and shared-stick handoff.
 - Physical controller grip, manual direction, hood startup reference, and real mechanism behavior remain unverified. The desktop checks do not validate an entire autonomous route or real-robot stopping time.
 
-## Decisions for Brendan and Maxwell
+## Controller testing and open decisions
 
 1. Try Option 2 on the actual controller: driving, collecting, aiming, and feeding together.
 2. Is the RB + RT grip comfortable for Option 2?
@@ -234,7 +229,7 @@ flowchart TD
 4. Are hold-to-deploy/retract intake controls appropriate for the team's workflow?
 5. Does the documented hood hold/return behavior fit the workflow, and how should deliberate turret zeroing be exposed?
 
-These mappings do **not** resolve automatic aiming from an incorrect field position. RB still requests field-based aiming. Fixed-speed pit shooting is a separate deferred feature. The local `feature/pit-test-controls` draft at `f590974` repurposes the D-pad and suppresses driving, so it does not satisfy Maxwell's swerve-testing requirement and must not be treated as either option documented here.
+RB uses field-based aiming and relies on a correct robot position. Fixed-speed pit shooting remains deferred. Any future pit-testing controls must preserve D-pad swerve testing.
 
 ## Code references and diagram provenance
 
