@@ -39,8 +39,9 @@ public class RobotVisualizer {
    * @param key A String representing the output location.
    */
   public void log(String key) {
-    // TODO: Verify these shared pivots and encoder-zero directions against the real robot.
-    // The draft CAD asset follows this geometry, so agreement in SIM is not physical validation.
+    // Legacy two-shooter CAD stream only. Its 180-degree rotation came from the incorrect
+    // intake-is-front assumption; do not use it to validate aiming or chassis direction.
+    // Use the static SIMCITY-3464-2026 asset until the new articulation is calibrated.
     Pose3d turretPose =
         GeomUtil.toPose3d(TurretConstants.kRobotToTurret)
             .transformBy(

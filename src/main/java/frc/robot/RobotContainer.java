@@ -162,7 +162,7 @@ public class RobotContainer {
             ? "Select a URI auto"
             : String.format(
                 java.util.Locale.ROOT,
-                "Robot center: X %.3f m, Y %.3f m; chassis heading %.1f deg; turret centered rearward",
+                "Robot center: X %.3f m, Y %.3f m; chassis heading %.1f deg; shooter side is front",
                 start.getX(),
                 start.getY(),
                 start.getRotation().getDegrees()));

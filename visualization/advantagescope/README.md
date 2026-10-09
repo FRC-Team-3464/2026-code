@@ -1,61 +1,39 @@
-# 3464 robot model (CAD draft)
+# 3464 robot models
 
-This simplified model retains the left shooter in the supplied rear-view photo,
-removes the crossed-out right shooter, and turns the retained shooter toward the
-robot's rear. +X points forward toward the intake, +Y left, +Z up. The moving hood
-is orange so it is easy to identify. Small fasteners, electronics, the obsolete
-climber and loose CAD parts are omitted. This is a display asset, not a physics model.
+## SIMCITY-3464-2026 (full-resolution CAD reference)
 
-## Open in AdvantageScope
+This static model preserves all 409 mesh instances from `2026-ROBOT.gltf`,
+including the original materials, normals, UVs, triangles, and assembly transforms.
+[View the full-resolution preview](Robot_SIMCITY_3464_2026/preview.png). The export
+assigns pure black to the large panels; this differs from their gray appearance
+in the Onshape screenshot. Original exported materials are retained.
 
-1. Choose **AdvantageScope → Use Custom Assets Folder** and select this
-   `visualization/advantagescope` directory (the parent of `Robot_3464_2026`).
-2. In a **3D Field** tab, add `/RealOutputs/RobotState/EstimatedPose` as a **Robot**
-   and select **3464 2026 — CAD draft** as its model.
-3. The model appears in its rear-facing reference pose without component data.
-4. Run SIM from this branch. Add `/RealOutputs/Mechanism3d/Robot/Components` to
-   that robot as **Component** data. The array order is turret, then hood.
+No parts are removed or simplified. The only placement change is one whole-robot
+coordinate conversion: +X toward the shooter (front), intake toward the rear,
++Y left, and wheel contact at Z = 0.
 
-`model.glb` is the fixed body; `model_0.glb` is the turret; `model_1.glb` is the hood.
-The asset is placed using the shared code geometry, including its hood offset.
-The component configuration removes that reference placement before applying
-those logged poses. At zero turret angle the existing visualizer adds 180° yaw,
-which makes this model face rearward. This is a display convention, not a verified
-encoder calibration.
+1. In AdvantageScope, choose **Use Custom Assets Folder** and select this
+   `visualization/advantagescope` directory.
+2. Add `/RealOutputs/RobotState/EstimatedPose` as a **Robot** and choose
+   **SIMCITY-3464-2026**.
+3. Remove any **Component** data beneath this robot. This reference model is static;
+   the earlier `SIMCITYComponents` animation and inferred pivots have been removed.
 
-## What remains unconfirmed
+Automatic AdvantageScope simplification is disabled for this model. Its large
+full-resolution mesh is intended for checking the CAD appearance first. Compare
+it against the supplied CAD before creating articulated or reduced-detail models.
+The old intake has not been added; compatibility with the new assembly is unconfirmed.
+No robot control constants are changed.
 
-`RobotVisualizer` uses `TurretConstants.kRobotToTurret` and
-`HoodConstants.kTurretToHood` directly. The builder places the CAD pieces at those
-same pivots. No separate display offsets or aiming changes are used.
-
-The hood offset is now a direct CAD estimate: approximately 8.9 cm along the turret's
-shooting direction and 5.3 cm upward (with a sub-millimetre sideways offset). It is
-used only for visualization; the turret's robot-relative aiming position is unchanged.
-Confirm the actual pivots and encoder-zero directions on the robot before treating
-this model as calibrated. Agreement between the model and code is not independent
-physical validation. Other old CAD details may also differ from the current robot.
-
-## Rebuild
-
-Source: the team's old Onshape assembly, document `85475e925eb3dcc4b391e6b2`,
-workspace `2ff6485baafc6bd31b6c9523`, element `92778bb882b703fb96455458`.
-The supplied `Assembly 1.gltf` contains 5,210 nodes with embedded geometry. Keep the
-original export separately; the 548 MB source is intentionally not in this repository.
-
-First build the robot jar, then export its actual shared constants (no robot is started):
+Install the builder dependency in a Python virtual environment, then rebuild:
 
 ```sh
-./gradlew jar --offline
-java -cp build/libs/2026-code.jar tools/robot-model/ExportGeometry.java > tools/robot-model/geometry.json
+python -m pip install -r tools/robot-model/requirements.txt
+python tools/robot-model/build_simcity_model.py '/path/to/2026-ROBOT.gltf'
 ```
 
-Use the WPILib JDK for these commands. Regenerate `geometry.json` whenever the
-shared geometry changes; it is a generated snapshot, not a source of calibration.
-
-In a Python virtual environment, install `tools/robot-model/requirements.txt`, then
-run `python tools/robot-model/build_model.py '/path/to/Assembly 1.gltf'` from the
-repository root. The script uses explicit part IDs from this export. Re-identify
-parts before using a newer export. The checked-in GLBs need no Python installation.
-
-Asset format: https://docs.advantagescope.org/more-features/custom-assets/
+The builder checks that batched triangles retain exactly the same vertex data,
+including normals and UVs, and that nodes, materials, and scenes are unchanged.
+The source hash and asset counts are recorded in `geometry.json`.
+The generated `model.glb` exceeds GitHub's regular file-size limit, so it is kept
+locally and ignored by Git. Regenerate it from the original export on another computer.

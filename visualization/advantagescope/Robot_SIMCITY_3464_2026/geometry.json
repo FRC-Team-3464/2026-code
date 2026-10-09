@@ -1,0 +1,14 @@
+{
+  "source": "2026-ROBOT.gltf",
+  "sha256": "54a41c2c7f18c04bf9f78e3d0ab330776fd03462db19d6342286a2cdbe83d498",
+  "mode": "static faithful CAD reference",
+  "robotForward": "shooter side (CAD -Y); intake is rearward",
+  "nodes": 832,
+  "meshInstances": 409,
+  "uniqueMeshes": 122,
+  "uniqueMeshTriangles": 3222836,
+  "materials": 44,
+  "geometrySimplified": false,
+  "oldIntakeAdded": false,
+  "assetBytes": 116089796
+}
