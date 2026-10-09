@@ -4,10 +4,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import frc.robot.subsystems.shooter.ShooterConstants.HoodConstants;
-import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
-import frc.robot.util.GeomUtil;
+import frc.robot.visualization.RobotCadModelGeometry;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -39,35 +36,42 @@ public class RobotVisualizer {
    * @param key A String representing the output location.
    */
   public void log(String key) {
-    // Legacy two-shooter CAD stream only. Its 180-degree rotation came from the incorrect
-    // intake-is-front assumption; do not use it to validate aiming or chassis direction.
-    // Use the static SIMCITY-3464-2026 asset until the new articulation is calibrated.
-    Pose3d turretPose =
-        GeomUtil.toPose3d(TurretConstants.kRobotToTurret)
-            .transformBy(
-                new Transform3d(
-                    Translation3d.kZero,
-                    new Rotation3d(0.0, 0.0, turretAngle.plus(Rotation2d.kPi).getRadians())));
+    Pose3d[] components = getComponentPoses();
+    Logger.recordOutput(key + "/Components", components);
+  }
 
+  /** Returns robot-relative poses in asset order: turret, then hood. */
+  public Pose3d[] getComponentPoses() {
+    // Tracking commands the negative robot-relative bearing, so display yaw negates feedback.
+    // CAD geometry is display-only; it does not replace the aiming calibration.
+    Pose3d turretPose =
+        new Pose3d(
+            RobotCadModelGeometry.TURRET_PIVOT,
+            new Rotation3d(0.0, 0.0, -turretAngle.getRadians()));
+
+    // Negate feedback so negative hood readings raise the CAD hood about its front pivot.
+    // This display-only sign does not change motor commands. Zero restores the exported CAD pose.
+    // TODO: Verify the sign on hardware and calibrate zero and scale from encoder readings.
     Pose3d hoodPose =
         turretPose.transformBy(
             new Transform3d(
-                HoodConstants.kTurretToHood.getTranslation(), new Rotation3d(0.0, hoodAngle, 0.0)));
+                RobotCadModelGeometry.HOOD_OFFSET,
+                new Rotation3d(0.0, -hoodAngle, RobotCadModelGeometry.CAD_TURRET_YAW_RAD)));
 
-    Logger.recordOutput(key + "/Components", turretPose, hoodPose);
+    return new Pose3d[] {turretPose, hoodPose};
   }
 
   /**
-   * Gets the left turret angle.
+   * Gets the turret angle.
    *
-   * @return A Rotation2d object representing the left turret angle.
+   * @return A Rotation2d object representing the turret angle.
    */
   public Rotation2d getTurretAzimuthAngle() {
     return turretAngle;
   }
 
   /**
-   * Sets the left turret angle.
+   * Sets the turret angle.
    *
    * @param angle A Rotation2d object to be inserted in the angles array.
    */
@@ -76,16 +80,16 @@ public class RobotVisualizer {
   }
 
   /**
-   * Gets the left hood angle.
+   * Gets the hood angle.
    *
-   * @return A double representing the left hood angle in radians.
+   * @return A double representing the hood angle in radians.
    */
   public double getTurretHoodAngle() {
     return hoodAngle;
   }
 
   /**
-   * Sets the left hood angle in radians.
+   * Sets the hood angle in radians.
    *
    * @param angle A Rotation2d object to be inserted in the angles array.
    */
