@@ -10,6 +10,9 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+// Compile display geometry kept with the visualization tooling. CAD assets are not resources.
+sourceSets.main.java.srcDir 'visualization/src/main/java'
+
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
@@ -183,7 +186,7 @@ createVersionFile.dependsOn(eventDeploy)
 spotless {
     java {
         // Targets only code files, avoiding root directory scans
-        target "src/**/*.java"
+        target "src/**/*.java", "visualization/src/main/java/**/*.java"
 
         // Explicitly exclude the auto-generated version file from linting
         targetExclude "**/BuildConstants.java"
