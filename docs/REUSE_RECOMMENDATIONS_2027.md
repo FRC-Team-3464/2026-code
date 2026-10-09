@@ -276,7 +276,7 @@ Sources: [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIO
 
 ### H4. Fix command ownership, mode gating, and termination behavior
 
-**What the code does:** hood D-pad `StartEndCommand`s in [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java) omit a hood requirement, while the hood has an active default command. Intake roller and pivot commands all claim `Intake`. The active autonomous command claims neither drivetrain nor turret. Controller bindings and joystick defaults are not explicitly restricted to teleop. Some tracking commands rely on a later default to restore outputs.
+**What the code does:** hood D-pad `StartEndCommand`s in [DualDriverControls.java](../src/main/java/frc/robot/control/DualDriverControls.java) omit a hood requirement, while the hood has an active default command. Intake roller and pivot commands all claim `Intake`. The active autonomous command claims neither drivetrain nor turret. Controller bindings and joystick defaults are not explicitly restricted to teleop. Some tracking commands rely on a later default to restore outputs.
 
 **Recommended action:** require the correct subsystem on every mechanism command. Audit simultaneous button presses, not just each button independently. If roller and pivot must operate independently, split their scheduler ownership or supply an intentional combined command; do not remove requirements to bypass conflicts.
 

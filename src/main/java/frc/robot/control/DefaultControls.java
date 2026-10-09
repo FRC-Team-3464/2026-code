@@ -1,71 +1,55 @@
 package frc.robot.control;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.RobotState;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 public class DefaultControls implements Configurable {
-
   private final DriverController driver;
-  private final DriverController operator;
   private final Drive drive;
-  private final Indexer indexer;
-  private final Intake intake;
   private final Shooter shooter;
+  private final DoubleSupplier rotationInput;
+  private final BooleanSupplier holdHood;
 
-  /** Creates a new DefaultControls. */
   public DefaultControls(
       DriverController driver,
-      DriverController operator,
       Drive drive,
-      Indexer indexer,
-      Intake intake,
-      Shooter shooter) {
+      Shooter shooter,
+      DoubleSupplier rotationInput,
+      BooleanSupplier holdHood) {
     this.driver = driver;
-    this.operator = operator;
     this.drive = drive;
-    this.indexer = indexer;
-    this.intake = intake;
     this.shooter = shooter;
+    this.rotationInput = rotationInput;
+    this.holdHood = holdHood;
   }
 
-  /** Configure all default commands for the subsystems (e.g. includes joystick driving). */
   @Override
   public void configure() {
-    // The drive default can run whenever no other command owns Drive, including autonomous/test.
-    // Read the mode every cycle and request zero speed outside teleop, even if sticks are held.
-    // An autonomous command that requires Drive still replaces this default normally.
+    // Default commands may run outside teleop when no autonomous command owns the subsystem.
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> DriverStation.isTeleopEnabled() ? -driver.getLeftY() : 0.0,
-            () -> DriverStation.isTeleopEnabled() ? -driver.getLeftX() : 0.0,
-            () -> DriverStation.isTeleopEnabled() ? -driver.getRightX() : 0.0));
-
-    Supplier<Translation2d> targetPoseSupplier = () -> RobotState.getInstance().getShooterTarget();
-    // Avoid the trench
+            () -> DriverStation.isTeleopEnabled() ? -driver.getLeftY() : 0,
+            () -> DriverStation.isTeleopEnabled() ? -driver.getLeftX() : 0,
+            () -> DriverStation.isTeleopEnabled() ? rotationInput.getAsDouble() : 0));
     shooter
         .getTurret()
         .setDefaultCommand(
             new RunCommand(() -> shooter.getTurret().setOpenLoop(0), shooter.getTurret()));
-
-    Trigger operatorTracking = operator.rightBumper().and(DriverStation::isTeleopEnabled);
     shooter
         .getHood()
         .setDefaultCommand(
             new RunCommand(
                 () -> {
-                  // A released D-pad leaves the hood holding its last measured angle. Keep that
-                  // target while teleop RB is held; otherwise return to the starting angle.
-                  if (!operatorTracking.getAsBoolean()) {
+                  // Manual movement holds its last angle on release. Preserve it while
+                  // aiming/manual control
+                  // is held in teleop; otherwise use the existing starting-angle behavior.
+                  if (!(DriverStation.isTeleopEnabled() && holdHood.getAsBoolean())) {
                     shooter.getHood().setAngle(0);
                   }
                 },

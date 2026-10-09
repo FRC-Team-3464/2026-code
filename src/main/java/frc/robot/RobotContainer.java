@@ -18,11 +18,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState.VisionMeasurement;
-import frc.robot.control.Configurable;
 import frc.robot.control.DefaultControls;
 import frc.robot.control.DriverController;
 import frc.robot.control.DriverControllerFactory;
-import frc.robot.control.DriverControls;
+import frc.robot.control.DualDriverControls;
+import frc.robot.control.SingleDriverControls;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
@@ -34,7 +34,6 @@ import frc.robot.util.GeomUtil;
 import frc.robot.wiring.RealRobotWiring;
 import frc.robot.wiring.RobotWiring;
 import frc.robot.wiring.SimRobotWiring;
-import java.util.List;
 import java.util.function.Supplier;
 
 public class RobotContainer {
@@ -122,10 +121,19 @@ public class RobotContainer {
 
   /** Binds robot actions to operator and driver controls. */
   private void configureBindings() {
-    List.<Configurable>of(
-            new DefaultControls(driver, operator, drive, indexer, intake, shooter),
-            new DriverControls(driver, operator, drive, shooter, intake, indexer))
-        .forEach(Configurable::configure);
+    if (Constants.kControllerLayout == Constants.ControllerLayout.SINGLE_CONTROLLER) {
+      SingleDriverControls controls =
+          new SingleDriverControls(driver, drive, shooter, intake, indexer);
+      controls.configure();
+      new DefaultControls(driver, drive, shooter, controls::rotationInput, controls::holdHood)
+          .configure();
+    } else {
+      DualDriverControls controls =
+          new DualDriverControls(driver, operator, drive, shooter, intake, indexer);
+      controls.configure();
+      new DefaultControls(driver, drive, shooter, controls::rotationInput, controls::holdHood)
+          .configure();
+    }
   }
 
   /** Sends an accepted camera measurement to the shared robot pose estimator. */

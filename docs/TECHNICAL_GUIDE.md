@@ -629,7 +629,7 @@ The hood D-pad bindings create `StartEndCommand`s **without a hood subsystem req
 
 The single-controller mapping is defined in a private method but never called. The commented driver left-bumper auto-aim binding is also inactive. `ZoneControls.configure()` is empty and is not installed by the container.
 
-Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java), [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java), [DriverController.java](../src/main/java/frc/robot/control/DriverController.java).
+Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultControls.java), [DualDriverControls.java](../src/main/java/frc/robot/control/DualDriverControls.java), [DriverController.java](../src/main/java/frc/robot/control/DriverController.java).
 
 ## 12. Autonomous behavior and PathPlanner assets
 
@@ -789,7 +789,7 @@ Read one working behavior end to end before studying every utility.
 
 1. **Startup and wiring:** [Robot.java](../src/main/java/frc/robot/Robot.java) and [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java). Find the mode selection, subsystem constructors, and scheduler call.
 2. **A simple mechanism:** [Indexer.java](../src/main/java/frc/robot/subsystems/indexer/Indexer.java), [IndexerIO.java](../src/main/java/frc/robot/subsystems/indexer/IndexerIO.java), and [IndexerIOTalonFX.java](../src/main/java/frc/robot/subsystems/indexer/IndexerIOTalonFX.java). Trace what starts and stops a motor.
-3. **User input:** [DriverControls.java](../src/main/java/frc/robot/control/DriverControls.java). Find how a button schedules the command you just read.
+3. **User input:** [DualDriverControls.java](../src/main/java/frc/robot/control/DualDriverControls.java). Find how a button schedules the command you just read.
 4. **Driving:** [DriveCommands.java](../src/main/java/frc/robot/commands/DriveCommands.java), [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java), and [Module.java](../src/main/java/frc/robot/subsystems/drive/Module.java). Follow speed and angle conversions.
 5. **Location:** [RobotState.java](../src/main/java/frc/robot/RobotState.java) and [Vision.java](../src/main/java/frc/robot/subsystems/vision/Vision.java). Separate sensor measurements from the combined estimate.
 6. **Shooting:** [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java) and [TrajectoryCalculator.java](../src/main/java/frc/robot/subsystems/shooter/TrajectoryCalculator.java). Compare the active call chains before changing table values.
