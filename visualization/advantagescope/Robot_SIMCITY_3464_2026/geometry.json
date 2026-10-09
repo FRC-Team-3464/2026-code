@@ -1,7 +1,7 @@
 {
   "source": "2026-ROBOT.gltf",
   "sha256": "54a41c2c7f18c04bf9f78e3d0ab330776fd03462db19d6342286a2cdbe83d498",
-  "mode": "static faithful CAD reference",
+  "mode": "articulated CAD; encoder-zero calibration pending",
   "robotForward": "shooter side (CAD -Y); intake is rearward",
   "nodes": 832,
   "meshInstances": 409,
@@ -10,5 +10,31 @@
   "materials": 44,
   "geometrySimplified": false,
   "oldIntakeAdded": false,
-  "assetBytes": 116089796
+  "assetBytes": {
+    "model.glb": 45342364,
+    "model_0.glb": 70237528,
+    "model_1.glb": 1101260
+  },
+  "componentMeshInstances": {
+    "chassis": 359,
+    "turret": 46,
+    "hood": 4
+  },
+  "hoodMeshNodes": [
+    242,
+    246,
+    262,
+    289
+  ],
+  "turretPivotRobot": [
+    0.10794809460639954,
+    -0.19684790074825287,
+    0.4085606295311379
+  ],
+  "hoodPivotRobot": [
+    0.19745454245166866,
+    -0.19684790074825287,
+    0.46190061752437694
+  ],
+  "cadTurretYawRad": -0.04917969941716352
 }
