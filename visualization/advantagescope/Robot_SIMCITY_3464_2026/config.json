@@ -1,0 +1,44 @@
+{
+  "name": "SIMCITY-3464-2026",
+  "disableSimplification": true,
+  "rotations": [
+    {
+      "axis": "z",
+      "degrees": 90
+    }
+  ],
+  "position": [
+    6.0558319091796875e-05,
+    -0.00013592839241027832,
+    -0.011112872914083017
+  ],
+  "cameras": [],
+  "components": [
+    {
+      "zeroedRotations": [
+        {
+          "axis": "z",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        -0.10788753628730774,
+        0.1967119723558426,
+        -0.41967350244522095
+      ]
+    },
+    {
+      "zeroedRotations": [
+        {
+          "axis": "z",
+          "degrees": 92.81778921432546
+        }
+      ],
+      "zeroedPosition": [
+        -0.20682565585976675,
+        0.18677026829245363,
+        -0.47301349043845997
+      ]
+    }
+  ]
+}
