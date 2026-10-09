@@ -17,7 +17,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.util.Direction;
 import java.util.function.Supplier;
 
-public class DriverControls implements Configurable {
+public class DualDriverControls implements Configurable {
   private final DriverController driver;
   private final DriverController operator;
   private final Drive drive;
@@ -29,7 +29,7 @@ public class DriverControls implements Configurable {
   // RB clears the latch so the next RB press can start automatic hood aiming again.
   private boolean manualHoodOverrideActive;
 
-  public DriverControls(
+  public DualDriverControls(
       DriverController driver,
       DriverController operator,
       Drive drive,
@@ -50,17 +50,14 @@ public class DriverControls implements Configurable {
     configureOperatorControls();
   }
 
+  /** Registers heading reset, X-lock and directional driving buttons. */
   private void configureDriverControls() {
-    // Bindings are polled in autonomous and test too. Gate manual requests at the trigger so they
-    // cannot take ownership from autonomous commands. While-held controls activate on teleop entry.
-    // Reset references only on a fresh physical press in teleop. Gating the trigger itself would
-    // also create a rising edge when teleop starts with the button already held.
+    // Gate manual commands to teleop; resets additionally require a fresh physical button press.
     teleopPress(driver.xSquare()).onTrue(drive.resetHeading());
     driver
         .bCircle()
         .and(DriverStation::isTeleopEnabled)
         .onTrue(Commands.runOnce(drive::stopWithX, drive));
-
     driver
         .dPadUp()
         .and(DriverStation::isTeleopEnabled)
@@ -93,23 +90,6 @@ public class DriverControls implements Configurable {
         .dPadDown()
         .and(DriverStation::isTeleopEnabled)
         .whileTrue(DriveCommands.crabWalk(drive, Direction.SOUTH));
-
-    // driver
-    // .leftBumper()
-    // .whileTrue(
-    // DriveCommands.joystickDriveAtAngle(
-    // drive,
-    // () -> -driver.getLeftY(), // xSupplier
-    // () -> -driver.getLeftX(), // ySupplier
-    // () -> {
-    // Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
-    // Translation2d target =
-    // AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
-
-    // Translation2d delta = target.minus(robotPose.getTranslation());
-
-    // return new Rotation2d(Math.atan2(delta.getY(), delta.getX()));
-    // }));
   }
 
   private void configureOperatorControls() {
@@ -208,80 +188,18 @@ public class DriverControls implements Configurable {
    * is held must not count as a new press. Filtering before scheduling also prevents a blocked
    * reset from claiming its subsystem and interrupting an autonomous command.
    */
-  private Trigger teleopPress(Trigger button) {
+  private static Trigger teleopPress(Trigger button) {
     return new BooleanEvent(CommandScheduler.getInstance().getDefaultButtonLoop(), button)
         .rising()
         .castTo(Trigger::new)
         .and(DriverStation::isTeleopEnabled);
   }
 
-  private void configureSingleController() {
-    // Preserve teleop-only manual control if this alternative layout is enabled in configure().
+  public double rotationInput() {
+    return -driver.getRightX();
+  }
 
-    driver
-        .rightBumper()
-        .and(DriverStation::isTeleopEnabled)
-        .whileTrue(
-            shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
-                () -> RobotState.getInstance().getShooterTarget()));
-    // // RB -> Shoot
-    // driver
-    // .rightBumper()
-    // .whileTrue(
-    // Commands.runEnd(
-    // () -> shooter.setFlywheelOpenLoop(.0175),
-    // () -> shooter.setFlywheelOpenLoop(0),
-    // shooter));
-    // driver
-    // .leftBumper()
-    // .whileTrue(
-    // Commands.runEnd(
-    // () -> shooter.setFlywheelOpenLoop(.0185),
-    // () -> shooter.setFlywheelOpenLoop(0),
-    // shooter));
-
-    driver.bCircle().and(DriverStation::isTeleopEnabled).whileTrue(indexer.index());
-    driver.aCross().and(DriverStation::isTeleopEnabled).whileTrue(indexer.indexReverse());
-
-    // driver
-    // .aCross()
-    // .whileTrue(
-    // Commands.runEnd(
-    // () -> indexer.setThroatOpenLoop(0.5), () -> indexer.setThroatOpenLoop(0),
-    // indexer));
-    // // driver
-    // // .bCircle()
-    // // .whileTrue(
-    // // Commands.runEnd(
-    // // () -> indexer.setThroatOpenLoop(-0.5),
-    // // () -> indexer.setThroatOpenLoop(0),
-    // // indexer));
-
-    driver.xSquare().and(DriverStation::isTeleopEnabled).whileTrue(intake.retractOpenLoop());
-    driver.yTriangle().and(DriverStation::isTeleopEnabled).whileTrue(intake.deployOpenLoop());
-
-    driver.leftTrigger().and(DriverStation::isTeleopEnabled).whileTrue(intake.outtake());
-    driver.rightTrigger().and(DriverStation::isTeleopEnabled).whileTrue(intake.intake());
-
-    driver
-        .dPadLeft()
-        .and(DriverStation::isTeleopEnabled)
-        .whileTrue(
-            Commands.runEnd(
-                () -> shooter.getTurret().setOpenLoop(-0.05),
-                () -> shooter.getTurret().setOpenLoop(0),
-                shooter.getTurret()));
-    driver
-        .dPadRight()
-        .and(DriverStation::isTeleopEnabled)
-        .whileTrue(
-            Commands.runEnd(
-                () -> shooter.getTurret().setOpenLoop(0.05),
-                () -> shooter.getTurret().setOpenLoop(0),
-                shooter.getTurret()));
-
-    // A held button must not redefine the turret's encoder zero on teleop entry or re-enable.
-    teleopPress(driver.yTriangle())
-        .onTrue(Commands.runOnce(() -> shooter.getTurret().zero(), shooter.getTurret()));
+  public boolean holdHood() {
+    return operator.rightBumper().getAsBoolean();
   }
 }
