@@ -14,6 +14,8 @@ public interface ModuleIO {
   // Holds every statistic that we might need to know about a module at a given time frame
   @AutoLog
   public static class ModuleIOInputs {
+    // True only when this refresh supplied usable position feedback; no disconnect debounce.
+    public boolean positionValid = false;
     public boolean driveConnected = false;
     public double drivePositionRad = 0.0;
     public double driveVelocityRadPerSec = 0.0;

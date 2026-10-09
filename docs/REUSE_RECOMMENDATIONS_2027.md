@@ -217,11 +217,11 @@ Document output timing for each mechanism. Immediate IO writes, applying a store
 
 ### H2. Establish one timestamp-consistent odometry pipeline
 
-**Current status:** [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) now refreshes modules and gyro, then submits one 50 Hz pose observation before commands execute. Its odometry lock is released in `finally`. The observation is timestamped after the reads, not with the original sensor sample time. The high-frequency thread still collects samples, but `Drive` does not use them; [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) does not drain its queues. [RobotState.java](../src/main/java/frc/robot/RobotState.java) has a velocity setter, but no active code supplies measured velocity. REAL gyro disconnection raises an alert without switching to a heading fallback.
+**Current status:** [Drive.java](../src/main/java/frc/robot/subsystems/drive/Drive.java) now refreshes modules and gyro, then submits one 50 Hz pose observation before commands execute. Its odometry lock is released in `finally`. The observation is timestamped after the reads, not with the original sensor sample time. The high-frequency thread still collects samples, but `Drive` does not use them; [GyroIOPigeon2.java](../src/main/java/frc/robot/subsystems/drive/GyroIOPigeon2.java) does not drain its queues. [RobotState.java](../src/main/java/frc/robot/RobotState.java) has a velocity setter, but no active code supplies measured velocity. Gyro disconnection now uses wheel travel for heading, with an offset to preserve continuity on recovery.
 
-**Why this matters:** commands no longer use a stale-cycle pose, but the unused fast samples add complexity, shared state lacks measured velocity, and REAL gyro failure can leave heading based on stale or invalid feedback. SIM rotation has its own wheel-based gyro model; it does not verify REAL failure behavior.
+**Why this matters:** commands no longer use a stale-cycle pose, but the unused fast samples add complexity, shared state lacks measured velocity, and wheel-based heading during gyro failure can drift with wheel slip. SIM rotation has its own wheel-based gyro model; it does not verify REAL failure behavior.
 
-**Recommended action:** finish the current 50 Hz pipeline by defining its timestamp policy, publishing measured chassis velocity, and handling disconnected gyro feedback. Keep `Drive` responsible for submitting one observation before commands execute. Decide whether high-frequency sampling is needed; if not, remove the unused queue path.
+**Recommended action:** finish the current 50 Hz pipeline by defining its timestamp policy, publishing measured chassis velocity, and physically validating gyro fallback and recovery. Keep `Drive` responsible for submitting one observation before commands execute. Decide whether high-frequency sampling is needed; if not, remove the unused queue path.
 
 If high-frequency odometry is retained, submit synchronized module and gyro samples with their original timestamps and remove the low-frequency submission. Restore queue draining, validate array alignment, and handle missing samples deliberately. Bounded queues can drop samples when full; dropped data should be observable. Retain the existing `finally` lock release.
 
@@ -559,7 +559,7 @@ The real-mode `WPILOGWriter` in [Robot.java](../src/main/java/frc/robot/Robot.ja
 
 Record requested target, applied/clamped target, actual value, control mode, readiness reason, and connection/reference validity for important mechanisms. Add command start/end/interruption diagnostics and loop timing so control conflicts and overruns can be diagnosed. Keep build metadata, which already identifies the code revision.
 
-Standardize log grouping and units prospectively, with documented changes to existing dashboard layouts. Fix misleading diagnostics such as `Turret Target Distance`, which computes `deltaField.getDistance(target)` rather than the target-vector length, and the gyro fallback alert that describes disabled code. Use distinct names for commanded chassis speed and measured chassis speed.
+Standardize log grouping and units prospectively, with documented changes to existing dashboard layouts. Fix misleading diagnostics such as `Turret Target Distance`, which computes `deltaField.getDistance(target)` rather than the target-vector length. Use distinct names for commanded chassis speed and measured chassis speed.
 
 #### Acceptance M4
 
