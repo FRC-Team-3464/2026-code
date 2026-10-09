@@ -1,13 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="940" viewBox="0 0 1280 940" role="img" aria-labelledby="title desc">
-<title id="title">Two-controller configuration — Driver</title>
-<desc id="desc">Current driver bindings verified against mentor-review 6d2e518. Complete text equivalent in SINGLE_CONTROLLER_OPTIONS.md.</desc>
+<title id="title">Dual-controller configuration — Driver</title>
+<desc id="desc">Current driver bindings for the dual-controller layout. Complete text equivalent in SINGLE_CONTROLLER_OPTIONS.md.</desc>
 <rect width="1280" height="940" fill="#f8fafc" />
 <style>text{font-family:Arial,sans-serif;fill:#172033}.heading{font-size:28px;font-weight:bold}.body{font-size:17px}.small{font-size:15px}.button{font-size:19px;font-weight:bold;text-anchor:middle}</style>
-<text x="35" y="45" class="heading">Two Controllers — Driver</text>
+<text x="35" y="45" class="heading">Dual Controllers — Driver</text>
 <text x="35" y="75" class="body">Current code · Driver Station port 0 · Xbox profile</text>
 <rect x="805" y="24" width="440" height="56" rx="9" fill="#dcfce7" />
-<text x="825" y="49" class="body" font-weight="bold">CURRENT CODE — two controllers</text>
-<text x="825" y="69" class="small">Verified against mentor-review · 6d2e518</text>
+<text x="825" y="58" class="body" font-weight="bold">CURRENT CODE — dual controllers</text>
 <path d="M420 302 Q423 268 485 268 L795 268 Q857 268 860 302 L900 609 Q901 660 852 650 L771 566 L509 566 L428 650 Q379 660 380 609 Z" fill="#e2e8f0" stroke="#475569" stroke-width="3" />
 <rect x="440" y="230" width="90" height="48" rx="13" fill="white" stroke="#64748b" stroke-width="2" />
 <text x="485.0" y="261.0" class="button">LT</text>
