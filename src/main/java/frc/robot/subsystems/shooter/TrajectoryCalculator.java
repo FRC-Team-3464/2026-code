@@ -46,6 +46,19 @@ public class TrajectoryCalculator {
     return calculateWithState(targetLocation, state);
   }
 
+  /**
+   * Calculate from the current pose without motion compensation. Use this when the hood and turret
+   * also aim from the current pose, so publishing measured drive speed does not change only the
+   * flywheel target. This preserves the previous zero-velocity calculation, including turret offset
+   * and distance clamping; it does not provide shooting-on-the-move support.
+   */
+  public static ShooterCommand calculateStationary(Translation2d targetLocation) {
+    return calculateWithState(
+        targetLocation,
+        new RobotStateData(
+            RobotState.getInstance().getEstimatedPose(), new ChassisSpeeds(), new ChassisSpeeds()));
+  }
+
   public static double calculateRPM(Translation2d targetLocation, Pose2d robotPose) {
     return 0.6 * shooterTable.get(targetLocation.getDistance(robotPose.getTranslation())).wheelRPM;
   }

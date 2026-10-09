@@ -548,7 +548,7 @@ The long method name `trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne()
 | --- | --- |
 | Turret | `Turret.trackTarget()`: geometric aiming from turret location to target |
 | Hood | `Hood.trackTarget()`: `calculateHoodAngle()`, which uses half the table hood value at robot-center distance |
-| Flywheel | `Shooter.trackTargetFlywheel()`: full `TrajectoryCalculator.calculate()`, using the returned table RPM |
+| Flywheel | `Shooter.trackTargetFlywheel()`: `TrajectoryCalculator.calculateStationary()`, using the returned table RPM |
 
 Thus, if the hood's robot-center distance is 3.25 m, its active target is **-0.625 rad**, not the raw table's -1.25 rad. The flywheel's distance is calculated from the offset turret location, so its interpolation need not use exactly the same distance.
 
@@ -583,7 +583,7 @@ The full `TrajectoryCalculator.calculate()` method attempts to account for robot
 
 Conceptually, moving sideways at 1 m/s during a 0.6 s flight introduces about 0.6 m of sideways motion into the prediction. The iteration reconciles changing shot distance with changing estimated flight time.
 
-**Current limitation:** no active caller updates `RobotState.setRobotVelocity()`. Its velocity remains the initialized zero value, so velocity-based compensation contributes no movement prediction in this checkout. In addition, the active turret and hood commands bypass the compensated angle outputs. The presence of this calculator therefore does not establish functional shooting while moving.
+`Drive.periodic()` supplies pose inputs and measured robot-relative chassis velocity in one `OdometryObservation`, after refreshing wheel feedback and before commands execute. `RobotState.addOdometryObservation()` updates both; there is no separate speed setter to forget. Measured motion is available to the full calculator. The active flywheel tracking command uses `calculateStationary()` to preserve its previous calculation while the hood and turret also aim from the current pose. This avoids enabling motion compensation for only one mechanism. Moving-shot behavior still needs coordinated aiming and physical validation.
 
 ### Flywheel control and readiness
 
