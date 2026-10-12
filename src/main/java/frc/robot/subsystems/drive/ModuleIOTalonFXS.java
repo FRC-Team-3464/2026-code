@@ -196,6 +196,9 @@ public class ModuleIOTalonFXS implements ModuleIO {
         BaseStatusSignal.refreshAll(turnPosition, turnVelocity, turnAppliedVolts, turnCurrent);
     var turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
 
+    // Heading fallback must reject failed reads immediately, even while connection alerts debounce.
+    inputs.positionValid = driveStatus.isOK() && turnStatus.isOK() && turnEncoderStatus.isOK();
+
     // Update drive inputs
     inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
     inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
