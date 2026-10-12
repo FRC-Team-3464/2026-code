@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -12,6 +13,7 @@ import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 import frc.robot.Constants.DeviceIDs;
 import frc.robot.subsystems.shooter.ShooterConstants.FlywheelConstants;
 
@@ -31,7 +33,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
   public FlywheelIOTalonFX() {
-    motor = new TalonFX(DeviceIDs.kTurretFlywheel);
+    motor = new TalonFX(DeviceIDs.kTurretFlywheel, new CANBus(Constants.kCANivoreBusName));
     motorConfig =
         new TalonFXConfiguration()
             .withSlot0(FlywheelConstants.kGains)
