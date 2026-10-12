@@ -306,7 +306,12 @@ The active real-hardware constructors are in `RobotContainer`. IDs are in `Const
 
 Numeric ID 19 occurs for both a CANcoder and a Talon FX. Record the device type and bus along with the number when checking the hardware; repeated numbers across device types alone do not establish a collision.
 
-The swerve CAN bus name is the empty string in `TunerConstants`; mechanism constructors use their default bus. Do not infer a dedicated CANivore installation from the presence of CAN-FD support in the source.
+REAL uses two CAN buses:
+
+- CANivore: swerve motors and CANcoders, Pigeon 2, flywheel, indexer tongue/throat, and intake left/right pivot motors.
+- roboRIO CAN: intake roller, hood, and turret azimuth.
+
+`Constants.kCANivoreBusName` currently uses `"*"` to select the first available CANivore. This assumes one CANivore; replace it with the confirmed name or serial number when available. Desktop SIM retains the existing empty-string drivetrain bus setting and separate simulation adapters. The bus assignments follow the confirmed wiring, but the missing physical device IDs and real communication still need verification.
 
 Other connections are:
 

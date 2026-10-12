@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -14,11 +15,14 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 import frc.robot.Constants.DeviceIDs;
 
 public class IndexerIOTalonFX implements IndexerIO {
-  private final TalonFX throatMotor = new TalonFX(DeviceIDs.kIndexerThroat);
-  private final TalonFX toungeMotor = new TalonFX(DeviceIDs.kIndexerTounge);
+  private final TalonFX throatMotor =
+      new TalonFX(DeviceIDs.kIndexerThroat, new CANBus(Constants.kCANivoreBusName));
+  private final TalonFX toungeMotor =
+      new TalonFX(DeviceIDs.kIndexerTounge, new CANBus(Constants.kCANivoreBusName));
 
   private final StatusSignal<AngularVelocity> throatVelocity;
   private final StatusSignal<Voltage> throatVoltage;

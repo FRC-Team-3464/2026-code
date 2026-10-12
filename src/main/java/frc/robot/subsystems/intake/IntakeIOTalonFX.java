@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -14,14 +15,17 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 import frc.robot.Constants.DeviceIDs;
 
 /** Hardware implementation of the IntakeIO interface. */
 public class IntakeIOTalonFX implements IntakeIO {
   // Kraken motors are represented by TalonFX motor controller class
-  private TalonFX leftPivotMotor = new TalonFX(DeviceIDs.kLeftIntakePivot);
-  private TalonFX rightPivotMotor = new TalonFX(DeviceIDs.kRightIntakePivot);
-  private TalonFX driveMotor = new TalonFX(DeviceIDs.kIntakeDrive);
+  private TalonFX leftPivotMotor =
+      new TalonFX(DeviceIDs.kLeftIntakePivot, new CANBus(Constants.kCANivoreBusName));
+  private TalonFX rightPivotMotor =
+      new TalonFX(DeviceIDs.kRightIntakePivot, new CANBus(Constants.kCANivoreBusName));
+  private TalonFX driveMotor = new TalonFX(DeviceIDs.kIntakeDrive, CANBus.roboRIO());
 
   private Follower rightPivotFollower =
       new Follower(DeviceIDs.kLeftIntakePivot, MotorAlignmentValue.Opposed);

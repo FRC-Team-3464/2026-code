@@ -32,6 +32,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.Constants;
 
 /**
  * This class holds all constant values for the drive subsystem. Place a specific "magic" value in
@@ -148,7 +149,11 @@ public final class DriveConstants {
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    public static final CANBus kCANBus = new CANBus("", "./logs/example.hoot");
+    // Keep the desktop bus selection unchanged; physical swerve and gyro use CANivore.
+    public static final CANBus kCANBus =
+        new CANBus(
+            Constants.kCurrentMode == Constants.Mode.REAL ? Constants.kCANivoreBusName : "",
+            "./logs/example.hoot");
 
     // Theoretical free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
