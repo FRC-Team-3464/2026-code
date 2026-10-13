@@ -32,6 +32,7 @@ import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.RobotState.OdometryObservation;
 import frc.robot.subsystems.drive.DriveConstants.TunerConstants;
+import frc.robot.util.AllianceFlipUtil;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -60,10 +61,11 @@ public class Drive extends SubsystemBase {
   // Heading used by both odometry and field-relative driving. During a gyro outage it is estimated
   // from wheel travel; after recovery it includes an offset to keep that heading continuous.
   private Rotation2d rawGyroRotation;
-  private Rotation2d gyroRecoveryOffset = Rotation2d.kZero;
+  private Rotation2d gyroHeadingOffset = Rotation2d.kZero;
   private SwerveModulePosition[] previousModulePositions;
   private boolean headingInitialized;
   private boolean gyroWasConnected;
+  private boolean driverHeadingReset = false;
 
   public Drive(
       GyroIO gyroIO,
@@ -185,10 +187,10 @@ public class Drive extends SubsystemBase {
       if (headingInitialized && !gyroWasConnected) {
         // Include this cycle's wheel movement before anchoring the returning gyro. Keep the offset
         // on subsequent cycles: switching straight back to its raw yaw would cause a heading jump.
-        gyroRecoveryOffset =
+        gyroHeadingOffset =
             rawGyroRotation.plus(new Rotation2d(wheelTurn)).minus(gyroInputs.yawPosition);
       }
-      rawGyroRotation = gyroInputs.yawPosition.plus(gyroRecoveryOffset);
+      rawGyroRotation = gyroInputs.yawPosition.plus(gyroHeadingOffset);
     } else {
       // Wheel travel is a temporary estimate, not an absolute heading reference. It can drift when
       // wheels slip and relies on usable module feedback; the gyro alert remains active in REAL.
@@ -281,31 +283,28 @@ public class Drive extends SubsystemBase {
     rawGyroRotation = angle;
     // An explicit reset replaces any recovery offset. During an outage, preserve the requested
     // heading and anchor the gyro to it when feedback returns.
-    gyroRecoveryOffset = Rotation2d.kZero;
+    gyroHeadingOffset = Rotation2d.kZero;
     previousModulePositions = hasValidWheelPositions() ? getModulePositions() : null;
   }
 
   /**
-   * Creates the driver's heading-reset command, requiring the drivetrain and preserving X/Y.
+   * Resets the driving and estimated headings together while preserving field X/Y.
    *
-   * <p>REAL retains the existing estimator-zero and hardware-zero requests. SIM additionally aligns
-   * the estimator with its immediately reset sensor. The physical gyro's offset and reset timing
-   * need separate validation before adopting that alignment policy on REAL.
+   * <p>Keep the sensor reference unchanged: resetting it separately can arrive after the estimator
+   * reset and appear as robot rotation. Adjust the existing heading offset instead, in REAL and
+   * SIM.
    */
   public Command resetHeading() {
     return runOnce(
         () -> {
+          driverHeadingReset = true;
+          gyroHeadingOffset = gyroHeadingOffset.minus(rawGyroRotation);
+          rawGyroRotation = Rotation2d.kZero;
           RobotState state = RobotState.getInstance();
-          state.resetRotation(Rotation2d.kZero);
-          setYaw(Rotation2d.kZero);
-          if (Constants.kCurrentMode == Mode.SIM) {
-            // Rebase the estimator's gyro offset and wheel baseline together. Otherwise the next
-            // sample can restore the old heading offset after the sensor has already been zeroed.
-            state.setPose(
-                new Pose2d(state.getEstimatedPose().getTranslation(), Rotation2d.kZero),
-                getModulePositions(),
-                rawGyroRotation);
-          }
+          state.setPose(
+              new Pose2d(state.getEstimatedPose().getTranslation(), Rotation2d.kZero),
+              getModulePositions(),
+              rawGyroRotation);
         });
   }
 
@@ -372,6 +371,11 @@ public class Drive extends SubsystemBase {
   /** Returns the continuous drive heading, including wheel fallback and gyro recovery offset. */
   public Rotation2d getRawGyroRotation() {
     return rawGyroRotation;
+  }
+
+  /** Uses alliance perspective until the driver establishes a forward direction with reset. */
+  public Rotation2d getDriverHeading() {
+    return driverHeadingReset ? rawGyroRotation : AllianceFlipUtil.apply(rawGyroRotation);
   }
 
   /** Returns the maximum linear speed in meters per sec. */

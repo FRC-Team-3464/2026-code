@@ -86,8 +86,7 @@ public class DriveCommands {
                   omega * drive.getMaxAngularSpeedRadPerSec());
 
           drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds, AllianceFlipUtil.apply(drive.getRawGyroRotation())));
+              ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getDriverHeading()));
         },
         drive);
   }
@@ -131,8 +130,7 @@ public class DriveCommands {
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
               drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds, AllianceFlipUtil.apply(drive.getRawGyroRotation())));
+                  ChassisSpeeds.fromFieldRelativeSpeeds(speeds, drive.getDriverHeading()));
             },
             drive)
 

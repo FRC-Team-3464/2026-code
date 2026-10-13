@@ -20,8 +20,8 @@ public final class ShooterConstants {
 
   public static final class TurretConstants {
     public static final double kGearRatio = 200.0 / 20.0; // Motor / Turret
-    public static final double kMinTurretAngleRad = Units.degreesToRadians(-90);
-    public static final double kMaxTurretAngleRad = Units.degreesToRadians(210);
+    public static final double kMinTurretAngleRad = Units.degreesToRadians(-80);
+    public static final double kMaxTurretAngleRad = Units.degreesToRadians(80);
     public static final double kAngleTolerance = Units.degreesToRadians(0.5);
 
     //
@@ -47,7 +47,7 @@ public final class ShooterConstants {
 
     public static final double kMaxAngleRad = Units.degreesToRadians(0);
     // TODO: Tune
-    public static final double kMinAngleRad = -3.9;
+    public static final double kMinAngleRad = Units.degreesToRadians(-223.5);
   }
 
   public static final class FlywheelConstants {
