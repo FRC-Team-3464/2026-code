@@ -300,11 +300,13 @@ public class Drive extends SubsystemBase {
           driverHeadingReset = true;
           gyroHeadingOffset = gyroHeadingOffset.minus(rawGyroRotation);
           rawGyroRotation = Rotation2d.kZero;
-          RobotState state = RobotState.getInstance();
-          state.setPose(
-              new Pose2d(state.getEstimatedPose().getTranslation(), Rotation2d.kZero),
-              getModulePositions(),
-              rawGyroRotation);
+          RobotState.getInstance()
+              .setPose(
+                  new Pose2d(
+                      RobotState.getInstance().getEstimatedPose().getTranslation(),
+                      Rotation2d.kZero),
+                  getModulePositions(),
+                  rawGyroRotation);
         });
   }
 
