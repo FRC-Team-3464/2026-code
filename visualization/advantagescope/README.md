@@ -65,6 +65,12 @@ are invented to make the display look plausible; large reported angles can there
 produce unrealistic motion. Photos of the physical hood, gear tooth counts, and paired
 encoder readings at known positions are needed to calibrate that mapping.
 
+REAL and SIM use the shared bounds in `ShooterConstants`: turret −80° to +80°,
+and hood −223.5° to 0° in the code's encoder coordinates. The hood range is not a
+verified physical tilt range. AdvantageScope has no separate limits: it displays
+measured feedback, including any motion beyond a software bound. No CAD rebuild
+is needed for a control-limit change; rebuild and restart the robot code.
+
 This animation does not validate physical travel, collisions, or shot accuracy.
 It changes no motor commands, control limits, or autonomous behavior.
 

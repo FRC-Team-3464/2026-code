@@ -43,7 +43,12 @@ public class TurretIOSim implements TurretIO {
   public void applyOutputs(TurretIOOutputs outputs) {
     switch (outputs.mode) {
       case CLOSED_LOOP -> {
-        pid.setSetpoint(outputs.closedLoopTarget.getRadians());
+        // Match the target bounds enforced by the real controller adapter.
+        pid.setSetpoint(
+            MathUtil.clamp(
+                outputs.closedLoopTarget.getRadians(),
+                TurretConstants.kMinTurretAngleRad,
+                TurretConstants.kMaxTurretAngleRad));
         appliedVolts = pid.calculate(sim.getAngularPositionRad());
       }
       case OPEN_LOOP -> {

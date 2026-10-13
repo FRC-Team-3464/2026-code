@@ -148,12 +148,13 @@ public class Turret extends FullSubsystem {
     positionControlActive = false;
     clearReadiness();
     outputs.mode = TurretIOOutputMode.OPEN_LOOP;
-    if (inputs.positionRad > TurretConstants.kMaxTurretAngleRad
-        || inputs.positionRad < TurretConstants.kMinTurretAngleRad) {
-      outputs.openLoopOutput = 0.0;
-    } else {
-      outputs.openLoopOutput = MathUtil.clamp(output, -1.0, 1.0);
-    }
+    // Stop outward movement at either limit, but allow recovery back into the permitted range.
+    boolean movingPastMaximum =
+        output > 0.0 && inputs.positionRad >= TurretConstants.kMaxTurretAngleRad;
+    boolean movingPastMinimum =
+        output < 0.0 && inputs.positionRad <= TurretConstants.kMinTurretAngleRad;
+    outputs.openLoopOutput =
+        movingPastMaximum || movingPastMinimum ? 0.0 : MathUtil.clamp(output, -1.0, 1.0);
   }
 
   /** Stages zero open-loop output and clears position readiness. */

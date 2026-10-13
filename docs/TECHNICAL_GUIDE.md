@@ -335,8 +335,8 @@ Other connections are:
 | Turret reduction | 10:1 |
 | Hood reduction | 16:1 |
 | Turret location relative to robot origin | 7.5 inches forward, 4 inches right, 14.5 inches up |
-| Turret software bounds | -90° to +210° |
-| Hood software bounds | -3.9 to 0 radians |
+| Turret software bounds | -80° to +80° |
+| Hood software bounds | -223.5° to 0° (approximately -3.90081 to 0 radians) |
 
 The hood bounds and table entries are the mechanism coordinates used by this program. Do not interpret them as independently verified fuel launch angles. Startup sets the hood and turret relative encoders to zero; there is no implemented absolute-sensor or limit-switch homing routine for them.
 
@@ -475,9 +475,9 @@ If alliance information is absent, the utility does not flip. `RobotState.getSho
 
 ### Heading reset detail
 
-The Pigeon constructor calls `pigeon.setYaw(0)`. Later, `GyroIOPigeon2.setYaw(angle)` adds 180° to its argument before writing it. The driver X binding schedules `drive.resetHeading()`, which requests estimator rotation reset and gyro zero; this is not a simple universal “everything becomes zero” operation. The drivetrain temporarily stores the requested heading, then reads the hardware-adjusted heading on its next refresh.
+The driver X binding schedules `drive.resetHeading()`. In REAL and SIM, it sets the software driving heading and estimated heading to zero together while preserving estimated X/Y. It adjusts the gyro-to-driving heading offset without resetting the physical sensor, so a delayed sensor reset cannot appear as robot rotation. Before the first driver reset, thumbstick driving uses the alliance-based perspective. After X, the current robot front becomes forward on either alliance, and subsequent turns remain field-relative to that reference. This choice persists through disable/re-enable until the code restarts; pressing X again establishes a new forward direction. Autonomous path and field-target alliance flipping are unchanged. Later gyro changes still track physical turns. During a gyro outage, the reset also applies to wheel-based heading; reconnection preserves continuity.
 
-In SIM, the `Drive.resetHeading()` command also aligns the estimator with the reset sensor reading while preserving translation. The low-level `setYaw()` method changes only the sensor and cached raw heading. This prevents the next update from restoring an old heading offset.
+The Pigeon constructor still calls `pigeon.setYaw(0)`. The separate low-level `GyroIOPigeon2.setYaw(angle)` still adds 180° before writing to hardware, but driver X no longer calls it. Physical mounting and alliance-relative driving still require robot validation. Accepted vision measurements can subsequently correct the estimated heading.
 
 Also, `Drive` calls `zeroYaw()` in its constructor but does not schedule the returned command. The real startup zero comes from the Pigeon constructor, not from executing that returned command.
 
@@ -573,7 +573,7 @@ commanded_angle = -geometric_angle
 
 The team identifies the shooter side as the robot front (+X) and the intake side as the rear. The original motor/encoder sign convention from `main` is retained; no rear-facing 180-degree offset is applied. Front/back identification alone does not verify encoder zero or positive direction. Manual controls and the auto-to-teleop transition are unchanged.
 
-The Spark MAX implementation clamps closed-loop targets to the configured bounds. Turret open-loop control checks whether the measured position is outside those bounds; if so, it blocks both directions. This is not a direction-aware recovery limit, and hardware soft limits are explicitly disabled in the Spark configuration.
+The Spark MAX implementation clamps closed-loop targets to the configured bounds. Turret open-loop control blocks outward movement at or beyond either bound while allowing movement back inward. These checks require a valid physical encoder reference; hardware soft limits remain disabled in the Spark configuration.
 
 ### Motion compensation infrastructure
 
@@ -612,7 +612,7 @@ The driver and operator profiles both default to Xbox. `DriverControllerFactory`
 | --- | --- |
 | Left stick Y / X | Field-relative forward/backward and sideways movement; axes are negated |
 | Right stick X | Rotation; axis is negated |
-| X | Reset estimated rotation and schedule gyro-zero request; see the 180° behavior above |
+| X | Reset driving and estimated headings together; preserve X/Y and leave sensor yaw unchanged |
 | B | Request X wheel arrangement once |
 | D-pad, including diagonals | Robot-relative crab walking at 1 m/s while held |
 

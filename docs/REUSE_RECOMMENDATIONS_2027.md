@@ -250,7 +250,7 @@ fresh measurements + their timestamps
 
 ### H3. Define and verify heading/reset conventions
 
-**What the code does:** `GyroIOPigeon2` initializes yaw to zero, but its `setYaw(angle)` adds 180°. `Drive.setYaw()` immediately stores the unadjusted argument until the next refresh. `Drive` calls the command factory `zeroYaw()` during construction without scheduling its result. Joystick drive uses raw gyro heading, while aiming uses estimator heading.
+**What the code does:** `GyroIOPigeon2` initializes yaw to zero, but its `setYaw(angle)` adds 180°. `Drive.setYaw()` immediately stores the unadjusted argument until the next refresh, but driver heading reset no longer calls it. The driver reset now aligns the software driving heading and pose estimator by adjusting a software offset in both REAL and SIM, preserving X/Y and leaving sensor yaw unchanged. `Drive` calls the command factory `zeroYaw()` during construction without scheduling its result. Joystick drive uses raw gyro heading, while aiming uses estimator heading.
 
 **Why this matters:** the heading can change meaning across startup, reset, sensor refresh, and vision correction. This is especially confusing when alliance flipping adds another 180° transformation.
 
@@ -300,7 +300,7 @@ Gate normal driving and operator actions to enabled teleop, or document narrowly
 
 ### H5. Establish valid mechanism references and travel limits
 
-**What the code does:** turret and hood relative encoders are set to zero at startup without establishing a physical reference. Turret Spark position wrapping is enabled while configured mechanical travel is limited to -90°…210°, and hardware soft limits are disabled. Turret open-loop code blocks both motion directions after the measured angle is outside the range. Hood open-loop control bypasses angle clamping. Intake deployment is open-loop, with no end-position input in its IO record.
+**What the code does:** turret and hood relative encoders are set to zero at startup without establishing a physical reference. Turret Spark position wrapping is enabled while configured software travel is limited to -80°…+80°, and hardware soft limits are disabled. Turret open-loop code blocks outward movement at or beyond either limit and permits inward recovery. Hood open-loop control bypasses angle clamping. Intake deployment is open-loop, with no end-position input in its IO record.
 
 The source cannot establish whether the team already aligns the mechanisms physically before startup. Confirm that procedure with the operators before changing it. This section combines observable limit-handling behavior with proposed referencing and fault-response requirements; it does not prove the robot has been operated without a valid reference.
 
