@@ -44,10 +44,8 @@ public final class Constants {
   // Single-controller mode uses port 0. Layout changes require rebuilding and restarting the code.
   public static final ControllerLayout kControllerLayout = ControllerLayout.SINGLE_CONTROLLER;
 
-  // "*" selects the first available CANivore; this robot has one. Use its name/serial
-  // here if multiple CANivores are ever connected.
-  // TODO: Replace "*" with the CANivore's confirmed name or serial number.
-  public static final String kCANivoreBusName = "*";
+  // Must match the CANivore name configured in Phoenix Tuner.
+  public static final String kCANivoreBusName = "canivore";
 
   public static final int kDriverControllerPort = 0;
   public static final int kOperatorControllerPort = 1;
