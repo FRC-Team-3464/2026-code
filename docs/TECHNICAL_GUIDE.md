@@ -54,7 +54,7 @@ The hopper is part of this conceptual ball path; there is no separate active `Ho
 
 The current operator workflow is to aim and spin the shooter with one control, then feed fuel with another. There is no active ball-counting or ball-presence sensor logic in the intake/indexer interfaces.
 
-The autonomous chooser defaults to **Do Nothing** and offers three 2026 PathPlanner routes: URI Center, URI Left Depot, and URI Right Outpost. Other stored routes are not selectable yet because their named actions and missed-shot behavior need review.
+The autonomous chooser defaults to **Do Nothing** and offers three 2026 PathPlanner routes: URI-MS-SUTO, URI-LT-DP-SUTO, and URI-RT-OP-SUTO. Other stored routes are not selectable yet because their named actions and missed-shot behavior need review.
 
 Source: [RobotContainer.java](../src/main/java/frc/robot/RobotContainer.java), [Shooter.java](../src/main/java/frc/robot/subsystems/shooter/Shooter.java).
 
@@ -644,7 +644,7 @@ Sources: [DefaultControls.java](../src/main/java/frc/robot/control/DefaultContro
 
 ### Set up a URI starting position
 
-1. While disabled, select `URI Left Depot`, `URI Center`, or `URI Right Outpost` in `Autonomous` and set the Driver Station alliance.
+1. While disabled, select `URI-LT-DP-SUTO`, `URI-MS-SUTO`, or `URI-RT-OP-SUTO` in `Autonomous` and set the Driver Station alliance.
 2. Check the `Auto Start` marker on `FieldInstance` and the `Auto Start/Placement` dashboard text. Coordinates describe the robot center in meters from the blue field origin; the heading describes the chassis. The shooter side is the front; the intake is at the rear. Starting headings come from the original path files.
 3. On the real field, place the robot at that location and heading. In either REAL or SIM, run the dashboard command `Apply Auto Starting Pose` while disabled to set the position estimate. This does not physically move the robot. In SIM, the displayed robot moves to that pose.
 4. The selected URI auto resets to the same starting pose when autonomous begins. Selecting `Do Nothing` or leaving the alliance unknown prevents the setup command from applying a pose; clicking it while enabled does nothing.
@@ -655,7 +655,7 @@ The three positions come from each routine's first path, with red-alliance poses
 
 PathPlanner `.path` files contain geometry and motion constraints. `.auto` files compose paths, waits, and named robot actions. `settings.json` contains the robot model and editor defaults; `navgrid.json` contains a pathfinding grid.
 
-For example, [URI Center.auto](../src/main/deploy/pathplanner/autos/URI%20Center.auto) follows `C to C Tower`, then runs an eight-second shooting phase and starts indexing after one second. The registered actions are `Shoot`, `Index`, `Intake`, `DeployIntake`, `RetractIntake`, and a no-op `climb` placeholder. The auto team included `climb` for a future mechanism; this robot has no climber, so that action does nothing. Nineteen stored autos call it. Those routes also use lowercase `shoot` and `intake`, whose intended behavior is not registered yet. They stay out of the chooser until those actions are implemented and the routes are verified. `LocalADStarAK` exists but is not installed as a pathfinder.
+For example, [URI-MS-SUTO.auto](../src/main/deploy/pathplanner/autos/URI-MS-SUTO.auto) follows `C to C Tower`, then runs an eight-second shooting phase and starts indexing after one second. The registered actions are `Shoot`, `Index`, `Intake`, `DeployIntake`, `RetractIntake`, and a no-op `climb` placeholder. The auto team included `climb` for a future mechanism; this robot has no climber, so that action does nothing. Nineteen stored autos call it. Those routes also use lowercase `shoot` and `intake`, whose intended behavior is not registered yet. They stay out of the chooser until those actions are implemented and the routes are verified. `LocalADStarAK` exists but is not installed as a pathfinder.
 
 All path names referenced by the scanned assets have corresponding `.path` files. That file-reference check does not validate the routes' physical feasibility or execution behavior.
 
