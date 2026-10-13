@@ -1,6 +1,6 @@
 # Robot Deployment and Commissioning Guide
 
-**Simsbury 4-H Robotics**  
+**Simsbury 4-H Robotics**
 **Sim-City 3464**
 
 This guide takes a new operator from a Windows laptop to deploying Team 3464's Java code on the robot's roboRIO 2.0, then checking the robot in stages. Start with a wired USB connection and leave the robot disabled until the electrical checks and mechanism references are confirmed.
