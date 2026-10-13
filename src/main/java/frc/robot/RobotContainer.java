@@ -256,9 +256,9 @@ public class RobotContainer {
           drive);
       // Other stored autos can intake after a missed shot. With no sensor confirming that fuel
       // exited, keep those routes unavailable until continuation is known to be safe.
-      addAutoOption("URI Center");
-      addAutoOption("URI Left Depot");
-      addAutoOption("URI Right Outpost");
+      addAutoOption("URI-MS-SUTO");
+      addAutoOption("URI-LT-DP-SUTO");
+      addAutoOption("URI-RT-OP-SUTO");
     } catch (IOException | ParseException | RuntimeException e) {
       DriverStation.reportError(
           "PathPlanner configuration failed: " + e.getMessage(), e.getStackTrace());
