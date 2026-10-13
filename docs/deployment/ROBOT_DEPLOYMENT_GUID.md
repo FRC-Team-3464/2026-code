@@ -1,4 +1,7 @@
-# Windows deployment and first robot test guide
+# Robot Deployment and Commissioning Guide
+
+**Simsbury 4-H Robotics**  
+**Sim-City 3464**
 
 This guide takes a new operator from a Windows laptop to deploying Team 3464's Java code on the robot's roboRIO 2.0, then checking the robot in stages. Start with a wired USB connection and leave the robot disabled until the electrical checks and mechanism references are confirmed.
 
@@ -8,9 +11,9 @@ Use the accompanying HTML version for offline reading or printing to PDF. The di
 
 [TOC]
 
-## 1 What to bring
+## 1 Deployment Prerequisites
 
-### Laptop and software
+### Workstation and Software Requirements
 
 Use a Windows 11 x64 laptop with administrator access for installations, its charger, reliable internet for initial downloads, and access to the team's GitHub repository. Windows on ARM is not supported by the cited 2026 WPILib installer. Install before arriving at the robot. [WPILib installation](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html)
 
@@ -30,7 +33,7 @@ A separate full LabVIEW development installation is not needed for this Java pro
 
 Software library versions are not device firmware versions. Keep the repository's `vendordeps` files rather than updating everything during first deployment. The inspected code uses Phoenix 6 **26.1.1**, REVLib **2026.0.3**, AdvantageKit **26.0.1**, PathPlannerLib **2026.1.2**, and PhotonLib **v2026.2.2**. Record actual firmware separately and check vendor compatibility before changing it.
 
-### Cables and equipment
+### Cabling and Test Equipment
 
 | Item | Where it connects | Purpose |
 | --- | --- | --- |
@@ -50,7 +53,7 @@ The roboRIO USB-B port is the laptop connection; its USB-A host ports serve atta
 
 Before moving cables, have someone familiar with the robot identify the roboRIO, CANivore, main breaker and radio. Do not unplug the CANivore to make room for the laptop: they use different roboRIO USB port roles.
 
-## 2 Agree on the first session
+## 2 Commissioning Roles and Test Sequence
 
 Have one person operate the laptop and another watch the robot and keep the main breaker accessible. Ask the electrical team to bring the confirmed device inventory and the mechanical team to explain the turret/hood startup positions and intake travel endpoints.
 
@@ -67,9 +70,9 @@ The first session should accomplish these milestones in order:
 
 Do not combine firmware updates, controller ID changes, code deployment and tuning into one unexplained change. Record each change and repeat the affected check.
 
-## 3 Install the Windows tools
+## 3 Development Environment Installation
 
-### WPILib
+### WPILib Installation
 
 1. Open the [WPILib installation page](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html) and obtain the Windows x64 **2026.2.1** installer matching the project.
 2. Mount the downloaded ISO in File Explorer and run `WPILibInstaller.exe`.
@@ -78,7 +81,7 @@ Do not combine firmware updates, controller ID changes, code deployment and tuni
 5. Press `Ctrl+Shift+P`. Confirm commands beginning with `WPILib:` are available.
 6. Do not accept an unrelated season/project upgrade prompt as part of this deployment.
 
-### Driver Station and device utilities
+### Driver Station and Vendor Utilities
 
 1. Follow the [2026 Game Tools installer instructions](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/frc-game-tools.html). Allow the required NI components and drivers to install, then restart Windows.
 2. Open **FRC Driver Station** from Windows Start. In Setup, enter team **3464**. Leave it disabled.
@@ -89,20 +92,23 @@ Do not combine firmware updates, controller ID changes, code deployment and tuni
 
 If school IT manages the laptop, resolve installation and network permissions beforehand. Avoid relying on a blanket firewall shutdown; configure the required applications with IT assistance.
 
-## 4 Get exactly the intended code
+## 4 Source Control and Deployment Baseline
 
-Deploy the latest **`mentor-review`** code after the heading-reset and turret-limit changes have been merged. This guide assumes those changes and the two-CAN-bus configuration are included.
+Use the **approved deployment branch** identified by the software lead for the test session. Confirm that it contains the intended changes before building. No particular branch name or pending change is required by this procedure.
 
-Expected configuration: turret limits **−80° to +80°**, hood limits **−223.5° to 0°** in encoder coordinates, inward manual turret recovery at either limit, and X heading reset that establishes forward consistently on both alliances. Fetch and update the laptop checkout before building.
+The repository URL and local folder below are examples for this team. Replace them if deploying another project. When prompted, enter the actual approved branch name.
 
-### First clone on this laptop
+Fetch and update the laptop checkout before building.
+
+### Initial Repository Checkout
 
 Open PowerShell and run one command at a time:
 
 ```powershell
 New-Item -ItemType Directory -Force C:\FRC
 Set-Location C:\FRC
-git clone --branch mentor-review https://github.com/FRC-Team-3464/2026-code.git
+$deploymentBranch = Read-Host "Enter the approved deployment branch"
+git clone --branch "$deploymentBranch" https://github.com/FRC-Team-3464/2026-code.git
 Set-Location C:\FRC\2026-code
 git status --short
 git branch --show-current
@@ -111,7 +117,7 @@ git log -1 --oneline
 
 If GitHub asks for access, use the team's approved GitHub login flow. Never paste access tokens into shared screenshots or the guide.
 
-### If the repository already exists
+### Updating an Existing Checkout
 
 ```powershell
 Set-Location C:\FRC\2026-code
@@ -123,35 +129,36 @@ If files are listed, stop and identify whose work it is before switching. Do not
 With a clean checkout:
 
 ```powershell
+$deploymentBranch = Read-Host "Enter the approved deployment branch"
 git fetch origin
-git switch mentor-review
-git pull --ff-only origin mentor-review
+git switch "$deploymentBranch"
+git pull --ff-only origin "$deploymentBranch"
 git branch --show-current
 git rev-parse HEAD
-git rev-parse origin/mentor-review
+git rev-parse "origin/$deploymentBranch"
 ```
 
-If the local branch does not exist, use `git switch --track origin/mentor-review`. If fast-forward fails, ask the software team to reconcile the branch. The two full revision values should match for an unchanged deployment of the remote branch.
+If the local branch does not exist, use `git switch --track "origin/$deploymentBranch"`. If fast-forward fails, ask the software team to reconcile the branch. The two full revision values should match for an unchanged deployment of the remote branch.
 
 Record the revision in the test-session notes. This is how to identify the deployed code later; a branch name alone can refer to different versions over time.
 
-### Inspect configuration before building
+### Configuration Verification
 
 Open `C:\FRC\2026-code` in WPILib VS Code with **File → Open Folder**. The root contains `build.gradle`, `gradlew.bat`, `src`, and `.wpilib`.
 
 Check:
 
 - `.wpilib/wpilib_preferences.json`: team number 3464, project year 2026, Java.
-- `Constants.java`: controller layout and profile. The inspected base selects `SINGLE_CONTROLLER`, Xbox, port 0.
+- `Constants.java`: controller layout and profile. Confirm the required layout, controller type and port for this robot; do not infer them from the branch name.
 - `Constants.java`: `kCANivoreBusName`. The base currently uses `"*"` for the first available CANivore and has a TODO for the confirmed name/serial. Confirm exactly one CANivore; do not guess a name.
-- `ShooterConstants.java`: turret bounds −80° to +80°; hood minimum `Units.degreesToRadians(-223.5)` and maximum 0. These still require physical reference and clearance checks.
-- `Drive.java`: heading reset uses the software gyro offset, and `getDriverHeading()` uses the driver-established reference after X.
+- `ShooterConstants.java`: verify the configured turret and hood limits against the approved physical references and travel clearances for this robot.
+- `Drive.java`: confirm the intended heading-reset and alliance behavior for the deployed version before running acceptance tests.
 
 REAL mode is selected automatically on the roboRIO by `RobotBase.isReal()`. **Do not change `kSimMode` to REAL to deploy.** Desktop simulation and physical robot detection are already separated.
 
-This project's deployment script can automatically stage and commit changes on branches whose names begin with `event`. That behavior does not apply to `mentor-review`. Use the intended branch and do not rename it as a deployment workaround.
+This project's deployment script can automatically stage and commit changes on branches whose names begin with `event`. Check whether the chosen deployment branch triggers that behavior. Do not rename a branch as a deployment workaround.
 
-## 5 Build before approaching the robot
+## 5 Build and Automated Validation
 
 From a VS Code terminal in the project root:
 
@@ -177,9 +184,9 @@ If formatting or tests fail, save the first useful error and ask the software te
 
 Optional desktop preparation: run **WPILib: Simulate Robot Code** to become familiar with controls. Close the simulated Driver Station before connecting to the real robot. A passing SIM session does not confirm physical wiring or calibration.
 
-## 6 Prepare and connect the robot
+## 6 Robot Preparation and Network Connectivity
 
-### Before power
+### Prepower Inspection
 
 - Remove game pieces for initial tests and keep people clear of wheels, belts, intake racks and shooter.
 - Have the mechanical team place the robot on a stable stand suitable for drivetrain testing. Wheel clearance alone does not make the hood/intake safe to move.
@@ -189,7 +196,7 @@ Optional desktop preparation: run **WPILib: Simulate Robot Code** to become fami
 
 **Do not enable merely because deployment succeeds.** This robot's hood default command can request its zero-angle position once enabled even without pressing an aiming button.
 
-### USB connection for the first deployment
+### USB Deployment Connection
 
 1. Keep Driver Station disabled.
 2. Plug the cable's USB-B end into the roboRIO **USB device** port; plug the other end into the laptop.
@@ -207,17 +214,17 @@ The first address is the normal single-roboRIO USB address. A successful ping co
 
 A USB connection is convenient for stationary checks. Disconnect the tether while disabled before floor driving; never drive away with the laptop attached.
 
-### Ethernet and radio connection for floor testing
+### Ethernet and Radio Connectivity
 
 Use the robot's already configured network and have the electrical/network lead identify a normal data port. Do not connect the laptop to an unidentified powered radio port. Leave Windows IPv4 on automatic unless the team has a documented alternative.
 
 On the normal team network, try `roboRIO-3464-FRC.local`; the conventional team address is `10.34.64.2`. Direct laptop-to-roboRIO Ethernet without the radio can instead use link-local addresses, so that conventional address is not guaranteed. Confirm the actual interface address before changing settings. USB connectivity does not automatically provide direct access to every camera on the robot Ethernet network. [Network troubleshooting](https://docs.wpilib.org/en/stable/docs/networking/networking-introduction/roborio-network-troubleshooting.html)
 
-## 7 Confirm hardware before enabling
+## 7 Hardware Configuration Verification
 
 Deploying a program can apply controller configuration and reset relative encoders even while disabled. Record the existing device inventory first where practical. Keep motor-control/test features in vendor utilities inactive.
 
-### Two buses expected by the code
+### CAN Bus Topology and Device Assignments
 
 ![Expected robot CAN connections](assets/can-buses.svg)
 
@@ -249,7 +256,7 @@ The laptop talks to the roboRIO. Robot code selects the appropriate CAN bus for 
 
 These are software expectations, not a signed-off inventory. Electrical must resolve IDs 9–11 and any extra devices. Record device type as well as number for both ID 19 entries; don't change either simply because their numbers match. Have the team verify device-type addressing before any renumbering.
 
-### Phoenix Tuner X inventory
+### CTRE Device Inventory
 
 1. Keep the robot disabled and connect Tuner to the roboRIO USB target or `172.22.11.2`.
 2. Confirm the server connection and view devices on both the roboRIO and CANivore networks.
@@ -259,13 +266,13 @@ These are software expectations, not a signed-off inventory. Electrical must res
 
 [Tuner connection instructions](https://pro.docs.ctr-electronics.com/en/stable/docs/tuner/connecting.html) and [CANivore setup](https://pro.docs.ctr-electronics.com/en/stable/docs/canivore/canivore-setup.html).
 
-### REV inventory
+### REV Device Inventory
 
 Use a data-capable USB-C cable at each SPARK MAX and REV Hardware Client 2 to identify the hood and turret controller IDs and firmware. Have electrical arrange connections with power off, then supply power as required by the vendor procedure. Record before changing anything. Do not use the client's motor test controls during inventory. [SPARK MAX connection](https://docs.revrobotics.com/rev-hardware-client/ion/spark-max) and [RHC2 troubleshooting](https://docs.revrobotics.com/rev-hardware-client-2/rhc2/troubleshooting).
 
 If a controller type, bus or ID differs from the table, pause powered testing and reconcile the software/wiring. A green Driver Station connection does not prove that every controller is reachable.
 
-## 8 Imaging only if the roboRIO needs it
+## 8 roboRIO Image Provisioning and Recovery
 
 Skip this section if the robot already boots with a compatible 2026 image and team number 3464. Reimaging is not part of a normal code deploy and can remove the current program/configuration on the card.
 
@@ -281,11 +288,11 @@ If imaging is necessary, have the robot lead preserve the existing card or backu
 
 roboRIO 2 imaging uses the microSD workflow, not the roboRIO 1 direct-imaging process. Follow the current illustrated [official roboRIO 2 imaging instructions](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-3/roborio2-imaging.html) for exact utility screens.
 
-## 9 Deploy the code
+## 9 Application Deployment
 
 With successful build, confirmed startup positions, powered robot, and Driver Station disabled:
 
-1. Verify the open folder is this repository, and the terminal shows `mentor-review`.
+1. Verify the open folder is this repository, and `git branch --show-current` matches the approved deployment branch.
 2. Close any active vendor motor-control sessions.
 3. In WPILib VS Code press `Ctrl+Shift+P`.
 4. Select **WPILib: Deploy Robot Code**.
@@ -304,7 +311,7 @@ Use one route, not both simultaneously. Do not use Java's standalone Run button 
 
 A successful deploy is not proof that the program stayed running. Check **Communications**, **Robot Code**, and messages while still disabled. Verify the build identity in the logged `GitBranch`, `GitSHA`, `BuildDate`, and dirty-state metadata when available. Do not rely on a moving dashboard widget as proof of the intended version.
 
-## 10 Configure Driver Station and the Xbox controller
+## 10 Driver Station and Controller Configuration
 
 ![Official Driver Station status pane](assets/ds-status-pane.png)
 
@@ -324,9 +331,9 @@ For ordinary disabling, use the Disable button or Enter with Driver Station in f
 
 **Driver Station Test mode is not a pit-shooting mode.** This repository's normal controller bindings require enabled Teleop. Do not enable Test/LiveWindow or vendor motor controls to bypass those bindings.
 
-## 11 Know the controls before enabling
+## 11 Operator Control Reference
 
-The inspected base selects the single-controller layout. Confirm the actual checkout still does. These bindings are in `SingleDriverControls.java`; default subsystem behavior is in `DefaultControls.java`.
+The following table is a robot-specific single-controller example. Confirm the selected layout and bindings in the actual checkout before using it. These bindings are in `SingleDriverControls.java`; default subsystem behavior is in `DefaultControls.java`.
 
 ![Single Xbox controller reference](../assets/single-controller-option-2.png)
 
@@ -352,9 +359,9 @@ Switching the right stick between chassis and manual aiming requires it to retur
 
 The hood can hold after manual movement while LT remains held, then return toward its default zero when LT/RB are released. **Releasing a mechanism button is not always a zero-output request. Use Disable if motion is unexpected.**
 
-## 12 Test in stages
+## 12 Hardware Commissioning and Acceptance Tests
 
-### Stage A Disabled inspection
+### Stage A Disabled System Verification
 
 Pass criteria: stable robot program, known device inventory, plausible feedback, no unexplained disconnects.
 
@@ -365,7 +372,7 @@ Pass criteria: stable robot program, known device inventory, plausible feedback,
 5. Have the team explain any sensor zeros, inversions or encoder offsets that have not been measured.
 6. Save screenshots and the device inventory before powered movement.
 
-### Stage B First enable on the stand
+### Stage B Initial Enable and Disable Verification
 
 Pass criteria: deliberate enable/disable, no unexplained motion, correct response to the stop operator.
 
@@ -375,7 +382,7 @@ Pass criteria: deliberate enable/disable, no unexplained motion, correct respons
 4. Disable immediately if anything moves unexpectedly, binds or makes abnormal noise.
 5. Do not continue until the cause is understood. Do not try to fix a mechanical problem with the robot enabled.
 
-### Stage C Drivetrain checks
+### Stage C Drivetrain Commissioning
 
 1. On the approved stand, use very small thumbstick requests and confirm all modules respond correctly. A wheel can point 180° away and spin oppositely due to swerve optimization; judge the combined rolling direction.
 2. Test D-pad only after the team is ready for its fixed 1 m/s request. It moves the drivetrain, not just a selected module.
@@ -384,7 +391,7 @@ Pass criteria: deliberate enable/disable, no unexplained motion, correct respons
 5. Disable, disconnect the USB tether, establish the radio/network connection, and move to a clear floor area before driving tests.
 6. Use small translation and rotation inputs, verify robot-front convention (shooter is front), and record results.
 
-### Stage D Heading reset acceptance
+### Stage D Heading Reset Acceptance Test
 
 Verify the software-offset heading reset on both alliances:
 
@@ -398,7 +405,7 @@ Verify the software-offset heading reset on both alliances:
 
 Heading reset also changes estimated rotation. Do not assume an arbitrary driver reset establishes a correct field pose for shooting. Re-establish the known field pose before automatic aiming.
 
-### Stage E Intake and indexer without game pieces
+### Stage E Intake and Indexer Functional Tests
 
 1. Confirm travel clearance and identify the extension/retraction endpoints with mechanical.
 2. Use a brief Y request and check both intake extension motors move as intended; release well before the stop.
@@ -407,7 +414,7 @@ Heading reset also changes estimated rotation. Do not assume an arbitrary driver
 5. Test RT briefly and verify tongue/throat motion. Keep the shooter area clear even with no loaded game piece.
 6. Disable between tests and record observations. There is no assumed automatic endpoint protection for these open-loop intake requests.
 
-### Stage F Manual turret and hood
+### Stage F Turret and Hood Manual Control Tests
 
 1. Confirm physical zero, encoder conversion and clearance first. Inspect the deployed bounds, not just a diagram.
 2. Keep the left stick centered and RB released. Hold LT, center the right stick, then apply a small horizontal request briefly.
@@ -418,7 +425,7 @@ Heading reset also changes estimated rotation. Do not assume an arbitrary driver
 
 Software should block outward manual requests at or beyond −80°/+80° and allow inward recovery. A valid physical zero and motor sign are prerequisites; the automated test alone cannot verify them.
 
-### Stage G Aiming and shooting
+### Stage G Aiming and Shooting Validation
 
 This is a separate test in an appropriate shooting area, with a confirmed field reference and a spotter. It is not a first-enable pit action.
 
@@ -428,7 +435,7 @@ This is a separate test in an appropriate shooting area, with a confirmed field 
 - Start with no game pieces and observe the requested/measured turret, hood and flywheel values.
 - Test feed only after the mechanism lead approves the aim, speed, target area and stop plan. RT is a manual feed request.
 
-### Stage H Autonomous
+### Stage H Autonomous Validation
 
 Only after driving, localization and mechanisms pass their checks:
 
@@ -442,7 +449,7 @@ Only after driving, localization and mechanisms pass their checks:
 
 Practice mode automatically advances through match phases. Use it only after individual mode tests, not as the first test session.
 
-## 13 Logs and evidence to save
+## 13 Telemetry and Test Records
 
 This code publishes AdvantageKit telemetry and starts a REAL log writer. It expects normal roboRIO USB logging at `/U/logs`; confirm storage is present and a file is actually being written. Live telemetry alone is not a saved recording.
 
@@ -465,7 +472,7 @@ For each test, record:
 
 Connect AdvantageScope using its live robot connection settings and the real robot address/team. See the team's [AdvantageScope setup](../../visualization/advantagescope/README.md) for the CAD model and logged fields. Download logs using the team's established robot-log transfer workflow or retrieve the logging drive after disabling and powering down. Keep DS logs as well as `.wpilog` files when diagnosing connection problems.
 
-## 14 Troubleshooting
+## 14 Deployment and Runtime Troubleshooting
 
 | Symptom | First checks | Next step |
 | --- | --- | --- |
@@ -491,7 +498,7 @@ Connect AdvantageScope using its live robot connection settings and the real rob
 
 Do not turn the main breaker off while flashing firmware or writing an SD image. For an immediate physical hazard, stopping the robot takes priority; investigate possible incomplete updates afterward.
 
-## 15 End the session and recover a failed deployment
+## 15 Shutdown and Deployment Recovery
 
 1. Disable and release all controls.
 2. Save logs, screenshots and failed-test details.
@@ -500,11 +507,11 @@ Do not turn the main breaker off while flashing firmware or writing an SD image.
 5. If a new program does not start or behaves incorrectly, have software select a known-good version compatible with the **current wiring** and redeploy while disabled. Older code that assumes a single CAN bus may not be a suitable rollback.
 6. Recheck startup references after any program restart. Do not assume relative encoders retained their physical zero.
 
-## 16 Quick checklist at the robot
+## 16 Deployment and Commissioning Checklist
 
 - [ ] Laptop tools installed and project builds successfully.
 - [ ] Intended remote code fetched; branch and deployed revision recorded.
-- [ ] Controller layout, ±80° turret bounds, hood bounds and heading-reset configuration checked.
+- [ ] Controller layout, mechanism limits and heading-reset configuration verified for the deployed version.
 - [ ] Electrical inventory, both buses and unknown IDs resolved for powered tests.
 - [ ] Turret/hood startup references and intake clearance confirmed.
 - [ ] Robot supported, game pieces removed, stop operator ready.
@@ -516,7 +523,7 @@ Do not turn the main breaker off while flashing firmware or writing an SD image.
 - [ ] Mechanisms and driving tested in stages; logs saved.
 - [ ] Automatic aiming/autonomous deferred until field pose and clear test area are ready.
 
-## Reference images and official instructions
+## References and Image Attribution
 
 The two Driver Station screenshots are reproduced from WPILib documentation with links beside them. The cable and CAN diagrams are schematic illustrations created for this guide. They are not as-built electrical drawings. Existing controller art comes from this repository.
 
