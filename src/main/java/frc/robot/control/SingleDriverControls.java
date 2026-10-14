@@ -142,7 +142,7 @@ public class SingleDriverControls implements Configurable {
                         .setOpenLoop(MathUtil.applyDeadband(driver.getRightX(), 0.1) * 0.05),
                 () -> shooter.getTurret().setOpenLoop(0),
                 shooter.getTurret()));
-    // Stick up requests the same signed hood output as operator D-pad up.
+    // Negative stick Y raises the hood; positive stick Y lowers it.
     driver
         .leftTrigger()
         .and(DriverStation::isTeleopEnabled)
@@ -154,7 +154,7 @@ public class SingleDriverControls implements Configurable {
                     shooter
                         .getHood()
                         .setManualOutput(
-                            MathUtil.applyDeadband(-driver.getRightY(), 0.1) * kManualDutyCycle),
+                            MathUtil.applyDeadband(driver.getRightY(), 0.1) * kManualDutyCycle),
                 shooter.getHood()::holdCurrentPosition,
                 shooter.getHood()));
   }

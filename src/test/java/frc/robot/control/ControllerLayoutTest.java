@@ -117,6 +117,9 @@ class ControllerLayoutTest {
     driver.setRawAxis(5, -.7);
     tick();
     assertTrue(turretIO.output > 0 && turretIO.output <= .05);
+    assertTrue(hoodIO.output < 0);
+    driver.setRawAxis(5, .7);
+    tick();
     assertTrue(hoodIO.output > 0);
     assertEquals(0, drive.speeds.omegaRadiansPerSecond);
     driver.setPOV(0, 0);
@@ -148,7 +151,7 @@ class ControllerLayoutTest {
     tick();
     driver.setRawAxis(5, -.7);
     tick();
-    assertTrue(hoodIO.output > 0);
+    assertTrue(hoodIO.output < 0);
     assertTrue(flywheelIO.velocityMode);
     driver.setRawAxis(5, 0);
     tick();
