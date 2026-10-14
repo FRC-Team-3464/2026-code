@@ -76,7 +76,7 @@ public final class SimRobotWiring implements RobotWiring {
     return new IndexerIOSim();
   }
 
-  /** Returns the current no-op intake simulation adapter. */
+  /** Returns an intake adapter that approximates sliding travel for visualization. */
   @Override
   public IntakeIO createIntake() {
     return new IntakeIOSim();

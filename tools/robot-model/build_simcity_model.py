@@ -15,6 +15,7 @@ import struct
 from pathlib import Path
 
 import numpy as np
+from build_intake_model import build as build_intake_model
 
 
 def write_component(path, cad, binary, members):
@@ -242,6 +243,7 @@ def main():
     ]:
         asset_sizes[filename] = write_component(out / filename, output, binary, members)
     (out / "config.json").write_text(json.dumps(config, indent=2) + "\n")
+    build_intake_model()
 
     # Keep display-only pivots in sync with component zeroing. These CAD values must
     # not silently replace the hardware/aiming calibration in ShooterConstants.
