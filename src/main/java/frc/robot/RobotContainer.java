@@ -207,7 +207,7 @@ public class RobotContainer {
     return autoChooser.getSelected();
   }
 
-  /** Configures PathPlanner and publishes the three 2026 URI autos. */
+  /** Configures PathPlanner and publishes the 2026 URI autos. */
   private void configurePathPlanner() {
     // Startup must remain safe if a deployed PathPlanner file is missing or invalid.
     autoChooser.setDefaultOption("Do Nothing", Commands.none());
@@ -259,6 +259,7 @@ public class RobotContainer {
       addAutoOption("URI-MS-SUTO");
       addAutoOption("URI-LT-DP-SUTO");
       addAutoOption("URI-RT-OP-SUTO");
+      addAutoOption("URI-LT-DP-SUTO-RETRACT");
     } catch (IOException | ParseException | RuntimeException e) {
       DriverStation.reportError(
           "PathPlanner configuration failed: " + e.getMessage(), e.getStackTrace());
