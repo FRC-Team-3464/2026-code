@@ -260,6 +260,7 @@ public class RobotContainer {
       addAutoOption("URI-LT-DP-SUTO");
       addAutoOption("URI-RT-OP-SUTO");
       addAutoOption("URI-LT-DP-SUTO-RETRACT");
+      addAutoOption("URI-RT-OP-SUTO-RETRACT");
     } catch (IOException | ParseException | RuntimeException e) {
       DriverStation.reportError(
           "PathPlanner configuration failed: " + e.getMessage(), e.getStackTrace());
