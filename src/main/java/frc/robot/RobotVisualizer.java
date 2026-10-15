@@ -1,9 +1,12 @@
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import frc.robot.visualization.IntakeModelGeometry;
 import frc.robot.visualization.RobotCadModelGeometry;
 import org.littletonrobotics.junction.Logger;
 
@@ -27,6 +30,7 @@ public class RobotVisualizer {
 
   private Rotation2d turretAngle = Rotation2d.kZero;
   private double hoodAngle = 0.0;
+  private double intakeExtensionFraction;
 
   private RobotVisualizer() {}
 
@@ -40,7 +44,7 @@ public class RobotVisualizer {
     Logger.recordOutput(key + "/Components", components);
   }
 
-  /** Returns robot-relative poses in asset order: turret, then hood. */
+  /** Returns robot-relative poses in asset order: turret, hood, then intake. */
   public Pose3d[] getComponentPoses() {
     // Tracking commands the negative robot-relative bearing, so display yaw negates feedback.
     // CAD geometry is display-only; it does not replace the aiming calibration.
@@ -58,7 +62,21 @@ public class RobotVisualizer {
                 RobotCadModelGeometry.HOOD_OFFSET,
                 new Rotation3d(0.0, -hoodAngle, RobotCadModelGeometry.CAD_TURRET_YAW_RAD)));
 
-    return new Pose3d[] {turretPose, hoodPose};
+    Pose3d intakePose =
+        new Pose3d(
+            IntakeModelGeometry.RETRACTED_POSITION.plus(
+                new Translation3d(
+                    -intakeExtensionFraction * IntakeModelGeometry.TRAVEL_METERS, 0, 0)),
+            new Rotation3d());
+    return new Pose3d[] {turretPose, hoodPose, intakePose};
+  }
+
+  /**
+   * Sets display-only sliding travel; REAL remains at the retracted pose until measured feedback
+   * exists.
+   */
+  public void setIntakeExtensionFraction(double fraction) {
+    intakeExtensionFraction = Double.isFinite(fraction) ? MathUtil.clamp(fraction, 0.0, 1.0) : 0.0;
   }
 
   /**

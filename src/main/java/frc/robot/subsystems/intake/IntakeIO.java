@@ -16,6 +16,10 @@ public interface IntakeIO {
 
   @AutoLog
   public static class IntakeIOInputs {
+    // Display-only simulated travel, not measured extension or a control readiness signal.
+    public boolean simExtensionAvailable = false;
+    public double simExtensionFraction = 0.0;
+
     public boolean leftPivotConnected = false;
     public double leftPivotVelocityRadPerSec = 0.0;
     public double leftPivotAppliedVolts = 0.0;

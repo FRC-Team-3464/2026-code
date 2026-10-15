@@ -1,11 +1,16 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
-/** Captures the real adapter's intake requests without modeling mechanism or fuel movement. */
+/** Records intake requests and approximates sliding travel for visualization, not fuel physics. */
 public class IntakeIOSim implements IntakeIO {
+  // Provisional display timing: full travel at the normal deployment duty cycle.
+  private static final double FULL_TRAVEL_SECONDS = 2.0;
+  private double extensionFraction;
   private boolean pivotPositionControl;
   private double pivotTargetMotorRotations;
   private double leftPivotDutyCycle;
@@ -17,7 +22,26 @@ public class IntakeIOSim implements IntakeIO {
     // Match IndexerIOSim: voltage fields represent requested duty cycle times battery voltage,
     // not measured motor output. Leave connection, velocity, and current feedback at their
     // defaults.
-    double batteryVolts = RobotController.getBatteryVoltage();
+    boolean enabled = DriverStation.isEnabled();
+    if (!enabled) {
+      // Disabled mechanisms hold their display position; stale requests must not resume on enable.
+      leftPivotDutyCycle = 0.0;
+      rightPivotDutyCycle = 0.0;
+      rollerDutyCycle = 0.0;
+    }
+    double batteryVolts = enabled ? RobotController.getBatteryVoltage() : 0.0;
+    if (!pivotPositionControl && batteryVolts > 0.0) {
+      extensionFraction =
+          MathUtil.clamp(
+              extensionFraction
+                  + (leftPivotDutyCycle / IntakeConstants.kPivotMotorSpeed)
+                      * Constants.kLoopPeriodSeconds
+                      / FULL_TRAVEL_SECONDS,
+              0.0,
+              1.0);
+    }
+    inputs.simExtensionFraction = extensionFraction;
+    inputs.simExtensionAvailable = true;
     inputs.leftPivotAppliedVolts = leftPivotDutyCycle * batteryVolts;
     inputs.rightPivotAppliedVolts = rightPivotDutyCycle * batteryVolts;
     inputs.driveAppliedVolts = rollerDutyCycle * batteryVolts;
