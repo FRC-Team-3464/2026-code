@@ -107,7 +107,7 @@ class ControllerLayoutTest {
     driver.setRawAxis(4, .8);
     tick();
     assertTrue(Math.abs(drive.speeds.omegaRadiansPerSecond) > 0);
-    driver.setRawAxis(2, 1); // LT while steering: stop chassis, do not turn turret yet.
+    driver.setRawButton(5, true); // LB while steering: stop chassis, do not turn turret yet.
     tick();
     assertEquals(0, drive.speeds.omegaRadiansPerSecond);
     assertEquals(0, turretIO.output);
@@ -126,7 +126,7 @@ class ControllerLayoutTest {
     tick();
     assertTrue(Math.abs(drive.speeds.vxMetersPerSecond) > 0);
     driver.setPOV(0, -1);
-    driver.setRawAxis(2, 0);
+    driver.setRawButton(5, false);
     tick();
     assertEquals(0, turretIO.output);
     assertEquals(0, drive.speeds.omegaRadiansPerSecond);
@@ -147,7 +147,7 @@ class ControllerLayoutTest {
     assertEquals(TurretIOOutputMode.CLOSED_LOOP, turretIO.mode);
     assertTrue(flywheelIO.velocityMode);
     assertNotEquals(0, indexerIO.output);
-    driver.setRawAxis(2, 1);
+    driver.setRawButton(5, true);
     tick();
     driver.setRawAxis(5, -.7);
     tick();
@@ -156,7 +156,7 @@ class ControllerLayoutTest {
     driver.setRawAxis(5, 0);
     tick();
     assertEquals(-1, hoodIO.target);
-    driver.setRawAxis(2, 0);
+    driver.setRawButton(5, false);
     tick();
     assertEquals(TurretIOOutputMode.OPEN_LOOP, turretIO.mode);
     assertEquals(-1, hoodIO.target);
@@ -177,7 +177,7 @@ class ControllerLayoutTest {
     tick();
     assertEquals(0, intakeIO.roller);
     assertFalse(flywheelIO.velocityMode);
-    driver.setRawButton(5, true);
+    driver.setRawAxis(2, 1);
     tick();
     double collection = intakeIO.roller;
     assertNotEquals(0, collection);
@@ -205,7 +205,7 @@ class ControllerLayoutTest {
   @Test
   void disableStopsManualCommandsAndAutonomousKeepsOwnership() {
     configure(ControllerLayout.SINGLE_CONTROLLER);
-    driver.setRawAxis(2, 1);
+    driver.setRawButton(5, true);
     tick();
     driver.setRawAxis(4, .8);
     driver.setRawAxis(3, 1);
@@ -219,7 +219,7 @@ class ControllerLayoutTest {
     tick();
     assertEquals(0, turretIO.output); // Shared stick must center before resuming manual motion.
     driver.setRawAxis(4, 0);
-    driver.setRawAxis(2, 0);
+    driver.setRawButton(5, false);
     tick();
     DriverStationSim.setAutonomous(true);
     DriverStationSim.notifyNewData();
@@ -248,11 +248,11 @@ class ControllerLayoutTest {
     tick();
     assertEquals(1, drive.xLocks);
     driver.setRawButton(2, false);
-    driver.setRawButton(5, true);
+    driver.setRawAxis(2, 1);
     tick();
     assertNotEquals(0, intakeIO.roller);
     DriverStationSim.setTest(true);
-    driver.setRawButton(5, true);
+    driver.setRawAxis(2, 1);
     driver.setPOV(0, 0);
     tick();
     assertEquals(0, intakeIO.roller);
