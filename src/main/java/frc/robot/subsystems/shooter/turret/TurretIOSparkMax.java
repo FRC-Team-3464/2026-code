@@ -38,6 +38,7 @@ public class TurretIOSparkMax implements TurretIO {
 
     config.idleMode(IdleMode.kCoast);
 
+    // Make the encoder's units match the turret angle/velocity
     config
         .encoder
         .positionConversionFactor(
@@ -50,24 +51,29 @@ public class TurretIOSparkMax implements TurretIO {
 
     config.softLimit.reverseSoftLimitEnabled(false).forwardSoftLimitEnabled(false);
 
-    // TODO: Tune
+    // PID + FF gains for the turret's closed-loop controller
     config.closedLoop.feedForward.kS(0.025 * 12);
     config.closedLoop.p(0.15);
     config.closedLoop.d(0.01);
     config.closedLoop.allowedClosedLoopError(
         TurretConstants.kAngleTolerance, ClosedLoopSlot.kSlot0);
 
+    // Try to apply the motor config until it works (limit of 5 attempts)
     tryUntilOk(
         motor,
         5,
         () ->
             motor.configure(
                 config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+    // At startup, tell the turret it's at angle 0
     encoder.setPosition(0);
   }
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
+    // Update the inputs with motor data
+    // ifOK only processes the value if it's valid
     sparkStickyFault = false;
     ifOk(motor, encoder::getPosition, (value) -> inputs.positionRad = value);
     ifOk(motor, encoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);
@@ -83,6 +89,7 @@ public class TurretIOSparkMax implements TurretIO {
   public void applyOutputs(TurretIOOutputs outputs) {
     switch (outputs.mode) {
       case CLOSED_LOOP -> {
+        // If we're running position control, clamp the setpoint and send it to the motor
         double clampedPosition =
             MathUtil.clamp(
                 outputs.closedLoopTarget.getRadians(),
@@ -92,11 +99,13 @@ public class TurretIOSparkMax implements TurretIO {
         motorController.setSetpoint(clampedPosition, ControlType.kPosition);
       }
       case OPEN_LOOP -> {
+        // If we're running open loop, set the motor output to the specified value
         motor.set((MathUtil.clamp(outputs.openLoopOutput, -1.0, 1.0)));
       }
     }
   }
 
+  /** Save the current motor position as zero rotations. */
   @Override
   public void zero() {
     encoder.setPosition(0);
