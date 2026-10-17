@@ -23,6 +23,12 @@ public class TrajectoryCalculator {
   private static final InterpolatingTreeMap<Double, TrajectoryParams> shooterTable =
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), TrajectoryParams::interpolate);
 
+  private static final InterpolatingTreeMap<Double, TrajectoryParams> passingTable =
+      new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), TrajectoryParams::interpolate);
+
+  private static final double MIN_PASSING_DISTANCE = 2.0;
+  private static final double MAX_PASSING_DISTANCE = 10.0;
+
   private static final double MIN_SHOOTING_DISTANCE = 1.5;
   private static final double MAX_SHOOTING_DISTANCE = 5.0;
 
@@ -33,6 +39,21 @@ public class TrajectoryCalculator {
     shooterTable.put(3.5, new TrajectoryParams(2075.0, -1.5, 0.68));
     shooterTable.put(4.0, new TrajectoryParams(2210.0, -1.75, 0.76));
     shooterTable.put(4.5, new TrajectoryParams(2650.0, -2, 0.76));
+
+    // Model-derived starting estimates; derivation and FIRST sources are in the AdvantageScope
+    // README.
+    // Reference: successful 3 m / 1900 RPM hub shot, 72 in hub opening, 5.91 in FUEL diameter.
+    // ASSUMED robot geometry: 0.40 m ball release height and 55 deg physical launch angle at
+    // the -0.5 rad hood encoder target. Neither assumption is a measured hood calibration.
+    // RPM scales by the calculated exit-speed ratio to the reference shot (rounded to 25 RPM).
+    // Hood is applied directly, without the hub table's 0.5 scale. Flight time is logging only.
+    // TODO: Confirm release height/angle and tune for measured landing distance, drag and slip.
+    passingTable.put(2.0, new TrajectoryParams(1175.0, -0.5, 0.81));
+    passingTable.put(3.0, new TrajectoryParams(1475.0, -0.5, 0.97));
+    passingTable.put(4.0, new TrajectoryParams(1725.0, -0.5, 1.11));
+    passingTable.put(6.0, new TrajectoryParams(2125.0, -0.5, 1.35));
+    passingTable.put(8.0, new TrajectoryParams(2475.0, -0.5, 1.55));
+    passingTable.put(10.0, new TrajectoryParams(2775.0, -0.5, 1.73));
   }
 
   // ========== PUBLIC API ==========
@@ -57,6 +78,25 @@ public class TrajectoryCalculator {
         targetLocation,
         new RobotStateData(
             RobotState.getInstance().getEstimatedPose(), new ChassisSpeeds(), new ChassisSpeeds()));
+  }
+
+  /** Stationary passing settings, measured from the turret and clamped to the passing table. */
+  public static TrajectoryParams calculatePassing(Translation2d targetLocation, Pose2d robotPose) {
+    Pose2d turretPose =
+        robotPose.transformBy(GeomUtil.toTransform2d(TurretConstants.kRobotToTurret));
+    double distance = targetLocation.getDistance(turretPose.getTranslation());
+    double clampedDistance =
+        Math.max(MIN_PASSING_DISTANCE, Math.min(MAX_PASSING_DISTANCE, distance));
+    TrajectoryParams params = passingTable.get(clampedDistance);
+    Logger.recordOutput("Passing/DistanceMeters", distance);
+    Logger.recordOutput("Passing/DistanceClampedMeters", clampedDistance);
+    Logger.recordOutput(
+        "Passing/InTableRange",
+        distance >= MIN_PASSING_DISTANCE && distance <= MAX_PASSING_DISTANCE);
+    Logger.recordOutput("Passing/RequestedRPM", params.wheelRPM());
+    Logger.recordOutput("Passing/HoodAngleRad", params.hoodAngle());
+    Logger.recordOutput("Passing/EstimatedFlightTimeSeconds", params.timeOfFlight());
+    return params;
   }
 
   public static double calculateRPM(Translation2d targetLocation, Pose2d robotPose) {

@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.json.simple.parser.ParseException;
+import org.littletonrobotics.junction.Logger;
 
 public class RobotContainer {
   // Driver and operator may use different controller layouts without changing their bindings.
@@ -157,7 +158,14 @@ public class RobotContainer {
 
   /** Publishes the current target and estimated robot pose after the scheduler updates state. */
   public void updateDashboard() {
-    targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getShooterTarget()));
+    targetField2d.setRobotPose(GeomUtil.toPose2d(RobotState.getInstance().getAutoShooterTarget()));
+    var target = RobotState.getInstance().selectTeleopShooterTarget();
+    Logger.recordOutput("TeleopShooterTarget/Type", target.type().name());
+    Logger.recordOutput(
+        "TeleopShooterTarget/Position",
+        target.type() == RobotState.ShotType.UNAVAILABLE
+            ? new Pose2d[] {}
+            : new Pose2d[] {GeomUtil.toPose2d(target.position())});
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
     Pose2d start = getSelectedAutoStartingPose();
     field2d.getObject("Auto Start").setPoses(start == null ? List.of() : List.of(start));
@@ -223,7 +231,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Shoot",
         shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
-            () -> RobotState.getInstance().getShooterTarget()));
+            () -> RobotState.getInstance().getAutoShooterTarget()));
     // The URI autos request Index inside a bounded shooting window. Pause feeding whenever the
     // turret, hood, or flywheel loses readiness and resume only if all three become ready again.
     NamedCommands.registerCommand("Index", indexer.indexWhileReady(shooter::readyToShoot));

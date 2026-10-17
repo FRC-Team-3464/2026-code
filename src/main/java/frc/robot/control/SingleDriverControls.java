@@ -3,13 +3,14 @@ package frc.robot.control;
 import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManualDutyCycle;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
+import frc.robot.RobotState.ShooterTarget;
+import frc.robot.RobotState.ShotType;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
@@ -90,7 +91,8 @@ public class SingleDriverControls implements Configurable {
         .whileTrue(intake.retractOpenLoop());
     driver.rightTrigger().and(DriverStation::isTeleopEnabled).whileTrue(indexer.index());
 
-    Supplier<Translation2d> targetSupplier = () -> RobotState.getInstance().getShooterTarget();
+    Supplier<ShooterTarget> targetSupplier =
+        () -> RobotState.getInstance().selectTeleopShooterTarget();
     // Remember a manual override until the aiming button is released, as in operator controls.
     driver
         .rightBumper()
@@ -104,17 +106,19 @@ public class SingleDriverControls implements Configurable {
     driver
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
+        .and(() -> targetSupplier.get().type() != ShotType.UNAVAILABLE)
         .and(driver.leftBumper().negate())
         .and(() -> !manualAimOverrideActive)
-        .whileTrue(shooter.trackTargetTurret(targetSupplier));
+        .whileTrue(shooter.trackTeleopTargetTurret(targetSupplier));
     driver
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
+        .and(() -> targetSupplier.get().type() != ShotType.UNAVAILABLE)
         .and(driver.leftBumper().negate())
         .and(() -> !manualAimOverrideActive)
         .whileTrue(
             shooter
-                .trackTargetHood(targetSupplier)
+                .trackTeleopTargetHood(targetSupplier)
                 .finallyDo(
                     () -> {
                       if (DriverStation.isTeleopEnabled()) {
@@ -127,7 +131,8 @@ public class SingleDriverControls implements Configurable {
     driver
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
-        .whileTrue(shooter.trackTargetFlywheel(targetSupplier));
+        .and(() -> targetSupplier.get().type() != ShotType.UNAVAILABLE)
+        .whileTrue(shooter.trackTeleopTargetFlywheel(targetSupplier));
 
     driver
         .leftBumper()
