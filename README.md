@@ -53,7 +53,9 @@ The 51 routines listed in the renamed FRC Autos Time Reference Sheet use matchin
 | ASST / HOARD | Assist / hoard |
 | CLIMB | Ends with a climb |
 
-The three URI routines use a `URI-` prefix: `URI-MS-SUTO`, `URI-LT-DP-SUTO`, and `URI-RT-OP-SUTO`. These are the routes available in the autonomous chooser.
+The URI routines use a `URI-` prefix. The autonomous chooser includes `URI-MS-SUTO`, `URI-MS-DP-SUTO-CYCLE-INTAKE`, `URI-MS-OP-SUTO-CYCLE-INTAKE`, `URI-LT-DP-SUTO`, and `URI-RT-OP-SUTO`, plus the left and right intake-retraction variants. `URI-MS-DP-SUTO-CYCLE-INTAKE` starts in the middle, deploys the intake while driving to the depot, collects for one additional second, then returns to the left shooting position and shoots for ten seconds. During shooting, it uses the same intake extension/retraction cycle as `URI-RT-OP-SUTO-CYCLE-INTAKE`. Its new `C to Depot` path is limited to 1 m/s and 1 m/s²; validate the route and deployed-intake clearance in simulation and on the field before competition use.
+
+`URI-MS-OP-SUTO-CYCLE-INTAKE` starts in the middle, deploys the intake while following `C to Outpost`, waits four seconds at the outpost for loading, then follows `Outpost Int Ext to Right Tower`. It uses the same ten-second shooting and intake cycle as `URI-RT-OP-SUTO-CYCLE-INTAKE`. The new outbound path uses the existing outpost limits of 3 m/s and 3 m/s²; validate its route and deployed-intake clearance before competition use.
 
 These names identify complete `.auto` routines. The shared `.path` filenames and command names inside each routine retain their existing names.
 

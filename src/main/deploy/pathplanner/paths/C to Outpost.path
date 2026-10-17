@@ -1,0 +1,70 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.67039886039886,
+        "y": 4.073760683760685
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.0,
+        "y": 4.073760683760685
+      },
+      "isLocked": false,
+      "linkedName": "Center Hub Start"
+    },
+    {
+      "anchor": {
+        "x": 2.5,
+        "y": 1.0
+      },
+      "prevControl": {
+        "x": 2.5,
+        "y": 2.3
+      },
+      "nextControl": {
+        "x": 2.5,
+        "y": 0.6369800569800577
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.7633475783475787,
+        "y": 0.6369800569800577
+      },
+      "prevControl": {
+        "x": 1.5,
+        "y": 0.6369800569800577
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Outpost Intake Extended"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": "Right Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": false
+}

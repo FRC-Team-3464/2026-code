@@ -265,6 +265,8 @@ public class RobotContainer {
       // Other stored autos can intake after a missed shot. With no sensor confirming that fuel
       // exited, keep those routes unavailable until continuation is known to be safe.
       addAutoOption("URI-MS-SUTO");
+      addAutoOption("URI-MS-DP-SUTO-CYCLE-INTAKE");
+      addAutoOption("URI-MS-OP-SUTO-CYCLE-INTAKE");
       addAutoOption("URI-LT-DP-SUTO");
       addAutoOption("URI-RT-OP-SUTO");
       addAutoOption("URI-LT-DP-SUTO-RETRACT");

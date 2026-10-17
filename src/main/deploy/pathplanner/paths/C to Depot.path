@@ -1,0 +1,75 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.67039886039886,
+        "y": 4.073760683760685
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.5,
+        "y": 4.073760683760685
+      },
+      "isLocked": false,
+      "linkedName": "Center Hub Start"
+    },
+    {
+      "anchor": {
+        "x": 1.1,
+        "y": 6.9
+      },
+      "prevControl": {
+        "x": 2.0,
+        "y": 6.9
+      },
+      "nextControl": {
+        "x": 0.5437037037037049,
+        "y": 6.9
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.5437037037037049,
+        "y": 5.921353276353277
+      },
+      "prevControl": {
+        "x": 0.5437037037037049,
+        "y": 6.65
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Depot Actual Intake Extended"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 90.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 1.0,
+    "maxAcceleration": 1.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "reversed": false,
+  "folder": "Left Paths",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": false
+}
