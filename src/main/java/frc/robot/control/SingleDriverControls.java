@@ -47,13 +47,13 @@ public class SingleDriverControls implements Configurable {
   }
 
   private void configureMechanismControls() {
-    hoodHold = driver.rightBumper().or(driver.leftTrigger());
+    hoodHold = driver.rightBumper().or(driver.leftBumper());
     // Poll before bindings and defaults so both stick roles use the same decision this cycle.
     CommandScheduler.getInstance()
         .getDefaultButtonLoop()
         .bind(
             () -> {
-              boolean requestedManual = driver.leftTrigger().getAsBoolean();
+              boolean requestedManual = driver.leftBumper().getAsBoolean();
               if (!DriverStation.isTeleopEnabled() || requestedManual != manualStickMode) {
                 rightStickReady = false;
               }
@@ -66,9 +66,9 @@ public class SingleDriverControls implements Configurable {
             });
 
     // Pivot takes precedence over rollers, outtake over collection. Mutually exclusive triggers
-    // also let a held LB resume after a pivot/outtake request without relying on binding order.
+    // also let a held LT resume after a pivot/outtake request without relying on binding order.
     driver
-        .leftBumper()
+        .leftTrigger()
         .and(DriverStation::isTeleopEnabled)
         .and(driver.yTriangle().or(driver.startMenu()).negate())
         .and(driver.aCross().negate())
@@ -94,7 +94,7 @@ public class SingleDriverControls implements Configurable {
     // Remember a manual override until the aiming button is released, as in operator controls.
     driver
         .rightBumper()
-        .and(driver.leftTrigger())
+        .and(driver.leftBumper())
         .and(DriverStation::isTeleopEnabled)
         .onTrue(Commands.runOnce(() -> manualAimOverrideActive = true));
     driver
@@ -104,13 +104,13 @@ public class SingleDriverControls implements Configurable {
     driver
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
-        .and(driver.leftTrigger().negate())
+        .and(driver.leftBumper().negate())
         .and(() -> !manualAimOverrideActive)
         .whileTrue(shooter.trackTargetTurret(targetSupplier));
     driver
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
-        .and(driver.leftTrigger().negate())
+        .and(driver.leftBumper().negate())
         .and(() -> !manualAimOverrideActive)
         .whileTrue(
             shooter
@@ -130,7 +130,7 @@ public class SingleDriverControls implements Configurable {
         .whileTrue(shooter.trackTargetFlywheel(targetSupplier));
 
     driver
-        .leftTrigger()
+        .leftBumper()
         .and(DriverStation::isTeleopEnabled)
         .and(() -> rightStickReady)
         .and(() -> Math.abs(driver.getRightX()) > 0.1)
@@ -144,7 +144,7 @@ public class SingleDriverControls implements Configurable {
                 shooter.getTurret()));
     // Negative stick Y raises the hood; positive stick Y lowers it.
     driver
-        .leftTrigger()
+        .leftBumper()
         .and(DriverStation::isTeleopEnabled)
         .and(() -> rightStickReady)
         .and(() -> Math.abs(driver.getRightY()) > 0.1)

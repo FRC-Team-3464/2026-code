@@ -92,9 +92,9 @@ Keep the driver's normal stick movement, D-pad swerve controls, X heading reset,
 
 [Open the standalone diagram](assets/single-controller-option-2.svg).
 
-- Hold **LT + right stick left/right** to turn the turret manually.
-- Hold **LT + right stick up/down** to adjust the hood manually.
-- While LT is held, the right stick must not also rotate the chassis.
+- Hold **LB + right stick left/right** to turn the turret manually.
+- Hold **LB + right stick up/down** to adjust the hood manually.
+- While LB is held, the right stick must not also rotate the chassis.
 - Independent indexer reverse is not assigned yet. Intake outtake on A is a different function.
 
 ## Pit testing with either proposal
@@ -104,8 +104,8 @@ Each single-controller diagram includes a pit-testing panel. Option 2 uses the i
 | Pit task | Option 1 | Option 2 |
 | --- | --- | --- |
 | Swerve movement/testing | D-pad without LB | D-pad |
-| Manual turret | Hold LB + D-pad left/right | Hold LT + right stick left/right |
-| Manual hood | Hold LB + D-pad up/down | Hold LT + right stick up/down |
+| Manual turret | Hold LB + D-pad left/right | Hold LB + right stick left/right |
+| Manual hood | Hold LB + D-pad up/down | Hold LB + right stick up/down |
 | Feed balls | Hold B | Hold RT |
 | Fixed-speed flywheel test | **Not assigned — needs agreement** | **Not assigned — needs agreement** |
 
@@ -118,14 +118,14 @@ Option 1 is proposed; Option 2 is implemented. “Hold” means request the acti
 | Control | Option 1 | Option 2 |
 | --- | --- | --- |
 | Left stick | Drive translation | Drive translation |
-| Right stick left/right | Rotate robot | Rotate robot normally; manual turret while LT held |
-| Right stick up/down | Unassigned | Manual hood while LT held |
+| Right stick left/right | Rotate robot | Rotate robot normally; manual turret while LB held |
+| Right stick up/down | Unassigned | Manual hood while LB held |
 | D-pad without modifier | Hold: swerve movement/testing, including diagonals | Hold: swerve movement/testing, including diagonals |
-| LB | Hold: D-pad manual-adjustment modifier | Hold: intake |
+| LB | Hold: D-pad manual-adjustment modifier | Hold: right-stick manual-adjustment modifier |
 | LB + D-pad left/right | Hold: manual turret | No special combination; LB and D-pad retain their individual actions |
 | LB + D-pad up/down | Hold: manual hood | No special combination; LB and D-pad retain their individual actions |
 | RB | Hold: automatic turret/hood aiming and flywheel spin-up | Hold: automatic turret/hood aiming and flywheel spin-up |
-| LT | Hold: outtake | Hold: right-stick manual-adjustment modifier |
+| LT | Hold: outtake | Hold: intake |
 | RT | Hold: intake | Hold: feed balls |
 | A | Hold: reverse indexer | Hold: outtake |
 | B | Hold: feed balls | Press: swerve X-lock |
@@ -142,10 +142,10 @@ Back/Start are the labels in the supplied Xbox-style reference image. View/Menu 
 | Consideration | Option 1 | Option 2 |
 | --- | --- | --- |
 | Familiarity | Closest to the old unused single-controller method | Preserves the active driver controls |
-| Driving while collecting | Thumbs on sticks; right finger holds RT | Thumbs on sticks; left index finger holds LB |
+| Driving while collecting | Thumbs on sticks; right finger holds RT | Thumbs on sticks; left index finger holds LT |
 | Feeding while steering | B requires the right thumb to leave the steering stick | RT leaves both thumbs on the sticks |
 | Shooting grip | Hold RB and B | Hold RB and RT: usually right index on RB and middle finger on RT |
-| Manual aiming | Left index on LB; left thumb on D-pad, away from driving stick | Left index on LT; right thumb on right stick, temporarily replacing chassis rotation |
+| Manual aiming | Left index on LB; left thumb on D-pad, away from driving stick | Left index on LB; right thumb on right stick, temporarily replacing chassis rotation |
 | Intake deployment/retraction | Right thumb moves to Y/X | Right thumb moves to Y/Start; Menu reach should be tried on the actual controller |
 | Outstanding mapping | Turret-zero setup interface | Indexer reverse and turret-zero setup interface |
 
@@ -155,11 +155,11 @@ Back/Start are the labels in the supplied Xbox-style reference image. View/Menu 
 
 - Only one layout registers bindings. In single mode, port 1 has no action bindings and hood defaults use driver input.
 - Bindings use the existing enabled-teleop checks. Held mechanism buttons can activate when teleop starts, as in dual mode. Shared-stick movement requires centering after enable or a role change. Broader connection/rearming policy is deferred for both layouts.
-- LT stops chassis rotation from the right stick. When pressing or releasing LT with the stick displaced, center the right stick before using its new role. Left-stick translation and D-pad swerve remain available while LT is held.
+- LB stops chassis rotation from the right stick. When pressing or releasing LB with the stick displaced, center the right stick before using its new role. Left-stick translation and D-pad swerve remain available while LB is held.
 - Right-stick manual outputs use a 0.1 deadband and existing manual output limits. Up requests the same hood direction as the existing operator D-pad up. Confirm physical direction on the robot.
-- LT interrupts automatic turret/hood aiming. Releasing LT with RB still held does not restart aiming; release and press RB again. RB flywheel tracking remains independent.
-- Centering the manual stick holds the hood's measured position. Releasing LT preserves that hold while RB remains held; otherwise the hood returns to software zero. Software zero is not a verified physical horizontal reference.
-- Y/Start pivot controls pause rollers. Pressing both requests no pivot movement. A outtake takes priority over LB collection; releasing pivot/outtake resumes collection if LB remains held.
+- LB interrupts automatic turret/hood aiming. Releasing LB with RB still held does not restart aiming; release and press RB again. RB flywheel tracking remains independent.
+- Centering the manual stick holds the hood's measured position. Releasing LB preserves that hold while RB remains held; otherwise the hood returns to software zero. Software zero is not a verified physical horizontal reference.
+- Y/Start pivot controls pause rollers. Pressing both requests no pivot movement. A outtake takes priority over LT collection; releasing pivot/outtake resumes collection if LT remains held.
 - RT feeds manually without a readiness gate, consistent with the dual-controller operator feed.
 - X resets heading only on a fresh enabled press. Y never zeros the turret.
 - Leaving enabled teleop cancels while-held manual commands through their existing end actions. Manual bindings do not run in Autonomous or Test mode.

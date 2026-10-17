@@ -27,12 +27,12 @@ public class TrajectoryCalculator {
   private static final double MAX_SHOOTING_DISTANCE = 5.0;
 
   static {
-    shooterTable.put(2.36, new TrajectoryParams(2000.0, 0, 0.45));
-    shooterTable.put(2.6, new TrajectoryParams(2100.0, -0.5, 0.52));
-    shooterTable.put(3.0, new TrajectoryParams(2150.0, -1.0, 0.60));
-    shooterTable.put(3.5, new TrajectoryParams(2350.0, -1.5, 0.68));
-    shooterTable.put(4.0, new TrajectoryParams(2500.0, -1.75, 0.76));
-    shooterTable.put(4.5, new TrajectoryParams(3000.0, -2, 0.76));
+    shooterTable.put(2.36, new TrajectoryParams(1770.0, 0, 0.45));
+    shooterTable.put(2.6, new TrajectoryParams(1850.0, -0.5, 0.52));
+    shooterTable.put(3.0, new TrajectoryParams(1900.0, -1.0, 0.60));
+    shooterTable.put(3.5, new TrajectoryParams(2075.0, -1.5, 0.68));
+    shooterTable.put(4.0, new TrajectoryParams(2210.0, -1.75, 0.76));
+    shooterTable.put(4.5, new TrajectoryParams(2650.0, -2, 0.76));
   }
 
   // ========== PUBLIC API ==========

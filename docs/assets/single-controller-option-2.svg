@@ -40,11 +40,11 @@
 <path d="M345 275.5 L445 304" stroke="#15803d" stroke-width="2" fill="none"/>
 <rect x="30" y="237" width="315" height="77" rx="9" fill="white" stroke="#15803d" stroke-width="2"/>
 <text x="43" y="260" class="body" font-weight="bold">LB</text>
-<text x="43" y="283" class="small">Hold: intake</text>
+<text x="43" y="283" class="small">Hold: manual-adjustment modifier</text>
 <path d="M345 377.5 L470 250" stroke="#b45309" stroke-width="2" fill="none"/>
 <rect x="30" y="339" width="315" height="77" rx="9" fill="white" stroke="#b45309" stroke-width="2"/>
 <text x="43" y="362" class="body" font-weight="bold">LT</text>
-<text x="43" y="385" class="small">Hold: manual-adjustment modifier</text>
+<text x="43" y="385" class="small">Hold: intake</text>
 <path d="M345 479.5 L520 512" stroke="#2563eb" stroke-width="2" fill="none"/>
 <rect x="30" y="441" width="315" height="77" rx="9" fill="white" stroke="#2563eb" stroke-width="2"/>
 <text x="43" y="464" class="body" font-weight="bold">D-pad</text>
@@ -80,17 +80,17 @@
 <path d="M740 559 V678" stroke="#2563eb" stroke-width="2"/>
 <rect x="388" y="678" width="504" height="72" rx="9" fill="white" stroke="#2563eb" stroke-width="2"/>
 <text x="408" y="703" class="body" font-weight="bold">Right stick</text>
-<text x="408" y="729" class="small">Normal: rotate robot. Hold LT: turret / hood adjustment.</text>
+<text x="408" y="729" class="small">Normal: rotate robot. Hold LB: turret / hood adjustment.</text>
 <rect x="30" y="775" width="1215" height="107" rx="10" fill="#fff7ed" stroke="#b45309"/>
-<text x="48" y="800" dy="0" class="body">Hold LT + right stick: left/right turns turret; up/down adjusts hood.</text>
+<text x="48" y="800" dy="0" class="body">Hold LB + right stick: left/right turns turret; up/down adjusts hood.</text>
 <text x="48" y="800" dy="27" class="body">Right-stick chassis rotation is suppressed during manual adjustment.</text>
 <text x="48" y="800" dy="54" class="body">Release manual controls to stop movement; release/repress RB to resume automatic aiming.</text>
 <text x="35" y="915" class="small">Blue: driving • Green: intake/feed • Orange: shooting • Gray: mixed/unassigned. Labels also identify each action.</text>
 <rect x="30" y="949" width="1215" height="265" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
 <text x="50" y="983" class="body" font-weight="bold">PIT TESTING — using the teleop controls</text>
 <text x="50" y="1020" class="body">Swerve: D-pad</text>
-<text x="50" y="1054" class="body">Turret: hold LT + right stick left/right</text>
-<text x="50" y="1088" class="body">Hood: hold LT + right stick up/down</text>
+<text x="50" y="1054" class="body">Turret: hold LB + right stick left/right</text>
+<text x="50" y="1088" class="body">Hood: hold LB + right stick up/down</text>
 <text x="680" y="1020" class="body">Feed: hold RT</text>
 <rect x="665" y="1037" width="560" height="72" rx="8" fill="#fef3c7"/>
 <text x="680" y="1063" class="body" font-weight="bold">Fixed-speed flywheel test: NOT ASSIGNED</text>
