@@ -9,6 +9,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
+import frc.robot.RobotState.ShooterTarget;
+import frc.robot.RobotState.ShotType;
 import frc.robot.subsystems.shooter.TrajectoryCalculator.ShooterCommand;
 import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
@@ -105,6 +108,41 @@ public class Shooter extends SubsystemBase {
           flywheel.setOpenLoop(0);
         },
         flywheel);
+  }
+
+  // Teleop selects the profile each cycle; autonomous commands above keep the hub table.
+  public Command trackTeleopTargetFlywheel(Supplier<ShooterTarget> targetSupplier) {
+    return Commands.runEnd(
+        () -> {
+          ShooterTarget target = targetSupplier.get();
+          double rpm =
+              target.type() == ShotType.PASS
+                  ? TrajectoryCalculator.calculatePassing(
+                          target.position(), RobotState.getInstance().getEstimatedPose())
+                      .wheelRPM()
+                  : TrajectoryCalculator.calculateStationary(target.position()).wheelRPM();
+          flywheel.setVelocity(rpm);
+        },
+        () -> flywheel.setOpenLoop(0),
+        flywheel);
+  }
+
+  public Command trackTeleopTargetHood(Supplier<ShooterTarget> targetSupplier) {
+    return Commands.run(
+        () -> {
+          ShooterTarget target = targetSupplier.get();
+          var pose = RobotState.getInstance().getEstimatedPose();
+          double angle =
+              target.type() == ShotType.PASS
+                  ? TrajectoryCalculator.calculatePassing(target.position(), pose).hoodAngle()
+                  : TrajectoryCalculator.calculateHoodAngle(target.position(), pose);
+          hood.setAngle(angle);
+        },
+        hood);
+  }
+
+  public Command trackTeleopTargetTurret(Supplier<ShooterTarget> targetSupplier) {
+    return trackTargetTurret(() -> targetSupplier.get().position());
   }
 
   public Command hoodDown() {

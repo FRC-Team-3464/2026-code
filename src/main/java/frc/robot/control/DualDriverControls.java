@@ -2,13 +2,14 @@ package frc.robot.control;
 
 import static frc.robot.subsystems.shooter.ShooterConstants.HoodConstants.kManualDutyCycle;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.event.BooleanEvent;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
+import frc.robot.RobotState.ShooterTarget;
+import frc.robot.RobotState.ShotType;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.indexer.Indexer;
@@ -104,7 +105,8 @@ public class DualDriverControls implements Configurable {
         .and(operator.xSquare().or(operator.yTriangle()).negate())
         .whileTrue(intake.intake());
 
-    Supplier<Translation2d> targetSupplier = () -> RobotState.getInstance().getShooterTarget();
+    Supplier<ShooterTarget> targetSupplier =
+        () -> RobotState.getInstance().selectTeleopShooterTarget();
 
     // RB controls the three shooter mechanisms independently. Therefore, a D-pad command can take
     // ownership of the hood without cancelling the turret or flywheel commands. Controller
@@ -113,17 +115,20 @@ public class DualDriverControls implements Configurable {
     operator
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
-        .whileTrue(shooter.trackTargetTurret(targetSupplier));
+        .and(() -> targetSupplier.get().type() != ShotType.UNAVAILABLE)
+        .whileTrue(shooter.trackTeleopTargetTurret(targetSupplier));
     operator
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
+        .and(() -> targetSupplier.get().type() != ShotType.UNAVAILABLE)
         .and(operator.dPadUp().or(operator.dPadDown()).negate())
         .and(() -> !manualHoodOverrideActive)
-        .whileTrue(shooter.trackTargetHood(targetSupplier));
+        .whileTrue(shooter.trackTeleopTargetHood(targetSupplier));
     operator
         .rightBumper()
         .and(DriverStation::isTeleopEnabled)
-        .whileTrue(shooter.trackTargetFlywheel(targetSupplier));
+        .and(() -> targetSupplier.get().type() != ShotType.UNAVAILABLE)
+        .whileTrue(shooter.trackTeleopTargetFlywheel(targetSupplier));
 
     // Remember that the operator chose a manual hood angle while tracking. Keeping this controller
     // state here prevents Hood from depending on RB or D-pad inputs.

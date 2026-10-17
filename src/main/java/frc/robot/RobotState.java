@@ -9,6 +9,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.FieldConstants;
@@ -143,30 +144,40 @@ public class RobotState {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
-  /**
-   * Get the target for the shooter to aim for. This accounts for alliance color and whether we're
-   * in a position to pass or shoot.
-   *
-   * @return A Translation2d object representing the aiming target.
-   */
-  public Translation2d getShooterTarget() {
-    // Get the estimated pose to do the calculations
-    // Pose2d estimatedPose = getEstimatedPose();
-
-    // If we're outside the alliance zone, aim for passing to the closest corner, not for shooting
-    // at the hub
-    // if (estimatedPose.getX()
-    //     < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.neutralZoneNear)) {
-    //   if (estimatedPose.getY() > AllianceFlipUtil.applyY(FieldConstants.LinesHorizontal.center))
-    // {
-    //     return AllianceFlipUtil.apply(new Translation2d(Meters.of(2), Meters.of(1)));
-    //   }
-    //   return AllianceFlipUtil.apply(
-    //       new Translation2d(Meters.of(2), Meters.of(FieldConstants.fieldWidth - 1)));
-    // }
-
-    // If we're inside our alliance zone, simply aim at the hub
+  /** Returns the alliance hub. Autonomous shooting always uses this target. */
+  public Translation2d getAutoShooterTarget() {
     return AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d());
+  }
+
+  public enum ShotType {
+    HUB,
+    PASS,
+    UNAVAILABLE
+  }
+
+  /** A hub or home-side passing target in field coordinates. */
+  public record ShooterTarget(ShotType type, Translation2d position) {}
+
+  /** Selects the hub in our alliance zone, otherwise the nearest home-side passing point. */
+  public ShooterTarget selectTeleopShooterTarget() {
+    Translation2d position = getEstimatedPose().getTranslation();
+    if (DriverStation.getAlliance().isEmpty()
+        || !Double.isFinite(position.getX())
+        || !Double.isFinite(position.getY())
+        || !Double.isFinite(getEstimatedPose().getRotation().getRadians())) {
+      return new ShooterTarget(ShotType.UNAVAILABLE, new Translation2d());
+    }
+    Translation2d relative = AllianceFlipUtil.apply(position);
+    if (relative.getX() <= FieldConstants.LinesVertical.allianceZone) {
+      return new ShooterTarget(ShotType.HUB, getAutoShooterTarget());
+    }
+    // Proposed passing destinations, measured from the blue origin and mirrored for red.
+    double targetY =
+        relative.getY() > FieldConstants.LinesHorizontal.center
+            ? FieldConstants.fieldWidth - 1.0
+            : 1.0;
+    return new ShooterTarget(
+        ShotType.PASS, AllianceFlipUtil.apply(new Translation2d(2.0, targetY)));
   }
 
   // Helper records (objects that just store data) to standardize sharing data between classes

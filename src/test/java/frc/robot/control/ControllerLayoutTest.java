@@ -2,7 +2,10 @@ package frc.robot.control;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.JoystickSim;
@@ -10,17 +13,23 @@ import edu.wpi.first.wpilibj.simulation.SimHooks;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.ControllerLayout;
+import frc.robot.RobotState;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.indexer.*;
 import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.TrajectoryCalculator;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.turret.TurretIO.*;
 import frc.robot.subsystems.shooter.turret.TurretIOSim;
+import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /** HAL joystick packets exercise the actual adapters, bindings, defaults and command scheduler. */
 class ControllerLayoutTest {
@@ -46,6 +55,9 @@ class ControllerLayoutTest {
     scheduler.unregisterAllSubsystems();
     DriverStationSim.resetData();
     DriverStationSim.setDsAttached(true);
+    DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
+    DriverStationSim.notifyNewData();
+    RobotState.getInstance().setPose(new Pose2d(2, 2, Rotation2d.kZero));
     driver = new JoystickSim(0);
     operator = new JoystickSim(1);
     connect(driver);
@@ -98,6 +110,7 @@ class ControllerLayoutTest {
     scheduler.cancelAll();
     scheduler.getDefaultButtonLoop().clear();
     scheduler.unregisterAllSubsystems();
+    RobotState.getInstance().setPose(Pose2d.kZero);
     SimHooks.resumeTiming();
   }
 
@@ -283,6 +296,107 @@ class ControllerLayoutTest {
     assertTrue(Math.abs(drive.speeds.vyMetersPerSecond) > 0);
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "SINGLE_CONTROLLER,Blue1", "SINGLE_CONTROLLER,Red1",
+    "TWO_CONTROLLERS,Blue1", "TWO_CONTROLLERS,Red1"
+  })
+  void passingUsesSeparateSettingsAndAutosStillUseHub(
+      ControllerLayout layout, AllianceStationID alliance) {
+    DriverStationSim.setAllianceStationId(alliance);
+    DriverStationSim.notifyNewData();
+    configure(layout);
+    JoystickSim aiming = layout == ControllerLayout.SINGLE_CONTROLLER ? driver : operator;
+    RobotState state = RobotState.getInstance();
+    Pose2d passingPose = AllianceFlipUtil.apply(new Pose2d(6, 1, Rotation2d.kPi));
+    state.setPose(passingPose);
+    aiming.setRawButton(6, true); // RB aims using the passing profile outside the home zone.
+    aiming.setRawAxis(3, 1); // RT retains manual feeding.
+    tick();
+    var pass = state.selectTeleopShooterTarget();
+    assertEquals(RobotState.ShotType.PASS, pass.type());
+    assertEquals(
+        AllianceFlipUtil.apply(new edu.wpi.first.math.geometry.Translation2d(2, 1)),
+        pass.position());
+    assertEquals(TurretIOOutputMode.CLOSED_LOOP, turretIO.mode);
+    assertTrue(flywheelIO.velocityMode);
+    double passRPM = TrajectoryCalculator.calculatePassing(pass.position(), passingPose).wheelRPM();
+    assertEquals(passRPM, flywheelIO.requestedRps * 60, 1e-9);
+    assertEquals(-0.5, hoodIO.target, 1e-9); // Passing angle is applied directly, not halved.
+    assertNotEquals(0, indexerIO.output);
+
+    // Crossing back into the home zone updates a held RB to the original hub settings.
+    state.setPose(AllianceFlipUtil.apply(new Pose2d(2, 2, Rotation2d.kZero)));
+    tick();
+    assertEquals(RobotState.ShotType.HUB, state.selectTeleopShooterTarget().type());
+    assertEquals(
+        TrajectoryCalculator.calculateStationary(state.getAutoShooterTarget()).wheelRPM(),
+        flywheelIO.requestedRps * 60,
+        1e-9);
+    assertEquals(
+        TrajectoryCalculator.calculateHoodAngle(
+            state.getAutoShooterTarget(), state.getEstimatedPose()),
+        hoodIO.target,
+        1e-9);
+
+    state.setPose(passingPose);
+    tick();
+    // Existing manual hood overrides work while the passing flywheel remains active.
+    if (layout == ControllerLayout.SINGLE_CONTROLLER) {
+      aiming.setRawButton(5, true);
+      tick();
+      aiming.setRawAxis(5, -0.7);
+    } else {
+      aiming.setPOV(0, 0);
+    }
+    tick();
+    assertNotEquals(0, hoodIO.output);
+    assertEquals(passRPM, flywheelIO.requestedRps * 60, 1e-9);
+    aiming.setRawButton(5, false);
+    aiming.setRawAxis(5, 0);
+    aiming.setPOV(0, -1);
+    tick();
+    assertEquals(-1, hoodIO.target, 1e-9);
+    aiming.setRawButton(6, false);
+    tick();
+    assertFalse(flywheelIO.velocityMode);
+    assertNotEquals(0, indexerIO.output); // Manual RT still feeds after RB is released.
+    aiming.setRawButton(6, true);
+    tick();
+    assertEquals(-0.5, hoodIO.target, 1e-9);
+
+    DriverStationSim.setAllianceStationId(AllianceStationID.Unknown);
+    tick();
+    assertFalse(flywheelIO.velocityMode);
+    assertEquals(TurretIOOutputMode.OPEN_LOOP, turretIO.mode);
+    DriverStationSim.setAllianceStationId(alliance);
+    tick();
+    assertTrue(flywheelIO.velocityMode);
+    DriverStationSim.setEnabled(false);
+    tick();
+    assertFalse(flywheelIO.velocityMode);
+    assertEquals(0, indexerIO.output);
+
+    // At this same outside-zone pose, autonomous continues using the hub-only API.
+    DriverStationSim.setAutonomous(true);
+    DriverStationSim.setEnabled(true);
+    DriverStationSim.notifyNewData();
+    var auto =
+        shooter.trackAndShootAtTargetFullRealCommandLatestGoodUseThisOne(
+            state::getAutoShooterTarget);
+    scheduler.schedule(auto);
+    tick();
+    assertTrue(auto.isScheduled());
+    assertEquals(
+        AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint.toTranslation2d()),
+        state.getAutoShooterTarget());
+    double autoRPM =
+        TrajectoryCalculator.calculateStationary(state.getAutoShooterTarget()).wheelRPM();
+    assertEquals(autoRPM, flywheelIO.requestedRps * 60, 1e-9);
+    assertNotEquals(passRPM, autoRPM);
+    scheduler.cancel(auto);
+  }
+
   private static class RecordingDrive extends Drive {
     ChassisSpeeds speeds = new ChassisSpeeds();
     int headingResets, xLocks;
@@ -381,10 +495,12 @@ class ControllerLayoutTest {
 
   private static class RecordingFlywheel extends FlywheelIOSim {
     boolean velocityMode;
+    double requestedRps;
 
     @Override
     public void setVelocity(double value) {
       velocityMode = true;
+      requestedRps = value;
       super.setVelocity(value);
     }
 
