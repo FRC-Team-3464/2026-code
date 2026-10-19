@@ -22,10 +22,12 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Turret extends FullSubsystem {
+  // IO representation + inputs and outputs for the turret
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
   private final TurretIOOutputs outputs = new TurretIOOutputs();
 
+  // Target angle for the turret to move to
   private Rotation2d targetAngle = Rotation2d.kZero;
 
   private boolean atGoal = false;
@@ -41,11 +43,14 @@ public class Turret extends FullSubsystem {
     io.updateInputs(inputs);
     Logger.processInputs("Turret", inputs);
 
+    // Log the turret position for AdvantageScope visualization
     RobotVisualizer.getInstance().setTurretAzimuthAngle(Rotation2d.fromRadians(inputs.positionRad));
   }
 
   @Override
   public void periodicAfterScheduler() {
+    // Apply the outputs (run the turret differently based on the control mode we
+    // want to use, usually determined by driver inputs)
     io.applyOutputs(outputs);
     Logger.recordOutput("Turret/Mode", outputs.mode.toString());
     Logger.recordOutput(("Turret/TargetAngle"), targetAngle);
@@ -98,8 +103,10 @@ public class Turret extends FullSubsystem {
    * @param position A {@link Rotation2d} object representing the target position of the turret.
    */
   public void setPosition(Rotation2d position) {
+    // Change the target angle to the specified position
     targetAngle = position;
 
+    // Ensure we're using the target angle for closed-loop control
     outputs.mode = TurretIOOutputMode.CLOSED_LOOP;
     outputs.closedLoopTarget = position;
 
@@ -109,7 +116,10 @@ public class Turret extends FullSubsystem {
   }
 
   public void setOpenLoop(double output) {
+    // Ensure we're using open-loop control
     outputs.mode = TurretIOOutputMode.OPEN_LOOP;
+
+    // Safety checks
     if (inputs.positionRad > TurretConstants.kMaxTurretAngleRad
         || inputs.positionRad < TurretConstants.kMinTurretAngleRad) {
       outputs.openLoopOutput = 0.0;
@@ -119,6 +129,7 @@ public class Turret extends FullSubsystem {
   }
 
   public void stop() {
+    // Change to open loop output of 0 to truly stop the motor
     outputs.mode = TurretIOOutputMode.OPEN_LOOP;
     outputs.openLoopOutput = 0.0;
   }
@@ -136,6 +147,8 @@ public class Turret extends FullSubsystem {
   }
 
   public void zero() {
+    // Tell the turret that the current position should be treated as "zero"
+    // (perfectly straight forward)
     io.zero();
   }
 }

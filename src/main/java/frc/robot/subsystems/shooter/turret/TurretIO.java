@@ -26,9 +26,12 @@ public interface TurretIO {
     public Rotation2d closedLoopTarget = Rotation2d.kZero;
   }
 
+  /** Update the turret inputs with new hardware data. */
   default void updateInputs(TurretIOInputs inputs) {}
 
+  /** Command the turret with the specified control type. */
   default void applyOutputs(TurretIOOutputs outputs) {}
 
+  /** Stop the turret motor. */
   default void zero() {}
 }
