@@ -67,11 +67,12 @@ public class Turret extends FullSubsystem {
           Translation2d target = targetSupplier.get();
           Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
 
-          Translation2d turretOffset = TurretConstants.kRobotToTurret.getTranslation().toTranslation2d();
+          Translation2d turretOffset =
+              TurretConstants.kRobotToTurret.getTranslation().toTranslation2d();
 
           // Turret position in field coordinates
-          Translation2d turretFieldPos = robotPose.getTranslation()
-              .plus(turretOffset.rotateBy(robotPose.getRotation()));
+          Translation2d turretFieldPos =
+              robotPose.getTranslation().plus(turretOffset.rotateBy(robotPose.getRotation()));
 
           // Vector from turret -> target (field frame)
           Translation2d deltaField = target.minus(turretFieldPos);
@@ -85,7 +86,8 @@ public class Turret extends FullSubsystem {
           Translation2d deltaRobot = deltaField.rotateBy(robotPose.getRotation().unaryMinus());
 
           // Angle turret should point (robot-relative)
-          Rotation2d targetAngle = Rotation2d.fromRadians(Math.atan2(deltaRobot.getY(), deltaRobot.getX()));
+          Rotation2d targetAngle =
+              Rotation2d.fromRadians(Math.atan2(deltaRobot.getY(), deltaRobot.getX()));
 
           this.targetAngle = targetAngle;
           setPosition(targetAngle.unaryMinus());
@@ -96,12 +98,9 @@ public class Turret extends FullSubsystem {
   /**
    * Set the target angle for the turret.
    *
-   * <p>
-   * This will clamp the angle to be within the maximum and minimum rotation of
-   * the turret.
+   * <p>This will clamp the angle to be within the maximum and minimum rotation of the turret.
    *
-   * @param position A {@link Rotation2d} object representing the target position
-   *                 of the turret.
+   * @param position A {@link Rotation2d} object representing the target position of the turret.
    */
   public void setPosition(Rotation2d position) {
     // Change the target angle to the specified position
@@ -111,8 +110,9 @@ public class Turret extends FullSubsystem {
     outputs.mode = TurretIOOutputMode.CLOSED_LOOP;
     outputs.closedLoopTarget = position;
 
-    atGoal = atGoalDebouncer.calculate(
-        Math.abs(position.getRadians() - inputs.positionRad) < TurretConstants.kAngleTolerance);
+    atGoal =
+        atGoalDebouncer.calculate(
+            Math.abs(position.getRadians() - inputs.positionRad) < TurretConstants.kAngleTolerance);
   }
 
   public void setOpenLoop(double output) {

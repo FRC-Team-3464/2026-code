@@ -20,9 +20,10 @@ public class TurretIOSim implements TurretIO {
   public TurretIOSim() {
     pid.reset();
     pid.enableContinuousInput(-Math.PI, Math.PI); // Treats the positions as points along a circle
-    sim = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(gearbox, 0.025, TurretConstants.kGearRatio),
-        gearbox);
+    sim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(gearbox, 0.025, TurretConstants.kGearRatio),
+            gearbox);
   }
 
   @Override
