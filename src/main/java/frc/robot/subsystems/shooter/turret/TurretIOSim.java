@@ -9,6 +9,7 @@ import frc.robot.Constants;
 import frc.robot.subsystems.shooter.ShooterConstants.TurretConstants;
 
 public class TurretIOSim implements TurretIO {
+  // Use the NEO motor simulation class
   private final DCMotor gearbox = DCMotor.getNEO(1);
   private final DCMotorSim sim;
 
@@ -18,20 +19,21 @@ public class TurretIOSim implements TurretIO {
 
   public TurretIOSim() {
     pid.reset();
-    pid.enableContinuousInput(-Math.PI, Math.PI);
-    sim =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(gearbox, 0.025, TurretConstants.kGearRatio),
-            gearbox);
+    pid.enableContinuousInput(-Math.PI, Math.PI); // Treats the positions as points along a circle
+    sim = new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(gearbox, 0.025, TurretConstants.kGearRatio),
+        gearbox);
   }
 
   @Override
   public void updateInputs(TurretIOInputs inputs) {
+    // Limit to the allowed values
     double volts = MathUtil.clamp(appliedVolts, -12.0, 12.0);
 
     sim.setInputVoltage(volts);
-    sim.update(0.02);
+    sim.update(0.02); // Move sim forward by 20ms
 
+    // Update IO inputs with sim data
     inputs.connected = true;
     inputs.positionRad = sim.getAngularPositionRad();
     inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
@@ -41,12 +43,15 @@ public class TurretIOSim implements TurretIO {
 
   @Override
   public void applyOutputs(TurretIOOutputs outputs) {
+    // Change the way we tell the motor to move based on how we want to control it
     switch (outputs.mode) {
       case CLOSED_LOOP -> {
+        // Use a PID controller to calculate voltage
         pid.setSetpoint(outputs.closedLoopTarget.getRadians());
         appliedVolts = pid.calculate(sim.getAngularPositionRad());
       }
       case OPEN_LOOP -> {
+        // Use duty cycle percentage-based control
         appliedVolts = 12.0 * outputs.openLoopOutput;
       }
     }
